@@ -100,7 +100,10 @@ class Config(BaseModel):
             for i, p in enumerate(self.patterns)
         ]
         for where, template in templates:
-            unknown = set(_PLACEHOLDER_RE.findall(template)) - KNOWN_PLACEHOLDERS
+            found = set(_PLACEHOLDER_RE.findall(template))
+            if "" in found:
+                raise ValueError(f"{where}: leerer Platzhalter {{}}")
+            unknown = found - KNOWN_PLACEHOLDERS
             if unknown:
                 raise ValueError(
                     f"{where} enthält unbekannte Platzhalter {sorted(unknown)}; "

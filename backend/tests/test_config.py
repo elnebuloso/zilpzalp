@@ -176,3 +176,20 @@ def test_date_format_with_directive_is_valid(valid_config, write_config):
     cfg = load_config(path)
 
     assert cfg.date_format == "%d.%m.%Y"
+
+
+def test_empty_placeholder_raises_clear_message(valid_config, write_config):
+    valid_config["default_pattern"] = "{date}_{}"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="leerer Platzhalter"):
+        load_config(path)
+
+
+def test_invalid_summary_mode_raises_config_error(valid_config, write_config):
+    valid_config["summary_mode"] = "bogus"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError) as exc:
+        load_config(path)
+    assert "summary_mode" in str(exc.value)
