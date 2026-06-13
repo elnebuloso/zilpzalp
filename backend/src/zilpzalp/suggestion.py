@@ -58,12 +58,20 @@ def _first_matching_rule(analysis: Analysis, config: Config) -> dict | None:
     return None
 
 
+def _resolve_targets(config: Config, names: list[str]) -> list[Path]:
+    if names:
+        wanted = set(names)
+        return [t.path for t in config.targets if t.name in wanted]
+    return [t.path for t in config.targets if t.default]
+
+
 def suggest(analysis: Analysis, config: Config) -> Suggestion:
     sender = analysis.sender or ""
     doctype = analysis.doctype or ""
     description = ""
     pattern_name: str | None = None
     preferred_label: str | None = None
+    target_names: list[str] = []
 
     rule = _first_matching_rule(analysis, config)
     if rule:
@@ -73,6 +81,7 @@ def suggest(analysis: Analysis, config: Config) -> Suggestion:
         description = apply.get("description", description)
         pattern_name = apply.get("pattern", pattern_name)
         preferred_label = apply.get("preferred_date")
+        target_names = apply.get("targets", []) or []
 
     idx = _preselect(analysis.date_candidates, preferred_label)
     date_str = analysis.date_candidates[idx].normalized if idx is not None else ""
@@ -89,5 +98,5 @@ def suggest(analysis: Analysis, config: Config) -> Suggestion:
         doctype=doctype,
         description=description,
         pattern_name=pattern_name,
-        target_paths=[],
+        target_paths=_resolve_targets(config, target_names),
     )

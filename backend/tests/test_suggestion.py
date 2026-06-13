@@ -98,3 +98,40 @@ rules:
     )
     s = suggest(analysis, _config(tmp_path, two_rules))
     assert s.doctype == "Allgemein"                       # erste Uebereinstimmung gewinnt
+
+
+TARGETS = """
+targets:
+  - name: Finanzen
+    path: /targets/finanzen
+    default: false
+  - name: Allgemein
+    path: /targets/allgemein
+    default: true
+rules:
+  - name: zu Finanzen
+    match:
+      sender_contains: "Stadtwerke"
+    apply:
+      targets: ["Finanzen"]
+"""
+
+
+def test_rule_targets_resolved_to_paths(tmp_path):
+    analysis = Analysis(
+        date_candidates=[DateCandidate(normalized="2026-01-15", raw="15.01.2026")],
+        sender="Stadtwerke",
+        full_text="x",
+    )
+    s = suggest(analysis, _config(tmp_path, TARGETS))
+    assert [str(p) for p in s.target_paths] == ["/targets/finanzen"]
+
+
+def test_default_targets_when_no_rule_targets(tmp_path):
+    analysis = Analysis(
+        date_candidates=[DateCandidate(normalized="2026-01-15", raw="15.01.2026")],
+        sender="Unbekannt",
+        full_text="x",
+    )
+    s = suggest(analysis, _config(tmp_path, TARGETS))
+    assert [str(p) for p in s.target_paths] == ["/targets/allgemein"]   # default: true
