@@ -59,6 +59,15 @@ class Config(BaseModel):
     # kept opaque here on purpose.
     rules: list[dict] = []
 
+    @field_validator("date_format")
+    @classmethod
+    def _date_format_has_directive(cls, value: str) -> str:
+        if "%" not in value:
+            raise ValueError(
+                f"date_format {value!r} enthält keine strftime-Direktive (z. B. %Y-%m-%d)"
+            )
+        return value
+
     @model_validator(mode="after")
     def _check_paths_exist(self) -> "Config":
         required = [

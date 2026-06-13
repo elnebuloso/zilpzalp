@@ -159,3 +159,20 @@ def test_missing_date_patterns_block_is_valid(valid_config, write_config):
     cfg = load_config(path)
 
     assert cfg.date_patterns == []
+
+
+def test_date_format_without_directive_raises(valid_config, write_config):
+    valid_config["date_format"] = "no-directive-here"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="strftime-Direktive"):
+        load_config(path)
+
+
+def test_date_format_with_directive_is_valid(valid_config, write_config):
+    valid_config["date_format"] = "%d.%m.%Y"
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert cfg.date_format == "%d.%m.%Y"
