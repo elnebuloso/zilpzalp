@@ -67,9 +67,14 @@ class Watcher:
 
     def start(self) -> None:
         self._observer.start()
-        for path in scan_folder(self._watchfolder):
-            self._on_pdf(path)
+        try:
+            for path in scan_folder(self._watchfolder):
+                self._on_pdf(path)
+        except Exception:
+            self.stop()
+            raise
 
     def stop(self) -> None:
-        self._observer.stop()
-        self._observer.join()
+        if self._observer.is_alive():
+            self._observer.stop()
+            self._observer.join()

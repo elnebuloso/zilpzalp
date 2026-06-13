@@ -1,6 +1,7 @@
 import time
 from pathlib import Path
 
+import pytest
 from watchdog.events import DirCreatedEvent, FileCreatedEvent, FileMovedEvent
 
 from zilpzalp.watcher import Watcher, _PdfEventHandler, scan_folder
@@ -81,3 +82,17 @@ def test_watcher_reports_existing_and_live_pdfs(tmp_path):
         )
     finally:
         watcher.stop()
+
+
+def test_watcher_stops_observer_when_initial_scan_fails(tmp_path, monkeypatch):
+    def boom(_folder):
+        raise OSError("scan failed")
+
+    monkeypatch.setattr("zilpzalp.watcher.scan_folder", boom)
+    watcher = Watcher(tmp_path, lambda _path: None)
+
+    with pytest.raises(OSError):
+        watcher.start()
+
+    # the observer thread must not be left running after a failed start
+    assert not watcher._observer.is_alive()
