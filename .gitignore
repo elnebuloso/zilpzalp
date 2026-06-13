@@ -1,1 +1,7 @@
 .idea
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+backend/config.yaml

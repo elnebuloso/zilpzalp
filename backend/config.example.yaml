@@ -1,0 +1,39 @@
+# Beispielkonfiguration für ZilpZalp. Für lokale Läufe nach config.yaml kopieren
+# und die Pfade an existierende Verzeichnisse anpassen.
+paths:
+  watchfolder: /data/inbox
+  error_folder: /data/error
+  processed_folder: /data/processed   # nur erforderlich bei original_handling: move
+
+original_handling: move        # move | delete | keep
+summary_mode: on_conflict      # always | on_conflict | never
+
+default_pattern: "{date}__{sender}_{doctype}_{description}"
+date_format: "%Y-%m-%d"
+
+# Optional: zusätzliche Datums-Matcher für Sonderfälle (additiv zur eingebauten Erkennung).
+date_patterns:
+  - label: leistungsdatum
+    regex: 'Leistungsdatum:\s*(\d{2}\.\d{2}\.\d{4})'
+
+targets:
+  - name: Finanzen
+    path: /targets/finanzen
+    default: false
+
+patterns:
+  - name: standard
+    template: "{date}__{sender}_{doctype}_{description}"
+
+rules:
+  - name: Stromrechnung Stadtwerke
+    match:
+      sender_contains: "Stadtwerke"
+      keywords_any: ["Stromabschlag", "Abschlag"]
+    apply:
+      sender: "Stadtwerke"
+      doctype: "Rechnung"
+      description: "Stromabschlag"
+      pattern: standard
+      preferred_date: rechnungsdatum
+      targets: ["Finanzen"]
