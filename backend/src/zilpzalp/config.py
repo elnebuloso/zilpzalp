@@ -50,24 +50,24 @@ class Config(BaseModel):
 def load_config(path: str | Path) -> Config:
     try:
         raw = Path(path).read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         raise ConfigError(
             f"Konfigurationsdatei {str(path)!r} kann nicht gelesen werden: {exc}"
-        )
+        ) from exc
     try:
         data = yaml.safe_load(raw)
     except yaml.YAMLError as exc:
         raise ConfigError(
             f"Konfigurationsdatei {str(path)!r} ist kein gültiges YAML: {exc}"
-        )
+        ) from exc
     if not isinstance(data, dict):
         raise ConfigError(
             f"Konfigurationsdatei {str(path)!r} muss ein YAML-Mapping enthalten"
-        )
+        ) from None
     try:
         return Config(**data)
     except ValidationError as exc:
-        raise ConfigError(_format_validation_error(path, exc))
+        raise ConfigError(_format_validation_error(path, exc)) from exc
 
 
 def _format_validation_error(path: str | Path, exc: ValidationError) -> str:

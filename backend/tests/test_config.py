@@ -54,3 +54,11 @@ def test_missing_required_field_raises_config_error(valid_config, write_config):
     with pytest.raises(ConfigError) as exc:
         load_config(path)
     assert "paths" in str(exc.value)
+
+
+def test_non_utf8_file_raises_config_error(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_bytes(b"\xff\xfe\x00")
+
+    with pytest.raises(ConfigError, match="kann nicht gelesen werden"):
+        load_config(path)
