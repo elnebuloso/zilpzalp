@@ -38,13 +38,43 @@ def _preselect(candidates: list[DateCandidate], preferred_label: str | None) -> 
     return 0
 
 
+def _rule_matches(rule: dict, analysis: Analysis) -> bool:
+    match = rule.get("match", {}) or {}
+    sender_contains = match.get("sender_contains")
+    if sender_contains and sender_contains.lower() not in (analysis.sender or "").lower():
+        return False
+    keywords_any = match.get("keywords_any")
+    if keywords_any and not any(
+        k.lower() in analysis.full_text.lower() for k in keywords_any
+    ):
+        return False
+    return True
+
+
+def _first_matching_rule(analysis: Analysis, config: Config) -> dict | None:
+    for rule in config.rules:
+        if _rule_matches(rule, analysis):
+            return rule
+    return None
+
+
 def suggest(analysis: Analysis, config: Config) -> Suggestion:
     sender = analysis.sender or ""
     doctype = analysis.doctype or ""
     description = ""
     pattern_name: str | None = None
+    preferred_label: str | None = None
 
-    idx = _preselect(analysis.date_candidates, None)
+    rule = _first_matching_rule(analysis, config)
+    if rule:
+        apply = rule.get("apply", {}) or {}
+        sender = apply.get("sender", sender)
+        doctype = apply.get("doctype", doctype)
+        description = apply.get("description", description)
+        pattern_name = apply.get("pattern", pattern_name)
+        preferred_label = apply.get("preferred_date")
+
+    idx = _preselect(analysis.date_candidates, preferred_label)
     date_str = analysis.date_candidates[idx].normalized if idx is not None else ""
     template = _resolve_pattern(config, pattern_name)
     filename = (
