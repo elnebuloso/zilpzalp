@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -32,3 +34,18 @@ def test_startup_aborts_on_invalid_config(valid_config, write_config, monkeypatc
     with pytest.raises(ConfigError):
         with TestClient(app):
             pass
+
+
+def test_watcher_populates_queue_on_startup(
+    valid_config, write_config, monkeypatch
+):
+    # drop a PDF into the configured watchfolder before the app starts
+    watchfolder = Path(valid_config["paths"]["watchfolder"])
+    (watchfolder / "incoming.pdf").write_bytes(b"%PDF-1.4")
+    path = write_config(valid_config)
+    monkeypatch.setenv(CONFIG_ENV, str(path))
+
+    with TestClient(app):
+        names = [entry.path.name for entry in app.state.queue.list()]
+
+    assert "incoming.pdf" in names
