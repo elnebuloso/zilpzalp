@@ -43,7 +43,21 @@ def process(
     """
     destinations = [target / filename for target in targets]
 
+    processed_dest: Path | None = None
+    if config.original_handling == "move":
+        processed_dest = config.paths.processed_folder / source.name
+
     for dest in destinations:
         shutil.copy2(source, dest)
 
+    if config.original_handling == "move":
+        shutil.move(str(source), str(processed_dest))
+        return ProcessResult(
+            copied=destinations,
+            original_action="moved",
+            original_destination=processed_dest,
+        )
+    if config.original_handling == "delete":
+        source.unlink()
+        return ProcessResult(copied=destinations, original_action="deleted")
     return ProcessResult(copied=destinations, original_action="kept")

@@ -64,3 +64,31 @@ def test_copies_to_multiple_targets(tmp_path):
     assert (t1 / "doc.pdf").read_bytes() == b"%PDF-1.4 hello"
     assert (t2 / "doc.pdf").read_bytes() == b"%PDF-1.4 hello"
     assert result.copied == [t1 / "doc.pdf", t2 / "doc.pdf"]
+
+
+def test_move_relocates_original_to_processed(tmp_path):
+    config = _config(tmp_path, "move")
+    source = _source(tmp_path, "orig.pdf")
+    target = _target(tmp_path, "finanzen")
+
+    result = process(source, "doc.pdf", [target], config)
+
+    assert (target / "doc.pdf").exists()                      # copy made
+    assert not source.exists()                                # original moved away
+    processed = tmp_path / "processed" / "orig.pdf"           # keeps original name
+    assert processed.read_bytes() == b"%PDF-1.4 hello"
+    assert result.original_action == "moved"
+    assert result.original_destination == processed
+
+
+def test_delete_removes_original(tmp_path):
+    config = _config(tmp_path, "delete")
+    source = _source(tmp_path)
+    target = _target(tmp_path, "finanzen")
+
+    result = process(source, "doc.pdf", [target], config)
+
+    assert (target / "doc.pdf").exists()                      # copy made
+    assert not source.exists()                                # original deleted
+    assert result.original_action == "deleted"
+    assert result.original_destination is None
