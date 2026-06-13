@@ -1,7 +1,9 @@
 from pathlib import Path
 
+import pytest
+
 from zilpzalp.config import load_config
-from zilpzalp.processor import process
+from zilpzalp.processor import FileConflictError, process
 
 
 def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
@@ -92,3 +94,31 @@ def test_delete_removes_original(tmp_path):
     assert not source.exists()                                # original deleted
     assert result.original_action == "deleted"
     assert result.original_destination is None
+
+
+def test_conflict_at_target_raises_and_leaves_original(tmp_path):
+    config = _config(tmp_path, "delete")
+    source = _source(tmp_path)
+    target = _target(tmp_path, "finanzen")
+    existing = target / "doc.pdf"
+    existing.write_bytes(b"already here")
+
+    with pytest.raises(FileConflictError):
+        process(source, "doc.pdf", [target], config)
+
+    assert existing.read_bytes() == b"already here"   # not overwritten (no auto-suffix)
+    assert source.exists()                            # delete did not run
+
+
+def test_conflict_preflight_prevents_partial_copy(tmp_path):
+    config = _config(tmp_path, "keep")
+    source = _source(tmp_path)
+    t1 = _target(tmp_path, "finanzen")
+    t2 = _target(tmp_path, "versicherungen")
+    (t2 / "doc.pdf").write_bytes(b"already here")      # conflict in the SECOND target
+
+    with pytest.raises(FileConflictError):
+        process(source, "doc.pdf", [t1, t2], config)
+
+    assert not (t1 / "doc.pdf").exists()               # first target NOT written either
+    assert source.exists()

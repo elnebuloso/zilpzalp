@@ -43,9 +43,15 @@ def process(
     """
     destinations = [target / filename for target in targets]
 
+    for dest in destinations:
+        if dest.exists():
+            raise FileConflictError(dest)
+
     processed_dest: Path | None = None
     if config.original_handling == "move":
         processed_dest = config.paths.processed_folder / source.name
+        if processed_dest.exists():
+            raise FileConflictError(processed_dest)
 
     for dest in destinations:
         shutil.copy2(source, dest)
