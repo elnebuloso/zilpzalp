@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ValidationError, model_validator
+
+KNOWN_PLACEHOLDERS = {"date", "sender", "doctype", "description"}
+_PLACEHOLDER_RE = re.compile(r"\{([^}]*)\}")
 
 
 class ConfigError(Exception):
@@ -67,6 +71,22 @@ class Config(BaseModel):
                 raise ValueError(
                     f"paths.processed_folder {str(processed)!r} existiert nicht "
                     "oder ist kein Verzeichnis"
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _check_placeholders(self) -> "Config":
+        templates = [("default_pattern", self.default_pattern)]
+        templates += [
+            (f"patterns[{i}].template ({p.name})", p.template)
+            for i, p in enumerate(self.patterns)
+        ]
+        for where, template in templates:
+            unknown = set(_PLACEHOLDER_RE.findall(template)) - KNOWN_PLACEHOLDERS
+            if unknown:
+                raise ValueError(
+                    f"{where} enthält unbekannte Platzhalter {sorted(unknown)}; "
+                    f"erlaubt sind {sorted(KNOWN_PLACEHOLDERS)}"
                 )
         return self
 

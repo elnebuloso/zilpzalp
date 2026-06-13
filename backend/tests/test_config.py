@@ -106,3 +106,28 @@ def test_move_with_nonexistent_processed_folder_raises(valid_config, write_confi
 
     with pytest.raises(ConfigError, match="processed_folder"):
         load_config(path)
+
+
+def test_unknown_placeholder_in_default_pattern_raises(valid_config, write_config):
+    valid_config["default_pattern"] = "{date}_{unknown}"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="unbekannte Platzhalter"):
+        load_config(path)
+
+
+def test_unknown_placeholder_in_pattern_template_raises(valid_config, write_config):
+    valid_config["patterns"] = [{"name": "standard", "template": "{date}_{bogus}"}]
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="bogus"):
+        load_config(path)
+
+
+def test_known_placeholders_are_valid(valid_config, write_config):
+    valid_config["default_pattern"] = "{sender}-{doctype}-{description}-{date}"
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert cfg.default_pattern == "{sender}-{doctype}-{description}-{date}"
