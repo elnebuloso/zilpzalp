@@ -162,11 +162,18 @@ Zahlungsziel, Erstellungsdatum, Zeiträume). Die Wahl des falschen Datums ist da
 des Produkts (Vision 17.1). Daraus folgt eine harte Anforderung an `analyzer`, `suggestion`
 und die Web-UI:
 
+- **`analyzer` erkennt Datumsangaben selbstständig** über eine eingebaute Erkennung gängiger
+  Formate (z. B. `TT.MM.JJJJ`, `JJJJ-MM-TT`, `T. Monat JJJJ`, zwei-/vierstellige Jahre). Diese
+  Erkennung funktioniert **ohne jede Konfiguration** — der Nutzer muss keinen Regex eingeben.
 - **`analyzer` sammelt ALLE Datumskandidaten**, nicht nur einen. Jeder Kandidat trägt:
   - das normalisierte Datum (`date_format`-konform),
   - den rohen Treffer-Text aus dem PDF,
   - soweit ableitbar ein Label/Kontext (z. B. „Rechnungsdatum", „fällig am") aus dem
     umgebenden Text.
+- **Optionaler dedizierter Matcher:** Für Sonderfälle, in denen die eingebaute Erkennung nicht
+  greift, kann in der Config ein eigener Datums-Regex mit Label hinterlegt werden
+  (`date_patterns`, siehe §5). Diese ergänzen die eingebauten Formate additiv; sie sind
+  **optional** und keine Voraussetzung für die Datumserkennung.
 - **Die Kandidatenliste wird unverändert bis in die UI durchgereicht.** `suggestion` darf
   einen Kandidaten als vorausgewählt markieren (per Regel `preferred_date` oder Heuristik),
   aber **niemals** Kandidaten entfernen, zusammenfassen oder intransparent eines festlegen.
@@ -197,6 +204,15 @@ summary_mode: on_conflict      # always | on_conflict | never
 
 default_pattern: "{date}__{sender}_{doctype}_{description}"
 date_format: "%Y-%m-%d"
+
+# Optional: zusätzliche Datums-Matcher für Sonderfälle.
+# Die eingebaute Datumserkennung läuft immer und braucht KEINE Konfiguration.
+# Einträge hier ERGÄNZEN die eingebauten Formate (additiv), ersetzen sie nicht.
+# Die erste Capture-Group liefert den Datumswert; label erscheint als Kontext in der UI
+# und ist über rules[].apply.preferred_date referenzierbar.
+date_patterns:
+  - label: leistungsdatum
+    regex: 'Leistungsdatum:\s*(\d{2}\.\d{2}\.\d{4})'
 
 targets:
   - name: Finanzen
@@ -232,6 +248,9 @@ rules:
   **wählt lediglich einen der erkannten Datumskandidaten vor**. Sie ersetzt oder verbirgt die
   übrigen Kandidaten nicht — alle bleiben in der UI auswählbar (siehe §4.3). Greift keine Regel,
   darf eine Heuristik vorauswählen; auch dann bleiben alle Kandidaten sichtbar.
+- **`date_patterns` ist optional.** Die Datumserkennung funktioniert ohne diesen Block; er
+  ergänzt nur Sonderfälle. Ungültige Regex werden beim Laden mit klarer Meldung abgewiesen,
+  ohne die eingebaute Erkennung zu beeinträchtigen.
 - **Beim Start validiert `config`** die Datei (Pflichtpfade existieren, Pattern-Platzhalter
   bekannt) und bricht mit klarer Fehlermeldung ab, statt halb zu starten.
 

@@ -216,6 +216,11 @@ Die Analyse soll relevante Informationen extrahieren, insbesondere:
 Die Datumserkennung sammelt bewusst **alle** Datumskandidaten, nicht nur einen. Welches
 Datum für den Dateinamen verwendet wird, entscheidet der Nutzer (siehe 9.3 und 17.1).
 
+Im Optimalfall erkennt das Tool die Datumsangaben **selbstständig** über eingebaute
+Erkennung gängiger Datumsformate — der Nutzer muss dafür **keinen Regex eingeben**. Für
+Sonderfälle kann optional ein dedizierter Matcher mit eigenem Datums-Regex konfiguriert
+werden; das ist eine zusätzliche Möglichkeit, keine Voraussetzung.
+
 OCR ist nicht Teil des MVP.
 
 ### 9.3 Web-UI
