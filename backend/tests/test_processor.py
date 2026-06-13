@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from zilpzalp.config import load_config
-from zilpzalp.processor import FileConflictError, process
+from zilpzalp.processor import FileConflictError, ProcessorError, process
 
 
 def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
@@ -122,3 +122,38 @@ def test_conflict_preflight_prevents_partial_copy(tmp_path):
 
     assert not (t1 / "doc.pdf").exists()               # first target NOT written either
     assert source.exists()
+
+
+def test_empty_targets_raises_and_keeps_original(tmp_path):
+    config = _config(tmp_path, "delete")
+    source = _source(tmp_path)
+
+    with pytest.raises(ProcessorError):
+        process(source, "doc.pdf", [], config)
+
+    assert source.exists()        # no copy => never delete the original
+
+
+def test_missing_target_dir_raises_and_leaves_original(tmp_path):
+    config = _config(tmp_path, "delete")
+    source = _source(tmp_path)
+    missing = tmp_path / "nope"   # never created
+
+    with pytest.raises(ProcessorError):
+        process(source, "doc.pdf", [missing], config)
+
+    assert source.exists()        # original untouched
+
+
+def test_move_conflict_in_processed_raises_before_copy(tmp_path):
+    config = _config(tmp_path, "move")
+    source = _source(tmp_path, "orig.pdf")
+    target = _target(tmp_path, "finanzen")
+    (tmp_path / "processed" / "orig.pdf").write_bytes(b"old")   # would be overwritten by move
+
+    with pytest.raises(FileConflictError):
+        process(source, "doc.pdf", [target], config)
+
+    assert not (target / "doc.pdf").exists()   # nothing copied
+    assert source.exists()                     # original not moved
+    assert (tmp_path / "processed" / "orig.pdf").read_bytes() == b"old"  # not overwritten

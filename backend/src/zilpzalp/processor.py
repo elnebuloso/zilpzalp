@@ -41,6 +41,12 @@ def process(
     rejected call leaves the filesystem unchanged. Raises ProcessorError on a
     missing/empty target, FileConflictError on an existing destination.
     """
+    if not targets:
+        raise ProcessorError("keine Zielordner angegeben")
+    for target in targets:
+        if not target.is_dir():
+            raise ProcessorError(f"Zielordner fehlt: {target}")
+
     destinations = [target / filename for target in targets]
 
     for dest in destinations:
