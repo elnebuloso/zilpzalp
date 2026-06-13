@@ -15,7 +15,7 @@ Trivial tasks (one-liners, obvious fixes): just do it.
 ## Git
 
 - Conventional Commits, English. Example: `fix(auth): handle expired tokens on refresh`
-- Commit und Push selbstständig, sobald ein Arbeitsschritt abgeschlossen ist.
+- Add, Commit und Push selbstständig, sobald ein Arbeitsschritt abgeschlossen ist.
 - Never force-push, amend pushed commits, or hard-reset.
 
 # Superpowers skill file naming
