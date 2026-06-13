@@ -273,18 +273,9 @@ Das Tool soll keine automatische Suffix- oder Zeitstempellogik erzwingen.
 
 ### 9.8 Hash-basierte Duplikaterkennung
 
-Das MVP soll identische Dateien per Hash erkennen.
-
-Die Prüfung erfolgt gegen alle definierten Zielordner. Dadurch kann erkannt werden, ob ein identisches PDF bereits vorhanden ist, auch wenn es einen anderen Dateinamen trägt.
-
-Wenn ein Hash-Duplikat gefunden wird, zeigt das Tool den Fund in der UI an. Der Nutzer kann entscheiden:
-
-- trotzdem verarbeiten
-- aus dem Watchfolder löschen
-- in den Fehlerordner verschieben
-- Vorgang abbrechen und später entscheiden
-
-Die Hash-Prüfung erkennt nur exakt identische Dateien, keine ähnlichen Dokumente.
+> **Entscheidung (MVP-Design):** Aus dem MVP gestrichen. Die Hash-Duplikaterkennung ist
+> Komfort, nicht Kern; sie wird auf eine spätere Version verschoben, um das MVP-Risiko zu
+> senken. Eine identische Datei unter anderem Namen wird im MVP nicht automatisch erkannt.
 
 ### 9.9 Finale Zusammenfassung
 
@@ -301,7 +292,6 @@ Die Zusammenfassung kann enthalten:
 - ursprünglicher Dateiname
 - finaler Dateiname
 - gewählte Zielordner
-- Duplikatstatus
 - Namenskonflikte
 - geplante Behandlung des Originals
 
@@ -432,19 +422,27 @@ Watchfolder → PDF erkennen → Inhalt analysieren → Vorschlag anzeigen → N
 
 Eine erste nutzbare Version gilt als erfolgreich, wenn folgende Kriterien erfüllt sind:
 
-1. Mindestens 80 % der PDFs erhalten direkt einen brauchbaren Namensvorschlag.
+1. Mindestens 80 % der PDFs erhalten direkt einen brauchbaren Startpunkt für den Namensvorschlag.
 2. Der Nutzer benötigt pro PDF weniger als 15 Sekunden zur Prüfung.
 3. Wiederkehrende Dokumente werden zuverlässig erkannt.
 4. Es gibt keine dauerhafte Datenhaltung über Konfiguration, Patterns, Regeln und Zielorte hinaus.
 5. Ein privater Dokumenten-Workflow wird vollständig abgedeckt: Eingang über Watchfolder, Prüfung in der Web-UI, Umbenennung, Kopie an Zielorte und konfigurierte Behandlung des Originals.
 
-Ein Namensvorschlag gilt als brauchbar, wenn er:
+Da das MVP rein regelbasiert arbeitet, ist ein vollständiger Vorschlag beim Erstkontakt mit
+einem unbekannten Absender kaum erreichbar — die Beschreibung ist deterministisch am
+schwersten. Der Erfolg bemisst sich daher am **brauchbaren Startpunkt plus schneller
+Bestätigung**, nicht am perfekten Erstvorschlag: Das Tool füllt vor, was es sicher weiß
+(Datum, ggf. Dokumenttyp), der Nutzer ergänzt den Rest in unter 15 Sekunden.
 
-- ein korrektes Datum enthält
-- den passenden Absender enthält
-- den passenden Dokumenttyp enthält
-- eine sinnvolle Beschreibung enthält
+Ein Startpunkt gilt als brauchbar, wenn er:
+
+- mindestens ein korrektes Datum als Vorschlag sichtbar macht
 - einem definierten Naming-Pattern entspricht
+- die sicher erkennbaren Bestandteile (Datum, ggf. Dokumenttyp) korrekt vorbefüllt
+- eine schnelle, fehlerarme Ergänzung der übrigen Bestandteile (Absender, Beschreibung) erlaubt
+
+Bei wiederkehrenden Dokumenten mit eingerichteter Regel werden Absender, Dokumenttyp und
+Beschreibung zusätzlich korrekt vorgeschlagen.
 
 ---
 
@@ -477,23 +475,25 @@ Das Tool sollte daher kurze, aber aussagekräftige Beschreibungsvorschläge erze
 
 ## 18. Offene Fragen
 
-Folgende Punkte sind noch nicht abschließend entschieden und sollten vor oder während der MVP-Umsetzung geklärt werden:
+Die meisten dieser Punkte wurden im MVP-Design entschieden (siehe
+`docs/superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md`). Der Stand:
 
 ### 18.1 Login und Sicherheitsmodell
 
-Es ist offen, ob das MVP einen Login benötigt.
-
-Da das Produkt für das lokale Heimnetz gedacht ist, kann ein Login im MVP möglicherweise entfallen. Dennoch muss geklärt werden, ob ein einfacher lokaler Schutz notwendig ist.
+**Entschieden: kein Login im MVP.** Das Produkt ist für das lokale Heimnetz gedacht; wer das
+Netz erreicht, erreicht das Tool. Die Verantwortung für den Netzzugang liegt beim Betreiber
+und wird in der Doku als Hinweis aufgenommen.
 
 ### 18.2 Konfigurationsspeicher
 
-Der konkrete Speicher für Patterns, Regeln und Zielorte ist noch nicht festgelegt.
-
-Mögliche Optionen sind zum Beispiel Konfigurationsdateien, SQLite oder eine andere einfache lokale Speicherung.
+**Entschieden: YAML-Konfigurationsdatei** (`config.yaml`) im gemounteten Config-Volume.
+Transparent, versionierbar, hand- und UI-editierbar; passt zur Datensparsamkeit.
 
 ### 18.3 KI-Anbindung
 
-Die KI-Anbindung ist pro Installation konfigurierbar. Offen bleibt, welche Schnittstellen initial unterstützt werden sollen und wie klar zwischen regelbasierten und KI-gestützten Vorschlägen unterschieden wird.
+**Entschieden: Das MVP arbeitet rein regelbasiert.** Eine KI-Anbindung ist nicht Teil des MVP,
+wird aber als sauber gekapselter, später implementierbarer Erweiterungspunkt in der
+Vorschlagslogik vorgesehen. Der Kernnutzen bleibt unabhängig von KI.
 
 ### 18.4 OCR als spätere Option
 
@@ -501,16 +501,13 @@ OCR ist nicht Teil des MVP. Es bleibt aber als spätere Option möglich, um gesc
 
 ### 18.5 Detailverhalten bei Hash-Duplikaten
 
-Die grundsätzlichen Nutzeroptionen bei Hash-Duplikaten sind definiert. Detailfragen bleiben offen, zum Beispiel:
-
-- Wie wird der Fundort des Duplikats angezeigt?
-- Werden mehrere Treffer angezeigt?
-- Wie teuer darf die Hash-Prüfung bei vielen Zielordnern sein?
-- Werden Hashwerte zwischengespeichert oder bei Bedarf neu berechnet?
+**Hinfällig:** Die Hash-Duplikaterkennung wurde aus dem MVP gestrichen (siehe 9.8).
 
 ### 18.6 Technische Fehlerausgaben
 
-Es ist offen, wie technische Fehler sichtbar gemacht werden, ohne eine fachliche Verarbeitungshistorie aufzubauen.
+**Entschieden:** Technische Laufzeitfehler werden nach `stdout` geloggt (Container-Logs) und in
+der UI transient am betroffenen Eintrag angezeigt. Unlesbare PDFs landen im `error/`-Ordner.
+Diese Ausgaben sind Betriebs-/Debug-Information, keine fachliche Verarbeitungshistorie.
 
 ---
 
