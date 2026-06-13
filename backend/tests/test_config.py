@@ -62,3 +62,30 @@ def test_non_utf8_file_raises_config_error(tmp_path):
 
     with pytest.raises(ConfigError, match="kann nicht gelesen werden"):
         load_config(path)
+
+
+def test_missing_watchfolder_raises(valid_config, write_config):
+    valid_config["paths"]["watchfolder"] = "/this/does/not/exist"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="watchfolder"):
+        load_config(path)
+
+
+def test_move_without_processed_folder_raises(valid_config, write_config):
+    valid_config["original_handling"] = "move"
+    del valid_config["paths"]["processed_folder"]
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="processed_folder ist erforderlich"):
+        load_config(path)
+
+
+def test_keep_without_processed_folder_is_valid(valid_config, write_config):
+    valid_config["original_handling"] = "keep"
+    del valid_config["paths"]["processed_folder"]
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert cfg.original_handling == "keep"

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, model_validator
 
 
 class ConfigError(Exception):
@@ -45,6 +45,30 @@ class Config(BaseModel):
     # rules are consumed by the analyzer/suggestion engine (Milestone 2);
     # kept opaque here on purpose.
     rules: list[dict] = []
+
+    @model_validator(mode="after")
+    def _check_paths_exist(self) -> "Config":
+        required = [
+            ("watchfolder", self.paths.watchfolder),
+            ("error_folder", self.paths.error_folder),
+        ]
+        for label, folder in required:
+            if not folder.is_dir():
+                raise ValueError(
+                    f"paths.{label} {str(folder)!r} existiert nicht oder ist kein Verzeichnis"
+                )
+        if self.original_handling == "move":
+            processed = self.paths.processed_folder
+            if processed is None:
+                raise ValueError(
+                    "paths.processed_folder ist erforderlich, wenn original_handling: move"
+                )
+            if not processed.is_dir():
+                raise ValueError(
+                    f"paths.processed_folder {str(processed)!r} existiert nicht "
+                    "oder ist kein Verzeichnis"
+                )
+        return self
 
 
 def load_config(path: str | Path) -> Config:
