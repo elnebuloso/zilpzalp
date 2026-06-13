@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 class ConfigError(Exception):
@@ -47,6 +47,32 @@ class Config(BaseModel):
     rules: list[dict] = []
 
 
-def load_config(path: Path) -> Config:
-    data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return Config(**data)
+def load_config(path: str | Path) -> Config:
+    try:
+        raw = Path(path).read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ConfigError(
+            f"Konfigurationsdatei {str(path)!r} kann nicht gelesen werden: {exc}"
+        )
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError as exc:
+        raise ConfigError(
+            f"Konfigurationsdatei {str(path)!r} ist kein gültiges YAML: {exc}"
+        )
+    if not isinstance(data, dict):
+        raise ConfigError(
+            f"Konfigurationsdatei {str(path)!r} muss ein YAML-Mapping enthalten"
+        )
+    try:
+        return Config(**data)
+    except ValidationError as exc:
+        raise ConfigError(_format_validation_error(path, exc))
+
+
+def _format_validation_error(path: str | Path, exc: ValidationError) -> str:
+    lines = [f"Konfigurationsdatei {str(path)!r} ist ungültig:"]
+    for err in exc.errors():
+        loc = ".".join(str(part) for part in err["loc"]) or "(Wurzel)"
+        lines.append(f"  - {loc}: {err['msg']}")
+    return "\n".join(lines)
