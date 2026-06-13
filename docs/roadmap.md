@@ -45,17 +45,17 @@ Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige,
 
 ## Vision-Anpassungen (aus Design-Spec §11)
 
-Folgende Vision-Abschnitte sind durch das MVP-Design zu aktualisieren. Kann als eigener
-kleiner Schritt oder zusammen mit Meilenstein 6 erledigt werden.
+Die folgenden Vision-Abschnitte wurden in Commit `9723008` mit den MVP-Design-Entscheidungen
+synchronisiert.
 
 | Vision-Abschnitt | Änderung | Status |
 |---|---|---|
-| 9.8 / 18.5 (Hash-Duplikaterkennung) | aus MVP gestrichen | 📋 offen |
-| 16.1 (Erfolgskriterium) | präzisiert: brauchbarer Startpunkt + schnelle Bestätigung | 📋 offen |
-| 18.1 (Login) | entschieden: kein Login | 📋 offen |
-| 18.2 (Konfigurationsspeicher) | entschieden: YAML | 📋 offen |
-| 18.3 (KI) | entschieden: MVP rein regelbasiert, KI als Erweiterungspunkt | 📋 offen |
-| 18.6 (technische Fehlerausgaben) | entschieden: stdout-Logs + transiente UI + `error/`-Ordner | 📋 offen |
+| 9.8 / 18.5 (Hash-Duplikaterkennung) | aus MVP gestrichen | ✅ fertig |
+| 16.1 (Erfolgskriterium) | präzisiert: brauchbarer Startpunkt + schnelle Bestätigung | ✅ fertig |
+| 18.1 (Login) | entschieden: kein Login | ✅ fertig |
+| 18.2 (Konfigurationsspeicher) | entschieden: YAML | ✅ fertig |
+| 18.3 (KI) | entschieden: MVP rein regelbasiert, KI als Erweiterungspunkt | ✅ fertig |
+| 18.6 (technische Fehlerausgaben) | entschieden: stdout-Logs + transiente UI + `error/`-Ordner | ✅ fertig |
 
 ---
 
