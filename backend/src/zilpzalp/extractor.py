@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import json
+import tempfile
+from pathlib import Path
 from typing import Any
+
+import opendataloader_pdf
 
 from zilpzalp.document import Block, BlockKind, Document
 
@@ -94,3 +99,26 @@ def document_from_odl(data: Any) -> Document:
     blocks: list[Block] = []
     _walk(data, blocks)
     return Document(blocks=blocks)
+
+
+class ExtractionError(Exception):
+    """PDF lieferte keinen verwertbaren Text (korrupt, leer oder reiner Scan)."""
+
+
+def extract(pdf_path: str | Path) -> Document:
+    pdf_path = Path(pdf_path)
+    with tempfile.TemporaryDirectory() as tmp:
+        opendataloader_pdf.convert(
+            input_path=[str(pdf_path)],
+            output_dir=tmp,
+            format="json",
+        )
+        outputs = list(Path(tmp).glob("*.json"))
+        if not outputs:
+            raise ExtractionError(f"OpenDataLoader erzeugte keine Ausgabe fuer {pdf_path.name!r}")
+        data = json.loads(outputs[0].read_text(encoding="utf-8"))
+    # TemporaryDirectory ist hier bereits geloescht -> kein Volltext bleibt auf Platte.
+    document = document_from_odl(data)
+    if not any(block.text.strip() for block in document.blocks):
+        raise ExtractionError(f"Kein Text im PDF {pdf_path.name!r} gefunden")
+    return document

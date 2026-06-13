@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-from zilpzalp.extractor import document_from_odl
+import pytest
+
+from zilpzalp.extractor import ExtractionError, document_from_odl, extract
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -38,3 +40,16 @@ def test_document_from_odl_table_cells_when_present():
     assert any("15.01.2026" in cell for cell in flat)
     # Der Block-Text enthaelt die Zell-Inhalte (fuer die Volltextsuche spaeter).
     assert "15.01.2026" in table.text
+
+
+@pytest.mark.integration
+def test_extract_real_pdf_returns_document():
+    doc = extract(FIXTURES / "invoice.pdf")
+    full = "\n".join(b.text for b in doc.blocks)
+    assert "15.01.2026" in full
+
+
+@pytest.mark.integration
+def test_extract_pdf_without_text_raises():
+    with pytest.raises(ExtractionError):
+        extract(FIXTURES / "empty.pdf")

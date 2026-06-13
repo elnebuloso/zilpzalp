@@ -28,6 +28,9 @@ packages = ["src/zilpzalp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: benoetigt eine echte JVM (OpenDataLoader); langsam",
+]
 
 [tool.ruff]
 line-length = 100
