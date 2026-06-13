@@ -15,7 +15,9 @@ der Vision.
 
 | Thema | Entscheidung | Begründung |
 |---|---|---|
-| Backend-Stack | **Python + FastAPI** | Stärkstes PDF-Ökosystem (PyMuPDF), OCR/KI später leicht nachrüstbar |
+| Backend-Stack | **Python + FastAPI** | Reifes Daten-/Web-Ökosystem; OCR/KI später leicht nachrüstbar |
+| PDF-Parsing | **OpenDataLoader PDF** (nur lokaler Strukturmodus) | Liefert eine **strukturierte** Analysegrundlage (Überschriften, Tabellenzellen, Lesereihenfolge, Bounding Boxes) statt flachem Text — adressiert direkt das Hauptrisiko „falsches Datum" (§4.3, Vision 17.1). Apache-2.0, läuft 100 % on-device. Preis: Java-Laufzeit im Image (siehe nächste Zeile). |
+| Java-Laufzeit | **Eclipse Temurin 17 JRE (headless)** | OpenDataLoader ist ein Java-Tool; das `pip`-Paket startet pro `convert()` eine JVM (benötigt Java 11+). Temurin = verbreiteter OpenJDK-Build (GPLv2+CE), headless, per Multi-Stage in den Backend-Container kopiert. |
 | Web-UI | **Server-rendered, Jinja2 + HTMX** | Kein Build-Step, ein Container, minimaler Stack für ein 1-Nutzer-Tool |
 | Konfigurationsspeicher | **YAML-Datei** (`config.yaml`) | Transparent, versionierbar, hand- und UI-editierbar; passt zu Datensparsamkeit |
 | Vorschlagslogik MVP | **rein regelbasiert** | Kernnutzen unabhängig von KI (Prinzip 6.2); KI als gekapselter Erweiterungspunkt |
@@ -53,7 +55,7 @@ zilpzalp/
 │   │       ├── config.py      # YAML laden / validieren / speichern
 │   │       ├── watcher.py     # watchdog-Events + initialer Scan
 │   │       ├── queue.py       # In-memory-Register der pending Dokumente
-│   │       ├── extractor.py   # PDF-Textextraktion (PyMuPDF)
+│   │       ├── extractor.py   # OpenDataLoader-Adapter: JVM-Aufruf → Document-Modell
 │   │       ├── analyzer.py    # Datum / Absender / Typ / Keywords / Beschreibung
 │   │       ├── suggestion.py  # Pattern + Regeln → Dateinamen-/Zielordner-Vorschlag
 │   │       ├── processor.py   # Copy an Zielordner + Original-Handling
@@ -75,6 +77,8 @@ zilpzalp/
 - `src`-Layout — verhindert versehentliche Imports aus dem Arbeitsverzeichnis, sauber paketierbar.
 - Templates/static unter `web/` — funktional Teil des Backends, kein eigenes Build-Tooling.
 - `frontend/` erst bei Bedarf (YAGNI) — das MVP braucht ihn nicht.
+- `Dockerfile.backend` bündelt Python **und** eine Temurin-17-JRE (headless) — OpenDataLoader
+  benötigt eine JVM; Details beim Packaging-Meilenstein.
 
 ---
 
@@ -83,8 +87,9 @@ zilpzalp/
 Ein FastAPI-Monolith in einem Container. Intern einzeln testbare Module mit klaren Grenzen.
 
 ```
-Watcher ──► Queue ──► Extractor ──► Analyzer ──► SuggestionEngine
-(watchdog)  (in-mem)   (PyMuPDF)     (Regeln)     (Pattern+Regel)
+Watcher ──► Queue ──► Extractor ─────► Analyzer ──► SuggestionEngine
+(watchdog)  (in-mem)   (OpenDataLoader   (Regeln)     (Pattern+Regel)
+                       → Document)
                                                        │
 ConfigStore (YAML) ◄── alle Module lesen Config        ▼
                                               Web-UI (Jinja2+HTMX)
@@ -97,15 +102,44 @@ ConfigStore (YAML) ◄── alle Module lesen Config        ▼
 |---|---|---|
 | `watcher` | Watchfolder beobachten (watchdog + initialer Scan beim Start), neue PDFs melden | config (Pfade) |
 | `queue` | In-memory-Register der zu prüfenden Dokumente (Status `pending`/`error`) | — |
-| `extractor` | Text aus textbasiertem PDF ziehen (PyMuPDF); erkennt „kein Text" → Fehler | — |
-| `analyzer` | **alle** Datumskandidaten (Regex, mit Kontext/Label), Absender/Typ/Keywords (Regelabgleich), Beschreibungsvorschlag | config (Regeln) |
+| `extractor` | OpenDataLoader-Adapter: PDF → strukturiertes `Document` (JVM-`convert` in Temp-Verzeichnis, JSON zurücklesen, **Temp sofort löschen**); erkennt „kein Text-Element" → Fehler | OpenDataLoader (JVM) |
+| `analyzer` | **alle** Datumskandidaten (Regex über die Block-Texte, mit **strukturgestütztem** Kontext/Label), Absender/Typ/Keywords (Regelabgleich), Beschreibungsvorschlag | config (Regeln) |
 | `suggestion` | Kandidaten + Naming-Pattern → finaler Dateinamen-Vorschlag + Zielordner-Vorschlag | config |
 | `config` | YAML laden/validieren/speichern | Dateisystem |
 | `web` | Jinja2+HTMX: Queue-Liste, Review-View, Config-Verwaltung | queue, suggestion, processor, config |
 | `processor` | Bei Bestätigung: Copy an Zielordner, Original gemäß Config behandeln | config |
 
-**Kern-Designregel:** `analyzer` und `suggestion` kennen weder Dateisystem noch Web — reine
-Funktionen `Text + Config → Vorschlag`. Dadurch sind die fehleranfälligsten Teile isoliert testbar.
+**Kern-Designregel:** `analyzer` und `suggestion` kennen weder Dateisystem noch Web noch die JVM —
+reine Funktionen `Document + Config → Vorschlag`. Der einzige Ort mit Dateisystem + JVM ist
+`extractor`. Dadurch sind die fehleranfälligsten Teile isoliert und ohne PDF/JVM testbar
+(Hand-`Document`-Fixtures).
+
+### 3.1 Dokumentmodell (`Document` / `Block`)
+
+OpenDataLoader liefert die **Rohzutaten**: Textinhalte **und** Layout-Struktur. Es erkennt
+**keine** Datumsangaben, Absender oder Dokumenttypen — diese fachliche Erkennung bleibt
+vollständig in `analyzer` (deterministisch, KI-frei). Der `extractor` normalisiert ODLs JSON in
+ein schlankes, projekteigenes Modell, damit der `analyzer` saubere, dokumentierte Eingaben
+bekommt (kein Streuen von ODL-Stringkeys wie `"bounding box"` durch das kritischste Modul):
+
+```python
+@dataclass(frozen=True)
+class Block:
+    kind: Literal["heading", "paragraph", "table", "list", "caption"]
+    text: str                      # Plaintext des Blocks
+    page: int
+    bbox: tuple[float, float, float, float]   # (links, unten, rechts, oben), PDF-Punkte
+    level: int | None = None       # nur bei heading: Hierarchieebene
+    cells: list[list[str]] | None = None      # nur bei table: Zeilen × Spalten
+
+@dataclass(frozen=True)
+class Document:
+    blocks: list[Block]            # in korrigierter Lesereihenfolge (ODL XY-Cut++)
+```
+
+**Bewusst kein Abstraktions-/Austauschlayer:** Das Modell existiert für saubere Eingaben und
+Testbarkeit, nicht um OpenDataLoader theoretisch ersetzbar zu machen — ODL ist eine erstklassige,
+gesetzte Abhängigkeit (YAGNI gegen spekulative Austauschbarkeit).
 
 ---
 
@@ -119,10 +153,10 @@ Watchfolder
   ▼
 queue: Eintrag "pending" (in-memory)
   ▼
-extractor: Text extrahieren
-  ├─ kein Text / korrupt ──► error/-Ordner verschieben, Status "error"
+extractor: OpenDataLoader (JVM) → Document; Temp-JSON sofort gelöscht
+  ├─ kein Text-Element / korrupt / reiner Scan ohne Textebene ──► error/, Status "error"
   ▼
-analyzer: Datumskandidaten, Absender, Typ, Keywords, Beschreibung
+analyzer: Datumskandidaten (strukturgestütztes Label), Absender, Typ, Keywords, Beschreibung
   ▼
 suggestion: Pattern + Regeln → Dateinamen-Vorschlag + Zielordner-Vorschlag
   ▼
@@ -168,8 +202,11 @@ und die Web-UI:
 - **`analyzer` sammelt ALLE Datumskandidaten**, nicht nur einen. Jeder Kandidat trägt:
   - das normalisierte Datum (`date_format`-konform),
   - den rohen Treffer-Text aus dem PDF,
-  - soweit ableitbar ein Label/Kontext (z. B. „Rechnungsdatum", „fällig am") aus dem
-    umgebenden Text.
+  - soweit ableitbar ein Label/Kontext (z. B. „Rechnungsdatum", „fällig am"), **strukturgestützt**
+    aus dem `Document`: bei einem Treffer in einer Tabellenzelle die Kopf-/Nachbarzelle derselben
+    Zeile, sonst der Text links davor im selben Block bzw. die zugehörige Überschrift. ODLs
+    korrigierte Lesereihenfolge verhindert dabei das falsche Zusammenziehen von Label und Datum
+    über Spaltengrenzen hinweg (typisch bei mehrspaltigen Rechnungen).
 - **Optionaler dedizierter Matcher:** Für Sonderfälle, in denen die eingebaute Erkennung nicht
   greift, kann in der Config ein eigener Datums-Regex mit Label hinterlegt werden
   (`date_patterns`, siehe §5). Diese ergänzen die eingebauten Formate additiv; sie sind
@@ -262,7 +299,7 @@ Ziel: Fehler sichtbar machen, **ohne** eine fachliche Verarbeitungshistorie aufz
 
 | Fehlerart | Behandlung | Persistenz |
 |---|---|---|
-| **Unlesbares/korruptes PDF, kein Text** | Datei → `error/`-Ordner; Queue-Eintrag Status `error` mit Kurzgrund | Nur die Datei in `error/` — keine DB, kein Historien-Log |
+| **Unlesbares/korruptes PDF, kein Text** (inkl. reiner Scan ohne Textebene — kein OCR im MVP) | Datei → `error/`-Ordner; Queue-Eintrag Status `error` mit Kurzgrund | Nur die Datei in `error/` — keine DB, kein Historien-Log |
 | **Technischer Laufzeitfehler** (Copy schlägt fehl, Zielpfad weg, Permission) | nach `stdout` loggen (Container-Logs); in der UI als **transienter** Fehler am Queue-Eintrag | in-memory + Container-Log, keine fachliche Historie |
 | **Config-Fehler** (ungültige YAML, fehlender Pfad) | Beim Start: klare Meldung + Abbruch. Zur Laufzeit nach Edit: Validierungsfehler in der UI, alte Config bleibt aktiv | keine |
 
@@ -280,11 +317,15 @@ Ziel: Fehler sichtbar machen, **ohne** eine fachliche Verarbeitungshistorie aufz
 > „Pipeline" bezeichnet hier ausschließlich den internen Verarbeitungsfluss, **nicht** CI/CD.
 
 - **Unit-Tests (uv + pytest)**, Schwerpunkt auf den reinen, fehleranfälligen Modulen:
-  - `analyzer` — Datumskandidaten (mehrere Formate/Arten, Risiko 17.1), Absender-/Typ-/Keyword-Abgleich
+  - `analyzer` — Datumskandidaten (mehrere Formate/Arten, Risiko 17.1), strukturgestützte
+    Label-Zuordnung, Absender-/Typ-/Keyword-Abgleich; Eingaben sind **hand­gebaute `Document`-Fixtures**
+    (kein PDF, keine JVM im Unit-Test)
   - `suggestion` — Pattern-Rendering, Regelpriorität (erste Übereinstimmung), `preferred_date`, finaler Name
   - `config` — YAML laden/validieren, Fehlerfälle (ungültig, fehlende Pfade)
   - `processor` — Copy + Original-Handling (move/delete/keep) gegen Temp-Verzeichnisse; Namenskonflikt
-  - `extractor` — Text-PDF vs. „kein Text" → Fehlerpfad (kleine Fixture-PDFs)
+  - `extractor` — Text-PDF → `Document` (Mapping aus ODL-JSON), „kein Text-Element" → Fehlerpfad,
+    Temp-Aufräumen (kleine Fixture-PDFs, echter ODL/JVM-Lauf — als langsamer Integrationszweig
+    markiert)
 - **Integrationstest des Verarbeitungsflusses:** Fixture-PDF in Temp-Watchfolder → erkannt →
   analysiert → Vorschlag korrekt → simulierte Bestätigung → landet im Zielordner, Original behandelt.
 - **UI-Tests mit Playwright (Skill):** Queue-Liste zeigt pending PDF, Review-View rendert
@@ -327,6 +368,13 @@ Zusätzlich zu den Nicht-Zielen der Vision (Abschnitt 15):
 - **Keine Hash-Duplikaterkennung** im MVP (siehe Abschnitt 1).
 - **Keine KI-Anbindung** im MVP — nur als gekapselter, später implementierbarer
   Erweiterungspunkt im `analyzer`/`suggestion`-Design vorgesehen.
+- **Nur OpenDataLoaders lokaler Strukturmodus.** Der Hybrid-Modus (OCR für reine Scans,
+  KI-Tabellen-/Bildverständnis über ein zusätzliches lokales KI-Backend) ist bewusst **nicht** im
+  MVP — er bräche die Nicht-Ziele OCR (15, Vision 18.4) und KI (6.2, Vision 18.3) und zöge einen
+  zweiten Dienst in den Betrieb. Bleibt späterer Erweiterungspunkt.
+- **JVM-Abhängigkeit bewusst akzeptiert.** Eine Temurin-17-JRE im Backend-Image und die
+  JVM-Startzeit pro PDF (~1–2 s) sind der bewusst eingegangene Preis für die strukturierte
+  Analysegrundlage; für ein 1-Nutzer-Heimtool unkritisch.
 
 ---
 
