@@ -100,6 +100,31 @@ def _cell_label(cells: list[list[str]], hit: str) -> str | None:
     return None
 
 
+_DOCTYPES = {
+    "rechnung": "Rechnung", "mahnung": "Mahnung", "vertrag": "Vertrag",
+    "bescheid": "Bescheid", "mitteilung": "Mitteilung", "kontoauszug": "Kontoauszug",
+    "angebot": "Angebot", "kuendigung": "Kündigung", "kündigung": "Kündigung",
+}
+
+
+def _detect_sender(document: Document) -> str | None:
+    page1 = [b for b in document.blocks if b.page == 1 and b.text.strip()]
+    if not page1:
+        return None
+    top = max(page1, key=lambda b: b.bbox[3])     # groesster top-Wert = oberster Block
+    return top.text.strip().splitlines()[0].strip()
+
+
+def _detect_doctype(document: Document) -> str | None:
+    headings = [b for b in document.blocks if b.kind == "heading"]
+    for block in headings + document.blocks:       # zuerst Ueberschriften, dann beliebig
+        low = block.text.lower()
+        for key, canonical in _DOCTYPES.items():
+            if key in low:
+                return canonical
+    return None
+
+
 def analyze(document: Document, config: Config) -> Analysis:
     full_text = "\n".join(b.text for b in document.blocks)
     candidates: list[DateCandidate] = []
@@ -127,4 +152,9 @@ def analyze(document: Document, config: Config) -> Analysis:
                             normalized=d.strftime(config.date_format), raw=value, label=dp.label
                         )
                     )
-    return Analysis(date_candidates=candidates, full_text=full_text)
+    return Analysis(
+        date_candidates=candidates,
+        sender=_detect_sender(document),
+        doctype=_detect_doctype(document),
+        full_text=full_text,
+    )

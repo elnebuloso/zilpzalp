@@ -104,3 +104,16 @@ def test_structural_labels_for_multiple_dates(tmp_path):
     assert by_date["2025-12-31"] == "Rechnung"            # Fallback: zugehoerige Ueberschrift
     # §4.3: nichts entfernt, alle drei Kandidaten vorhanden.
     assert len(analysis.date_candidates) == 3
+
+
+def test_sender_and_doctype_heuristics(tmp_path):
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Stadtwerke Musterstadt GmbH", page=1, bbox=(0, 805, 500, 825)),
+        Block(kind="heading", text="Rechnung", page=1, bbox=(0, 760, 200, 780), level=1),
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 700, 500, 720)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+
+    assert analysis.sender == "Stadtwerke Musterstadt GmbH"   # oberster Block auf Seite 1
+    assert analysis.doctype == "Rechnung"                      # Heading aus Doctype-Vokabular
+    assert "Rechnungsdatum: 15.01.2026" in analysis.full_text
