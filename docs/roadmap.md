@@ -1,0 +1,68 @@
+# ZilpZalp — Roadmap
+
+Lebendes Tracking-Dokument für die MVP-Umsetzung. Jeder Meilenstein wird in einer
+eigenen, frischen Session bearbeitet:
+
+1. (falls nötig) **Spec** für den Meilenstein schreiben — verfeinert das master Design-Spec
+2. **Plan** schreiben (bite-sized TDD-Tasks, `superpowers:writing-plans`)
+3. **Umsetzen** (`superpowers:subagent-driven-development` oder `executing-plans`)
+4. In dieser Roadmap als **fertig** markieren und Spec/Plan **mit Commit-SHA** verlinken
+
+Architektur-Referenz für alle Meilensteine ist das master Design-Spec. Einzelne
+Meilenstein-Specs sind optional — nur anlegen, wenn ein Meilenstein über die Architektur-
+Referenz hinaus Detailentscheidungen braucht.
+
+**Status-Legende:** 📋 geplant · ✍️ Spec in Arbeit · 📝 Plan in Arbeit · 🚧 Umsetzung · ✅ fertig
+
+---
+
+## Fundament-Dokumente
+
+| Dokument | Pfad | Status | Commit |
+|---|---|---|---|
+| Produktvision | [docs/vision.md](vision.md) | ✅ fertig | `37a9eac` |
+| MVP Design-Spec (Architektur-Referenz) | [docs/superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md](superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md) | ✅ fertig | `fdd181f` |
+
+---
+
+## Meilensteine
+
+Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige, testbare Software.
+
+| # | Meilenstein | Scope | Spec | Plan | Status | Commit (fertig) |
+|---|---|---|---|---|---|---|
+| 1 | **Backend-Fundament + Config** | uv/pyproject/src-Layout, `config.py` (YAML laden + validieren), Startup-Validierung | — (Design-Spec §2, §5) | _tbd_ | 📋 geplant | — |
+| 2 | **Analyse-Kern** | `extractor` (PyMuPDF, „kein Text"→Fehler), `analyzer` (Datum/Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §5) | _tbd_ | 📋 geplant | — |
+| 3 | **Dateioperationen** | `processor` (Copy an Zielordner, Original-Handling move/delete/keep, Namenskonflikt) | — (Design-Spec §4.1, §6) | _tbd_ | 📋 geplant | — |
+| 4 | **Ingestion** | `watcher` (watchdog-Events + initialer Scan), `queue` (in-memory Register, Pfad-Dedup) | — (Design-Spec §4) | _tbd_ | 📋 geplant | — |
+| 5 | **Web-UI** | FastAPI-Routen, Jinja2+HTMX (Queue-Liste, Review-View, Config-Verwaltung, Zusammenfassung), Playwright-Tests, `docs/ui/` | _tbd (UI-Spec empfohlen)_ | _tbd_ | 📋 geplant | — |
+| 6 | **Endnutzer-Doku + Packaging** | `mkdocs/` (mkdocs-material), `Dockerfile.backend`, `Dockerfile.mkdocs`, `docker-compose.yml` | — (Design-Spec §2, §8) | _tbd_ | 📋 geplant | — |
+
+> **Scope-Ausschluss (gilt durchgängig):** kein CI/CD, keine Build-Automation, kein
+> Deployment, kein Registry/Publishing — Verantwortung beim Betreiber (Design-Spec §10).
+
+---
+
+## Vision-Anpassungen (aus Design-Spec §11)
+
+Folgende Vision-Abschnitte sind durch das MVP-Design zu aktualisieren. Kann als eigener
+kleiner Schritt oder zusammen mit Meilenstein 6 erledigt werden.
+
+| Vision-Abschnitt | Änderung | Status |
+|---|---|---|
+| 9.8 / 18.5 (Hash-Duplikaterkennung) | aus MVP gestrichen | 📋 offen |
+| 16.1 (Erfolgskriterium) | präzisiert: brauchbarer Startpunkt + schnelle Bestätigung | 📋 offen |
+| 18.1 (Login) | entschieden: kein Login | 📋 offen |
+| 18.2 (Konfigurationsspeicher) | entschieden: YAML | 📋 offen |
+| 18.3 (KI) | entschieden: MVP rein regelbasiert, KI als Erweiterungspunkt | 📋 offen |
+| 18.6 (technische Fehlerausgaben) | entschieden: stdout-Logs + transiente UI + `error/`-Ordner | 📋 offen |
+
+---
+
+## Arbeitsweise in frischen Sessions
+
+- **Plan schreiben:** „Schreibe den Plan für Meilenstein N aus der Roadmap." → Agent liest
+  `docs/roadmap.md` + Design-Spec, schreibt `docs/superpowers/plans/YYYY-MM-DD-HHMM-<name>.md`,
+  trägt den Plan-Link + Status `📝`/`🚧` in die Roadmap ein.
+- **Nach Umsetzung:** Status auf `✅` setzen und Spec/Plan-Zeile mit dem finalen Commit-SHA
+  ergänzen.
