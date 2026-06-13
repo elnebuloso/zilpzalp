@@ -27,6 +27,12 @@ class Analysis:
 # --- Eingebaute Datumsformate (laufen immer, ohne Config) ---
 _NUMERIC = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b")
 _ISO = re.compile(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b")
+_MONTHS_DE = {
+    "januar": 1, "februar": 2, "maerz": 3, "märz": 3, "april": 4, "mai": 5,
+    "juni": 6, "juli": 7, "august": 8, "september": 9, "oktober": 10,
+    "november": 11, "dezember": 12,
+}
+_LONG_DE = re.compile(r"\b(\d{1,2})\.?\s+([A-Za-zäöüÄÖÜ]+)\s+(\d{4})\b")
 
 
 def _two_digit_year(value: int) -> int:
@@ -51,6 +57,13 @@ def _numeric_matches(text: str) -> list[tuple[int, int, str, datetime.date]]:
             out.append((m.start(), m.end(), m.group(0), d))
     for m in _ISO.finditer(text):
         d = _valid_date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        if d is not None:
+            out.append((m.start(), m.end(), m.group(0), d))
+    for m in _LONG_DE.finditer(text):
+        month = _MONTHS_DE.get(m.group(2).lower())
+        if month is None:
+            continue
+        d = _valid_date(int(m.group(3)), month, int(m.group(1)))
         if d is not None:
             out.append((m.start(), m.end(), m.group(0), d))
     return out

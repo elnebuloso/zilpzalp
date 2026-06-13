@@ -38,3 +38,15 @@ def test_numeric_dates_are_collected_and_normalized(tmp_path):
     assert "2025-12-31" in normalized
     assert "2020-13-32" not in normalized            # ungueltiges Datum verworfen
     assert all(c.raw for c in analysis.date_candidates)  # roher Treffer-Text erhalten
+
+
+def test_long_form_german_and_two_digit_year(tmp_path):
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Berlin, 5. Maerz 2026", page=1, bbox=(0, 0, 0, 0)),
+        Block(kind="paragraph", text="Vertragsbeginn 01.07.99", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    normalized = [c.normalized for c in analysis.date_candidates]
+
+    assert "2026-03-05" in normalized            # "5. Maerz 2026"
+    assert "1999-07-01" in normalized            # 99 -> 1999 (Pivot 69)
