@@ -19,3 +19,22 @@ def test_document_from_odl_simple_elements():
     assert any(b.kind == "heading" for b in doc.blocks)
     # Blocks tragen 1-indizierte Seitenzahlen.
     assert all(b.page >= 1 for b in doc.blocks)
+
+
+def test_document_from_odl_table_cells_when_present():
+    data = json.loads((FIXTURES / "invoice.odl.json").read_text(encoding="utf-8"))
+    doc = document_from_odl(data)
+
+    tables = [b for b in doc.blocks if b.kind == "table"]
+    if not tables:  # Fixture enthält (noch) keine Tabelle -> Test ist dann nicht aussagekräftig.
+        import pytest
+
+        pytest.skip("Fixture enthaelt keine Tabelle; siehe make_fixtures.py")
+
+    table = tables[0]
+    assert table.cells is not None
+    # Jede Zeile ist eine Liste von Zell-Strings; mindestens eine Zelle traegt ein Datum.
+    flat = [cell for row in table.cells for cell in row]
+    assert any("15.01.2026" in cell for cell in flat)
+    # Der Block-Text enthaelt die Zell-Inhalte (fuer die Volltextsuche spaeter).
+    assert "15.01.2026" in table.text

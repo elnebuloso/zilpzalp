@@ -11,6 +11,8 @@ _KEY_PAGE = "page number"
 _KEY_BBOX = "bounding box"
 _KEY_HEADING_LEVEL = "heading level"
 _KEY_CHILDREN = "kids"  # Falls SCHEMA_NOTES "children"/anderen Namen zeigt: hier anpassen.
+_KEY_ROWS = "rows"        # Liste der Tabellenzeilen
+_KEY_CELLS = "cells"      # Liste der Zellen je Zeile
 
 # ODL-Typ → unser BlockKind. Unbekannte Typen werden übersprungen.
 _KIND_MAP: dict[str, BlockKind] = {
@@ -44,6 +46,30 @@ def _simple_block(node: dict[str, Any], kind: BlockKind) -> Block | None:
     )
 
 
+def _table_cells(node: dict[str, Any]) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for row in node.get(_KEY_ROWS, []) or []:
+        cells = []
+        for cell in row.get(_KEY_CELLS, []) or []:
+            # Eine Zelle kann selbst verschachtelte Text-Knoten haben -> einsammeln.
+            parts: list[Block] = []
+            _walk(cell, parts)
+            inline = (cell.get(_KEY_TEXT) or "").strip()
+            text = inline or " ".join(p.text for p in parts).strip()
+            cells.append(text)
+        if cells:
+            rows.append(cells)
+    return rows
+
+
+def _table_block(node: dict[str, Any]) -> Block | None:
+    cells = _table_cells(node)
+    if not cells:
+        return None
+    text = "\n".join(" ".join(row) for row in cells)
+    return Block(kind="table", text=text, page=int(node.get(_KEY_PAGE, 1)), bbox=_bbox(node), cells=cells)
+
+
 def _walk(node: Any, blocks: list[Block]) -> None:
     if isinstance(node, list):
         for child in node:
@@ -53,7 +79,10 @@ def _walk(node: Any, blocks: list[Block]) -> None:
         return
     kind = _KIND_MAP.get(str(node.get(_KEY_TYPE, "")).lower())
     if kind == "table":
-        return  # Tabellen behandelt Task 5; hier (noch) überspringen, NICHT hineinlaufen.
+        block = _table_block(node)
+        if block is not None:
+            blocks.append(block)
+        return  # nicht zusätzlich in die Zellen hineinlaufen
     if kind is not None:
         block = _simple_block(node, kind)
         if block is not None:
