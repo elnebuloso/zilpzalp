@@ -89,3 +89,20 @@ def test_keep_without_processed_folder_is_valid(valid_config, write_config):
     cfg = load_config(path)
 
     assert cfg.original_handling == "keep"
+
+
+def test_missing_error_folder_raises(valid_config, write_config):
+    valid_config["paths"]["error_folder"] = "/this/does/not/exist"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="error_folder"):
+        load_config(path)
+
+
+def test_move_with_nonexistent_processed_folder_raises(valid_config, write_config):
+    valid_config["original_handling"] = "move"
+    valid_config["paths"]["processed_folder"] = "/this/does/not/exist"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="processed_folder"):
+        load_config(path)
