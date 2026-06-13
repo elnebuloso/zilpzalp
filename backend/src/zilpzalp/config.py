@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ValidationError, model_validator
+from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
 KNOWN_PLACEHOLDERS = {"date", "sender", "doctype", "description"}
 _PLACEHOLDER_RE = re.compile(r"\{([^}]*)\}")
@@ -35,6 +35,15 @@ class Pattern(BaseModel):
 class DatePattern(BaseModel):
     label: str
     regex: str
+
+    @field_validator("regex")
+    @classmethod
+    def _regex_compiles(cls, value: str) -> str:
+        try:
+            re.compile(value)
+        except re.error as exc:
+            raise ValueError(f"ungültiger regulärer Ausdruck {value!r}: {exc}")
+        return value
 
 
 class Config(BaseModel):

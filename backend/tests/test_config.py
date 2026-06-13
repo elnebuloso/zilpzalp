@@ -131,3 +131,31 @@ def test_known_placeholders_are_valid(valid_config, write_config):
     cfg = load_config(path)
 
     assert cfg.default_pattern == "{sender}-{doctype}-{description}-{date}"
+
+
+def test_invalid_date_pattern_regex_raises(valid_config, write_config):
+    valid_config["date_patterns"] = [{"label": "broken", "regex": "(unbalanced"}]
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="ungültiger regulärer Ausdruck"):
+        load_config(path)
+
+
+def test_valid_date_pattern_regex_is_accepted(valid_config, write_config):
+    valid_config["date_patterns"] = [
+        {"label": "leistungsdatum", "regex": r"Leistungsdatum:\s*(\d{2}\.\d{2}\.\d{4})"}
+    ]
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert cfg.date_patterns[0].label == "leistungsdatum"
+
+
+def test_missing_date_patterns_block_is_valid(valid_config, write_config):
+    del valid_config["date_patterns"]
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert cfg.date_patterns == []
