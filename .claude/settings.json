@@ -41,7 +41,17 @@
       "Skill(update-config:*)",
       "Bash(2>&1)",
       "Bash(python -)",
-      "Bash(echo \"---EXIT $?---\")"
+      "Bash(echo \"---EXIT $?---\")",
+      "Bash(cd *)",
+      "Bash(git rev-parse *)",
+      "Bash(git show *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git status*)",
+      "Bash(git fetch*)",
+      "Bash(git branch*)",
+      "Bash(tail *)",
+      "Bash(head *)"
     ]
   }
 }
