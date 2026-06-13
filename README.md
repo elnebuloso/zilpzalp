@@ -22,8 +22,7 @@ backend/src/zilpzalp/. Halte dich strikt an den Scope der Roadmap-Zeile und schl
 aus, was laut Roadmap erst spätere Meilensteine liefern — frag nach, wenn der Scope unklar ist.
 
 Plan speichern als docs/superpowers/plans/YYYY-MM-DD-HHMM-<kurzname>.md, dann die betreffende
-Meilenstein-Zeile in docs/roadmap.md aktualisieren (Plan-Link, Status 📝). Committen.
-Vor jedem push fragen.
+Meilenstein-Zeile in docs/roadmap.md aktualisieren (Plan-Link, Status 📝).
 ````
 
 ## Optimize `.claude/settings.json`
