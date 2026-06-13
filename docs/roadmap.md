@@ -31,7 +31,7 @@ Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige,
 
 | # | Meilenstein | Scope | Spec | Plan | Status | Commit (fertig) |
 |---|---|---|---|---|---|---|
-| 1 | **Backend-Fundament + Config** | uv/pyproject/src-Layout, `config.py` (YAML laden + validieren), Startup-Validierung | — (Design-Spec §2, §5) | [Plan](superpowers/plans/2026-06-13-1506-backend-fundament-config.md) | 📝 Plan in Arbeit | — |
+| 1 | **Backend-Fundament + Config** | uv/pyproject/src-Layout, `config.py` (YAML laden + validieren), Startup-Validierung | — (Design-Spec §2, §5) | [Plan](superpowers/plans/2026-06-13-1506-backend-fundament-config.md) | ✅ fertig | `c6d7478` |
 | 2 | **Analyse-Kern** | `extractor` (PyMuPDF, „kein Text"→Fehler), `analyzer` (**alle** Datumskandidaten, Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §4.3, §5) | _tbd_ | 📋 geplant | — |
 | 3 | **Dateioperationen** | `processor` (Copy an Zielordner, Original-Handling move/delete/keep, Namenskonflikt) | — (Design-Spec §4.1, §6) | _tbd_ | 📋 geplant | — |
 | 4 | **Ingestion** | `watcher` (watchdog-Events + initialer Scan), `queue` (in-memory Register, Pfad-Dedup) | — (Design-Spec §4) | _tbd_ | 📋 geplant | — |
