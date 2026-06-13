@@ -29,5 +29,5 @@ Vor jedem push fragen.
 ## Optimize `.claude/settings.json`
 
 ````shell
-fewer-permission-prompts
+/fewer-permission-prompts
 ````
