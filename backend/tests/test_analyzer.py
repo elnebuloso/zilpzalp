@@ -50,3 +50,34 @@ def test_long_form_german_and_two_digit_year(tmp_path):
 
     assert "2026-03-05" in normalized            # "5. Maerz 2026"
     assert "1999-07-01" in normalized            # 99 -> 1999 (Pivot 69)
+
+
+def test_config_date_patterns_add_labeled_candidates(tmp_path):
+    (tmp_path / "inbox").mkdir(exist_ok=True)
+    (tmp_path / "error").mkdir(exist_ok=True)
+    cfg_file = tmp_path / "config.yaml"
+    cfg_file.write_text(
+        f"""
+paths:
+  watchfolder: {tmp_path / "inbox"}
+  error_folder: {tmp_path / "error"}
+original_handling: keep
+summary_mode: never
+default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+date_format: "%Y-%m-%d"
+date_patterns:
+  - label: leistungsdatum
+    regex: 'Leistungszeitraum bis (\\d{{2}}\\.\\d{{2}}\\.\\d{{4}})'
+""",
+        encoding="utf-8",
+    )
+    from zilpzalp.config import load_config
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Leistungszeitraum bis 31.12.2025", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, load_config(cfg_file))
+
+    leistung = [c for c in analysis.date_candidates if c.label == "leistungsdatum"]
+    assert len(leistung) == 1
+    assert leistung[0].normalized == "2025-12-31"

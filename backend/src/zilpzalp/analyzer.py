@@ -88,4 +88,15 @@ def analyze(document: Document, config: Config) -> Analysis:
             candidates.append(
                 DateCandidate(normalized=d.strftime(config.date_format), raw=hit, label=None)
             )
+        for dp in config.date_patterns:
+            for m in re.finditer(dp.regex, block.text):
+                value = m.group(1) if m.groups() else m.group(0)
+                parsed = _find_dates_in_text(value)
+                if parsed:
+                    _s, _e, hit, d = parsed[0]
+                    candidates.append(
+                        DateCandidate(
+                            normalized=d.strftime(config.date_format), raw=value, label=dp.label
+                        )
+                    )
     return Analysis(date_candidates=candidates, full_text=full_text)
