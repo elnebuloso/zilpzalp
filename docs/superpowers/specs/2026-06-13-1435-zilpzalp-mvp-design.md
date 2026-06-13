@@ -1,0 +1,296 @@
+# ZilpZalp MVP — Technisches Design
+
+Status: Entwurf zur Freigabe
+Datum: 2026-06-13
+Grundlage: [docs/vision.md](../../vision.md)
+
+Dieses Dokument überführt die Produktvision in ein umsetzbares technisches Design für
+das MVP. Es legt Tech-Stack, Projektstruktur, Komponenten, Datenfluss, Konfiguration,
+Fehlerbehandlung und Teststrategie fest und klärt die offenen Fragen aus Abschnitt 18
+der Vision.
+
+---
+
+## 1. Getroffene Grundentscheidungen
+
+| Thema | Entscheidung | Begründung |
+|---|---|---|
+| Backend-Stack | **Python + FastAPI** | Stärkstes PDF-Ökosystem (PyMuPDF), OCR/KI später leicht nachrüstbar |
+| Web-UI | **Server-rendered, Jinja2 + HTMX** | Kein Build-Step, ein Container, minimaler Stack für ein 1-Nutzer-Tool |
+| Konfigurationsspeicher | **YAML-Datei** (`config.yaml`) | Transparent, versionierbar, hand- und UI-editierbar; passt zu Datensparsamkeit |
+| Vorschlagslogik MVP | **rein regelbasiert** | Kernnutzen unabhängig von KI (Prinzip 6.2); KI als gekapselter Erweiterungspunkt |
+| Login / Zugriffsschutz | **kein Login** | Heimnetz-Ausrichtung; Doku-Hinweis zur Netzverantwortung |
+| Hash-Duplikaterkennung | **nicht im MVP** | Komfort, nicht Kern; reduziert MVP-Risiko (streicht Vision 9.8 / 18.5) |
+| Python-Tooling | **uv** | Dependency-/venv-Management, `uv run` / `uv sync`; `pyproject.toml` als Quelle der Wahrheit |
+| Entwicklungsplattform | **WSL2** | Hinweis: Filesystem-Events auf gemounteten Windows-Pfaden (`/mnt/c`) unzuverlässig — native Linux-Pfade bevorzugen |
+| UI-Tests | **Playwright (Skill)** | Browser-getriebene Tests der HTMX-UI |
+
+---
+
+## 2. Projektstruktur (Monorepo, Ordner pro Projektart)
+
+`src` liegt nie auf Root. Auf Root nur Dockerfiles, Compose und Meta-Dateien. Jede
+Projektart hat eine eigene, passend benannte `Dockerfile.<name>`.
+
+```
+zilpzalp/
+├── Dockerfile.backend         # Root: Backend-Image
+├── Dockerfile.mkdocs          # Root: Endnutzer-Doku-Site
+├── docker-compose.yml         # referenziert die passenden Dockerfiles explizit
+├── README.md  LICENSE  CLAUDE.md  .gitattributes  .gitignore
+│
+├── docs/                      # intern / Devs
+│   ├── vision.md
+│   ├── superpowers/specs/     # Design-Specs (dieses Dokument)
+│   └── ui/                    # sprachliche UI-Seitenbeschreibung (entsteht mit der UI)
+│
+├── backend/                   # Projektart 1: Python/FastAPI
+│   ├── pyproject.toml         # Deps + Tooling (ruff, pytest), uv-verwaltet
+│   ├── src/
+│   │   └── zilpzalp/
+│   │       ├── __init__.py
+│   │       ├── main.py        # FastAPI-App, Startup (Watcher starten, Config laden)
+│   │       ├── config.py      # YAML laden / validieren / speichern
+│   │       ├── watcher.py     # watchdog-Events + initialer Scan
+│   │       ├── queue.py       # In-memory-Register der pending Dokumente
+│   │       ├── extractor.py   # PDF-Textextraktion (PyMuPDF)
+│   │       ├── analyzer.py    # Datum / Absender / Typ / Keywords / Beschreibung
+│   │       ├── suggestion.py  # Pattern + Regeln → Dateinamen-/Zielordner-Vorschlag
+│   │       ├── processor.py   # Copy an Zielordner + Original-Handling
+│   │       └── web/
+│   │           ├── routes.py
+│   │           ├── templates/ # *.html (Jinja2)
+│   │           └── static/    # htmx.min.js, style.css
+│   └── tests/                 # spiegelt src/zilpzalp/
+│
+├── mkdocs/                    # Projektart 2: Endnutzer-Doku (mkdocs-material)
+│   ├── mkdocs.yml
+│   └── docs/                  # install.md, usage.md, configuration.md, troubleshooting.md
+│
+└── (frontend/)                # Projektart 3: erst bei Bedarf (separates SPA)
+```
+
+**Begründungen:**
+- Top-Level `backend/` statt `apps/backend/` — bei wenigen Projektarten unnötige Verschachtelung.
+- `src`-Layout — verhindert versehentliche Imports aus dem Arbeitsverzeichnis, sauber paketierbar.
+- Templates/static unter `web/` — funktional Teil des Backends, kein eigenes Build-Tooling.
+- `frontend/` erst bei Bedarf (YAGNI) — das MVP braucht ihn nicht.
+
+---
+
+## 3. Komponenten
+
+Ein FastAPI-Monolith in einem Container. Intern einzeln testbare Module mit klaren Grenzen.
+
+```
+Watcher ──► Queue ──► Extractor ──► Analyzer ──► SuggestionEngine
+(watchdog)  (in-mem)   (PyMuPDF)     (Regeln)     (Pattern+Regel)
+                                                       │
+ConfigStore (YAML) ◄── alle Module lesen Config        ▼
+                                              Web-UI (Jinja2+HTMX)
+                                                       │ Bestätigung
+                                                       ▼
+                                              Processor (Copy + Original-Handling)
+```
+
+| Modul | Verantwortung | Hängt ab von |
+|---|---|---|
+| `watcher` | Watchfolder beobachten (watchdog + initialer Scan beim Start), neue PDFs melden | config (Pfade) |
+| `queue` | In-memory-Register der zu prüfenden Dokumente (Status `pending`/`error`) | — |
+| `extractor` | Text aus textbasiertem PDF ziehen (PyMuPDF); erkennt „kein Text" → Fehler | — |
+| `analyzer` | Datumskandidaten (Regex), Absender/Typ/Keywords (Regelabgleich), Beschreibungsvorschlag | config (Regeln) |
+| `suggestion` | Kandidaten + Naming-Pattern → finaler Dateinamen-Vorschlag + Zielordner-Vorschlag | config |
+| `config` | YAML laden/validieren/speichern | Dateisystem |
+| `web` | Jinja2+HTMX: Queue-Liste, Review-View, Config-Verwaltung | queue, suggestion, processor, config |
+| `processor` | Bei Bestätigung: Copy an Zielordner, Original gemäß Config behandeln | config |
+
+**Kern-Designregel:** `analyzer` und `suggestion` kennen weder Dateisystem noch Web — reine
+Funktionen `Text + Config → Vorschlag`. Dadurch sind die fehleranfälligsten Teile isoliert testbar.
+
+---
+
+## 4. Datenfluss & Zustandsmodell
+
+### 4.1 Datenfluss pro PDF
+
+```
+Watchfolder
+  │ watcher: live über watchdog-Events; initialer Scan nur beim Start
+  ▼
+queue: Eintrag "pending" (in-memory)
+  ▼
+extractor: Text extrahieren
+  ├─ kein Text / korrupt ──► error/-Ordner verschieben, Status "error"
+  ▼
+analyzer: Datumskandidaten, Absender, Typ, Keywords, Beschreibung
+  ▼
+suggestion: Pattern + Regeln → Dateinamen-Vorschlag + Zielordner-Vorschlag
+  ▼
+Web-UI: erscheint in Queue-Liste; Nutzer öffnet Review-View,
+        prüft/korrigiert Felder, wählt Zielordner, sieht finalen Namen
+  ▼
+[optional] Zusammenfassung (summary_mode: always | on_conflict | never)
+  │ Nutzer bestätigt
+  ▼
+processor: Copy an gewählte Zielordner
+  ├─ Namenskonflikt im Ziel ──► Nutzer entscheidet (kein Auto-Suffix)
+  ▼
+Original im Watchfolder gemäß original_handling behandeln (move/delete/keep)
+  ▼
+queue: Eintrag entfernt
+```
+
+### 4.2 Zustandsmodell — bewusst zustandsarm
+
+- **Pending-Dokumente & Analyseergebnisse leben rein in-memory** (im `queue`-Register).
+  Weder Original, Volltext, Vorschläge noch Historie werden auf Platte geschrieben.
+- **Quelle der Wahrheit ist der Watchfolder selbst.** Im Normalbetrieb erkennt der `watcher`
+  neue Dateien **live über watchdog-Events** — der Container läuft durch, kein manueller
+  Neustart nötig. Der initiale Scan beim Start ist nur der Wiederaufbau-Sonderfall
+  (was lag schon da / was ist von vor einem Neustart übrig).
+- **In-Bearbeitung-Korrekturen** leben im Browser/Request bis zur Bestätigung. Kein
+  serverseitiger Entwurf-Speicher.
+- **Idempotenz:** Doppelte Erkennung (Event + Scan) wird über den Dateipfad dedupliziert.
+- **Konsequenz (gewollt):** Der Watchfolder ist Eingang *und* Arbeitsvorrat. Ein PDF
+  verschwindet erst nach bestätigter Verarbeitung oder Verschieben nach `error/`. Ein
+  unbestätigtes PDF taucht nach einem Neustart wieder in der Queue auf.
+
+---
+
+## 5. Konfiguration (`config.yaml`)
+
+Die einzige dauerhafte Datenhaltung. Liegt im gemounteten Config-Volume.
+
+```yaml
+paths:
+  watchfolder: /data/inbox
+  error_folder: /data/error
+  processed_folder: /data/processed   # optional, nur bei original_handling: move
+
+original_handling: move        # move | delete | keep
+summary_mode: on_conflict      # always | on_conflict | never
+
+default_pattern: "{date}__{sender}_{doctype}_{description}"
+date_format: "%Y-%m-%d"
+
+targets:
+  - name: Finanzen
+    path: /targets/finanzen
+    default: false
+  - name: Versicherungen
+    path: /targets/versicherungen
+    default: false
+
+patterns:
+  - name: standard
+    template: "{date}__{sender}_{doctype}_{description}"
+
+rules:
+  - name: Stromrechnung Stadtwerke
+    match:                       # alle Bedingungen müssen passen
+      sender_contains: "Stadtwerke"
+      keywords_any: ["Stromabschlag", "Abschlag"]
+    apply:
+      sender: "Stadtwerke"
+      doctype: "Rechnung"
+      description: "Stromabschlag"
+      pattern: standard
+      preferred_date: rechnungsdatum   # bevorzugtes Datumsfeld
+      targets: ["Finanzen"]
+```
+
+**Designentscheidungen:**
+- **Regeln sind geordnet, erste Übereinstimmung gewinnt** — deterministisch & nachvollziehbar (6.2).
+- **`apply` setzt nur Vorschläge** — der Nutzer bleibt in der Bestätigungsschleife (8.2);
+  eine Regel automatisiert nichts durch.
+- **`preferred_date`** adressiert das Hauptrisiko „falsches Datum" (17.1): die Regel sagt,
+  *welches* erkannte Datum vorgeschlagen wird; alle Kandidaten bleiben in der UI sichtbar.
+- **Beim Start validiert `config`** die Datei (Pflichtpfade existieren, Pattern-Platzhalter
+  bekannt) und bricht mit klarer Fehlermeldung ab, statt halb zu starten.
+
+---
+
+## 6. Fehlerbehandlung (klärt Vision 18.6)
+
+Ziel: Fehler sichtbar machen, **ohne** eine fachliche Verarbeitungshistorie aufzubauen (Prinzip 11).
+
+| Fehlerart | Behandlung | Persistenz |
+|---|---|---|
+| **Unlesbares/korruptes PDF, kein Text** | Datei → `error/`-Ordner; Queue-Eintrag Status `error` mit Kurzgrund | Nur die Datei in `error/` — keine DB, kein Historien-Log |
+| **Technischer Laufzeitfehler** (Copy schlägt fehl, Zielpfad weg, Permission) | nach `stdout` loggen (Container-Logs); in der UI als **transienter** Fehler am Queue-Eintrag | in-memory + Container-Log, keine fachliche Historie |
+| **Config-Fehler** (ungültige YAML, fehlender Pfad) | Beim Start: klare Meldung + Abbruch. Zur Laufzeit nach Edit: Validierungsfehler in der UI, alte Config bleibt aktiv | keine |
+
+**Abgrenzung:**
+- Container-Logs (stdout) sind Betriebs-/Debug-Ausgaben, **keine** produktseitige Dokumenthistorie.
+- Die UI zeigt Fehler **transient** (verschwinden bei Neustart/Rescan), da der Zustand aus dem
+  Watchfolder neu abgeleitet wird.
+- Der `error/`-Ordner ist die einzige dauerhafte Fehlerspur — eine Datei am Rand des Workflows,
+  kein Protokoll.
+
+---
+
+## 7. Teststrategie
+
+> „Pipeline" bezeichnet hier ausschließlich den internen Verarbeitungsfluss, **nicht** CI/CD.
+
+- **Unit-Tests (uv + pytest)**, Schwerpunkt auf den reinen, fehleranfälligen Modulen:
+  - `analyzer` — Datumskandidaten (mehrere Formate/Arten, Risiko 17.1), Absender-/Typ-/Keyword-Abgleich
+  - `suggestion` — Pattern-Rendering, Regelpriorität (erste Übereinstimmung), `preferred_date`, finaler Name
+  - `config` — YAML laden/validieren, Fehlerfälle (ungültig, fehlende Pfade)
+  - `processor` — Copy + Original-Handling (move/delete/keep) gegen Temp-Verzeichnisse; Namenskonflikt
+  - `extractor` — Text-PDF vs. „kein Text" → Fehlerpfad (kleine Fixture-PDFs)
+- **Integrationstest des Verarbeitungsflusses:** Fixture-PDF in Temp-Watchfolder → erkannt →
+  analysiert → Vorschlag korrekt → simulierte Bestätigung → landet im Zielordner, Original behandelt.
+- **UI-Tests mit Playwright (Skill):** Queue-Liste zeigt pending PDF, Review-View rendert
+  Felder/Vorschlag, Bestätigung löst Verarbeitung aus, transiente Fehleranzeige.
+- **Datensparsamkeit verifizieren:** Test, der sicherstellt, dass nach Verarbeitung nichts außer
+  Config + Dateien an Zielorten persistiert (kein Volltext/keine Historie auf Platte).
+
+---
+
+## 8. Dokumentation
+
+| Ort | Zielgruppe | Inhalt |
+|---|---|---|
+| `docs/vision.md`, `docs/superpowers/specs/` | intern / Devs | Produktvision, Architektur, Entscheidungen |
+| `docs/ui/` | UI-Devs | sprachliche, seitenweise Beschreibung der Oberfläche; entsteht mit der UI-Implementierung. Start: `docs/ui/README.md` (Übersicht + Seitenindex), je Seite ein Abschnitt/Datei (`queue.md`, `review-view.md`, `config.md`) |
+| `mkdocs/` | **Endnutzer** | Installations- & Benutzungs-Doku auf Basis von **squidfunk/mkdocs-material**: Installation (Docker Compose, Volumes/Mounts, Watchfolder/Zielordner/Error-Ordner), Bedienung (Review-Workflow), Konfiguration (`config.yaml`), Betrieb & typische Fehlerfälle. Gebaut/serviert via `Dockerfile.mkdocs`. `README.md` verweist hierauf |
+
+---
+
+## 9. Präzisierung des Erfolgskriteriums (Vision 16.1)
+
+Rein regelbasiert ist ein vollständiger Vorschlag (Datum + Absender + Typ + sinnvolle
+Beschreibung) beim **Erstkontakt** mit einem unbekannten Absender kaum erreichbar — die
+Beschreibung ist deterministisch am schwersten (Risiko 17.2).
+
+**Präzisierung:** Erfolg bemisst sich am *brauchbaren Startpunkt plus schneller Bestätigung*,
+nicht am perfekten Erstvorschlag. Das Tool füllt vor, was es sicher weiß (Datum, ggf. Typ),
+der Nutzer ergänzt den Rest in unter 15 Sekunden. Die 80-%-Schwelle bezieht sich auf diesen
+brauchbaren Startpunkt. Vision-Abschnitt 16 wird entsprechend angepasst.
+
+---
+
+## 10. Scope-Ausschlüsse dieses Designs
+
+Zusätzlich zu den Nicht-Zielen der Vision (Abschnitt 15):
+
+- **Kein CI/CD, keine Build-Automation, kein Deployment, kein Registry/Publishing.**
+  Verantwortung liegt beim Betreiber. Das Design liefert nur `Dockerfile.<subprojekt>` und
+  `docker-compose.yml` als Artefakte, nicht deren Automatisierung.
+- **Keine Hash-Duplikaterkennung** im MVP (siehe Abschnitt 1).
+- **Keine KI-Anbindung** im MVP — nur als gekapselter, später implementierbarer
+  Erweiterungspunkt im `analyzer`/`suggestion`-Design vorgesehen.
+
+---
+
+## 11. Auswirkungen auf die Vision
+
+Folgende Vision-Abschnitte sind durch dieses Design zu aktualisieren:
+
+- **9.8 / 18.5 (Hash-Duplikaterkennung):** aus MVP gestrichen.
+- **16.1 (Erfolgskriterium):** präzisiert (Abschnitt 9 hier).
+- **18.1 (Login):** entschieden — kein Login.
+- **18.2 (Konfigurationsspeicher):** entschieden — YAML.
+- **18.3 (KI):** entschieden — MVP rein regelbasiert, KI als Erweiterungspunkt.
+- **18.6 (technische Fehlerausgaben):** entschieden — siehe Abschnitt 6.
