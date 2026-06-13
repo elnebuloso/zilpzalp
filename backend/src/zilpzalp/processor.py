@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from zilpzalp.config import Config
 
@@ -23,7 +24,7 @@ class FileConflictError(ProcessorError):
 @dataclass(frozen=True)
 class ProcessResult:
     copied: list[Path]
-    original_action: str                       # "moved" | "deleted" | "kept"
+    original_action: Literal["moved", "deleted", "kept"]
     original_destination: Path | None = None   # set only for "moved"
 
 

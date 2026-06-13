@@ -1,9 +1,7 @@
 from pathlib import Path
 
-import pytest
-
 from zilpzalp.config import load_config
-from zilpzalp.processor import FileConflictError, ProcessorError, process
+from zilpzalp.processor import process
 
 
 def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
