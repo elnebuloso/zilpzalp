@@ -1,10 +1,12 @@
 """Erzeugt deterministische Test-PDFs. Einmalig per `uv run python` ausführen.
 
 `pypdf` (6.x) hat kein `page.add_text` mehr, daher bauen wir die Seite mit
-reportlab und betten echten, extrahierbaren Text ein. Die drei Datumswerte
-liegen in einer echten reportlab-`Table` (mit Gitterlinien), damit
-OpenDataLoader sie zuverlaessig als `table` erkennt. `empty.pdf` enthaelt
-bewusst keinen Text (simuliert reinen Scan / unlesbar).
+reportlab und betten echten, extrahierbaren Text ein. Die Datumswerte
+erscheinen sowohl als inline-Paragraphen (z.B. `Rechnungsdatum: 15.01.2026`)
+als auch in einer echten reportlab-`Table` (mit Gitterlinien), damit
+OpenDataLoader die Paragraphen als `paragraph` und die Tabelle als `table`
+erkennt. `empty.pdf` enthaelt bewusst keinen Text (simuliert reinen Scan /
+unlesbar).
 """
 from pathlib import Path
 
@@ -23,11 +25,15 @@ def _invoice_pdf(path: Path) -> None:
     story = [
         Paragraph("Stadtwerke Musterstadt GmbH", styles["Normal"]),
         Paragraph("Rechnung", styles["Heading1"]),
-        Spacer(1, 12),
+        Paragraph("Rechnungsdatum: 15.01.2026", styles["Normal"]),
+        Spacer(1, 40),
+        Paragraph("Leistungsdatum: 31.12.2025", styles["Normal"]),
+        Spacer(1, 40),
+        Paragraph("Faellig am: 01.02.2026", styles["Normal"]),
+        Spacer(1, 40),
         Table(
             [
                 ["Rechnungsdatum", "15.01.2026"],
-                ["Leistungsdatum", "31.12.2025"],
                 ["Faellig am", "01.02.2026"],
             ],
             colWidths=[200, 120],

@@ -50,11 +50,11 @@ exakt so verwenden.
 
 ## TABELLEN-Darstellung (Tabelle WURDE erfasst)
 
-Eine echte Tabelle ist im Fixture enthalten (3 Zeilen x 2 Spalten). Aufbau:
+Eine echte Tabelle ist im Fixture enthalten (2 Zeilen x 2 Spalten). Aufbau:
 
 ```
 table (type="table")
-  number of rows: 3
+  number of rows: 2
   number of columns: 2
   rows: [                         <-- Schluessel "rows" (NICHT "kids")
     table row (type="table row")
@@ -88,6 +88,16 @@ Hinweis: Ein reines Spalten-Layout (zwei Texte auf gleicher y-Hoehe per
 `canvas.drawString`) reichte NICHT – ODL fasste das zu einem einzigen
 Paragraph zusammen. Erst eine echte reportlab-`Table` mit Gitterlinien
 (`GRID`) erzeugte verlaesslich die `table`/`table row`/`table cell`-Struktur.
+
+## Inline-Datums-Paragraphen (fuer Task 4)
+
+Zusaetzlich zur Tabelle traegt das Fixture drei inline-Paragraphen mit den
+exakten `content`-Werten `Rechnungsdatum: 15.01.2026`,
+`Leistungsdatum: 31.12.2025` und `Faellig am: 01.02.2026`. WICHTIG: ODL
+verschmilzt direkt aufeinanderfolgende `Paragraph`-Flowables zu EINEM
+Paragraph (auch bei kleinem `Spacer`). Erst grosse vertikale Abstaende
+(`Spacer(1, 40)` zwischen den Zeilen) erzwingen drei getrennte
+`paragraph`-Knoten mit jeweils exaktem `content`.
 
 ## Ausgabe-Datei: Naming & Location (fuer Task 6 glob)
 
