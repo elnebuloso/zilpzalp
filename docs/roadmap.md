@@ -66,3 +66,28 @@ synchronisiert.
   trägt den Plan-Link + Status `📝`/`🚧` in die Roadmap ein.
 - **Nach Umsetzung:** Status auf `✅` setzen und Spec/Plan-Zeile mit dem finalen Commit-SHA
   ergänzen.
+
+### Prompt-Vorlage (pro Meilenstein nur `N`, Name und Scope anpassen)
+
+```
+Schreibe den Implementierungsplan für Meilenstein N (<Name>) aus der Roadmap.
+
+Kontext zuerst lesen: docs/roadmap.md und die Architektur-Referenz
+docs/superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md (die in der
+Roadmap-Zeile genannten §§), plus bereits existierenden Code unter
+backend/src/zilpzalp/, auf dem dieser Meilenstein aufbaut.
+
+Nutze das superpowers:writing-plans Skill. Bite-sized TDD-Tasks, exakte Pfade,
+vollständiger Code/Tests in jedem Schritt. Tech: Python + FastAPI, uv, pytest,
+src-Layout unter backend/src/zilpzalp/.
+
+Scope dieses Meilensteins (nicht mehr): <Scope aus der Roadmap-Zeile + explizite
+Ausschlüsse der Module, die erst spätere Meilensteine bringen>.
+
+Plan speichern als docs/superpowers/plans/YYYY-MM-DD-HHMM-<name>.md, dann in
+docs/roadmap.md die Meilenstein-N-Zeile aktualisieren (Plan-Link, Status 📝).
+Committen. Vor jedem push fragen.
+```
+
+Den `Scope`-Block aus der jeweiligen Roadmap-Zeile übernehmen und um die expliziten
+Ausschlüsse ergänzen — er ist der einzige Teil, der pro Meilenstein wirklich variiert.
