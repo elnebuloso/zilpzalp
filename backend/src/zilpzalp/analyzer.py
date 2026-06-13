@@ -80,13 +80,41 @@ def _find_dates_in_text(text: str) -> list[tuple[int, int, str, datetime.date]]:
     return kept
 
 
+_INLINE_LABEL = re.compile(r"([A-Za-zäöüÄÖÜ][A-Za-zäöüÄÖÜ ]{1,39}?)[:\s]*$")
+
+
+def _inline_label(text_before: str) -> str | None:
+    snippet = text_before.splitlines()[-1] if text_before.splitlines() else text_before
+    m = _INLINE_LABEL.search(snippet.strip())
+    return m.group(1).strip() if m else None
+
+
+def _cell_label(cells: list[list[str]], hit: str) -> str | None:
+    for r, row in enumerate(cells):
+        for c, cell in enumerate(row):
+            if hit in cell:
+                if c > 0 and row[c - 1].strip():
+                    return row[c - 1].strip()          # Nachbarzelle links
+                if r > 0 and cells[0][c].strip():
+                    return cells[0][c].strip()          # Kopfzelle der Spalte
+    return None
+
+
 def analyze(document: Document, config: Config) -> Analysis:
     full_text = "\n".join(b.text for b in document.blocks)
     candidates: list[DateCandidate] = []
+    last_heading: str | None = None
     for block in document.blocks:
-        for _start, _end, hit, d in _find_dates_in_text(block.text):
+        if block.kind == "heading":
+            last_heading = block.text.strip() or last_heading
+        for start, _end, hit, d in _find_dates_in_text(block.text):
+            if block.kind == "table" and block.cells:
+                label = _cell_label(block.cells, hit)
+            else:
+                label = _inline_label(block.text[:start])
+            label = label or last_heading
             candidates.append(
-                DateCandidate(normalized=d.strftime(config.date_format), raw=hit, label=None)
+                DateCandidate(normalized=d.strftime(config.date_format), raw=hit, label=label)
             )
         for dp in config.date_patterns:
             for m in re.finditer(dp.regex, block.text):

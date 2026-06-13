@@ -81,3 +81,26 @@ date_patterns:
     leistung = [c for c in analysis.date_candidates if c.label == "leistungsdatum"]
     assert len(leistung) == 1
     assert leistung[0].normalized == "2025-12-31"
+
+
+def test_structural_labels_for_multiple_dates(tmp_path):
+    doc = Document(blocks=[
+        Block(kind="heading", text="Rechnung", page=1, bbox=(0, 800, 500, 820), level=1),
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 700, 500, 720)),
+        Block(
+            kind="table",
+            text="Faellig am 01.02.2026",
+            page=1,
+            bbox=(0, 600, 500, 660),
+            cells=[["Faellig am", "01.02.2026"]],
+        ),
+        Block(kind="paragraph", text="31.12.2025", page=1, bbox=(0, 500, 500, 520)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    by_date = {c.normalized: c.label for c in analysis.date_candidates}
+
+    assert by_date["2026-01-15"] == "Rechnungsdatum"      # Inline-Text vor dem Treffer
+    assert by_date["2026-02-01"] == "Faellig am"          # Nachbarzelle in der Tabellenzeile
+    assert by_date["2025-12-31"] == "Rechnung"            # Fallback: zugehoerige Ueberschrift
+    # §4.3: nichts entfernt, alle drei Kandidaten vorhanden.
+    assert len(analysis.date_candidates) == 3
