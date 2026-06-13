@@ -32,7 +32,7 @@ Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige,
 | # | Meilenstein | Scope | Spec | Plan | Status | Commit (fertig) |
 |---|---|---|---|---|---|---|
 | 1 | **Backend-Fundament + Config** | uv/pyproject/src-Layout, `config.py` (YAML laden + validieren), Startup-Validierung | — (Design-Spec §2, §5) | [Plan](superpowers/plans/2026-06-13-1506-backend-fundament-config.md) | ✅ fertig | `c6d7478` |
-| 2 | **Analyse-Kern** | `extractor` (OpenDataLoader-Adapter: JVM→`Document`-Modell, Temp-Cleanup, „kein Text-Element"→Fehler), `analyzer` (**alle** Datumskandidaten mit strukturgestütztem Label, Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §3.1, §4.3, §5) | _tbd_ | 📋 geplant | — |
+| 2 | **Analyse-Kern** | `extractor` (OpenDataLoader-Adapter: JVM→`Document`-Modell, Temp-Cleanup, „kein Text-Element"→Fehler), `analyzer` (**alle** Datumskandidaten mit strukturgestütztem Label, Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §3.1, §4.3, §5) | [Plan](superpowers/plans/2026-06-13-1642-analyse-kern.md) | 📝 Plan in Arbeit | — |
 | 3 | **Dateioperationen** | `processor` (Copy an Zielordner, Original-Handling move/delete/keep, Namenskonflikt) | — (Design-Spec §4.1, §6) | _tbd_ | 📋 geplant | — |
 | 4 | **Ingestion** | `watcher` (watchdog-Events + initialer Scan), `queue` (in-memory Register, Pfad-Dedup) | — (Design-Spec §4) | _tbd_ | 📋 geplant | — |
 | 5 | **Web-UI** | FastAPI-Routen, Jinja2+HTMX (Queue-Liste, Review-View mit **auswählbarer Datumsliste** §4.3, Config-Verwaltung, Zusammenfassung), Playwright-Tests, `docs/ui/` | _tbd (UI-Spec empfohlen)_ | _tbd_ | 📋 geplant | — |
