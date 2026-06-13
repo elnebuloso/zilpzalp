@@ -98,7 +98,7 @@ ConfigStore (YAML) ◄── alle Module lesen Config        ▼
 | `watcher` | Watchfolder beobachten (watchdog + initialer Scan beim Start), neue PDFs melden | config (Pfade) |
 | `queue` | In-memory-Register der zu prüfenden Dokumente (Status `pending`/`error`) | — |
 | `extractor` | Text aus textbasiertem PDF ziehen (PyMuPDF); erkennt „kein Text" → Fehler | — |
-| `analyzer` | Datumskandidaten (Regex), Absender/Typ/Keywords (Regelabgleich), Beschreibungsvorschlag | config (Regeln) |
+| `analyzer` | **alle** Datumskandidaten (Regex, mit Kontext/Label), Absender/Typ/Keywords (Regelabgleich), Beschreibungsvorschlag | config (Regeln) |
 | `suggestion` | Kandidaten + Naming-Pattern → finaler Dateinamen-Vorschlag + Zielordner-Vorschlag | config |
 | `config` | YAML laden/validieren/speichern | Dateisystem |
 | `web` | Jinja2+HTMX: Queue-Liste, Review-View, Config-Verwaltung | queue, suggestion, processor, config |
@@ -155,6 +155,31 @@ queue: Eintrag entfernt
   verschwindet erst nach bestätigter Verarbeitung oder Verschieben nach `error/`. Ein
   unbestätigtes PDF taucht nach einem Neustart wieder in der Queue auf.
 
+### 4.3 Umgang mit mehreren Datumsangaben (Kernanforderung)
+
+Dokumente enthalten häufig mehrere Datumsangaben (Rechnungs-, Leistungs-, Fälligkeitsdatum,
+Zahlungsziel, Erstellungsdatum, Zeiträume). Die Wahl des falschen Datums ist das Hauptrisiko
+des Produkts (Vision 17.1). Daraus folgt eine harte Anforderung an `analyzer`, `suggestion`
+und die Web-UI:
+
+- **`analyzer` sammelt ALLE Datumskandidaten**, nicht nur einen. Jeder Kandidat trägt:
+  - das normalisierte Datum (`date_format`-konform),
+  - den rohen Treffer-Text aus dem PDF,
+  - soweit ableitbar ein Label/Kontext (z. B. „Rechnungsdatum", „fällig am") aus dem
+    umgebenden Text.
+- **Die Kandidatenliste wird unverändert bis in die UI durchgereicht.** `suggestion` darf
+  einen Kandidaten als vorausgewählt markieren (per Regel `preferred_date` oder Heuristik),
+  aber **niemals** Kandidaten entfernen, zusammenfassen oder intransparent eines festlegen.
+- **Die Review-View zeigt alle Kandidaten als auswählbare Liste** (z. B. Radio-Buttons), jeweils
+  mit normalisiertem Datum und Kontext. Der Nutzer wählt genau das Datum für den Dateinamen.
+  Eine Vorauswahl ist erlaubt, der Wechsel auf jeden anderen Kandidaten ist jederzeit möglich.
+- **Kein Kandidat gefunden:** Die UI bietet eine manuelle Datumseingabe an.
+- **Testabdeckung (verbindlich):** `analyzer`-Tests müssen Dokumente mit *mehreren* Datumsangaben
+  abdecken und sicherstellen, dass alle gefunden, korrekt normalisiert und (wo möglich) gelabelt
+  werden — sowie dass `preferred_date`/Heuristik nur die Vorauswahl beeinflusst, nie die Menge.
+
+Dies ist eine zentrale Produktanforderung, kein Komfortmerkmal.
+
 ---
 
 ## 5. Konfiguration (`config.yaml`)
@@ -203,8 +228,10 @@ rules:
 - **Regeln sind geordnet, erste Übereinstimmung gewinnt** — deterministisch & nachvollziehbar (6.2).
 - **`apply` setzt nur Vorschläge** — der Nutzer bleibt in der Bestätigungsschleife (8.2);
   eine Regel automatisiert nichts durch.
-- **`preferred_date`** adressiert das Hauptrisiko „falsches Datum" (17.1): die Regel sagt,
-  *welches* erkannte Datum vorgeschlagen wird; alle Kandidaten bleiben in der UI sichtbar.
+- **`preferred_date`** adressiert das Hauptrisiko „falsches Datum" (17.1): die Regel
+  **wählt lediglich einen der erkannten Datumskandidaten vor**. Sie ersetzt oder verbirgt die
+  übrigen Kandidaten nicht — alle bleiben in der UI auswählbar (siehe §4.3). Greift keine Regel,
+  darf eine Heuristik vorauswählen; auch dann bleiben alle Kandidaten sichtbar.
 - **Beim Start validiert `config`** die Datei (Pflichtpfade existieren, Pattern-Platzhalter
   bekannt) und bricht mit klarer Fehlermeldung ab, statt halb zu starten.
 

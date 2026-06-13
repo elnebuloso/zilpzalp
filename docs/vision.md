@@ -207,11 +207,14 @@ Das MVP verarbeitet textbasierte PDFs mit eingebettetem Text.
 
 Die Analyse soll relevante Informationen extrahieren, insbesondere:
 
-- Datumsangaben
+- **alle im Dokument gefundenen Datumsangaben** (ein Dokument enthält häufig mehrere)
 - mögliche Absender
 - mögliche Dokumenttypen
 - relevante Schlüsselwörter
 - mögliche Beschreibungsvorschläge
+
+Die Datumserkennung sammelt bewusst **alle** Datumskandidaten, nicht nur einen. Welches
+Datum für den Dateinamen verwendet wird, entscheidet der Nutzer (siehe 9.3 und 17.1).
 
 OCR ist nicht Teil des MVP.
 
@@ -222,7 +225,7 @@ Die Benutzeroberfläche wird als Web-UI im Browser umgesetzt.
 Pro Dokument soll die Prüfansicht folgende Informationen enthalten:
 
 - PDF-Vorschau
-- erkannte Datumsangaben
+- **alle erkannten Datumsangaben als auswählbare Liste** — siehe unten
 - erkannter oder vorgeschlagener Absender
 - erkannter oder vorgeschlagener Dokumenttyp
 - Beschreibungsvorschlag
@@ -230,6 +233,15 @@ Pro Dokument soll die Prüfansicht folgende Informationen enthalten:
 - finaler Dateiname
 
 Der Nutzer kann die Vorschläge prüfen, korrigieren und bestätigen.
+
+**Auswahl des Datums (Kernanforderung):** Die Prüfansicht zeigt **alle** im Dokument
+gefundenen Datumsangaben als Liste auswählbarer Vorschläge. Jeder Eintrag ist nachvollziehbar
+(erkanntes Datum in normalisierter Form sowie, soweit möglich, ein kurzer Kontext bzw. die
+Fundstelle, z. B. „Rechnungsdatum: 15.01.2026"). Der Nutzer wählt daraus genau das Datum, das
+in den Dateinamen übernommen wird. Ein Vorschlag kann vorausgewählt sein (durch Heuristik oder
+Regel, siehe 8.1 `preferred_date`), aber das Tool darf **niemals** intransparent ein Datum
+festlegen oder die übrigen erkannten Daten verbergen. Findet das Tool keine Datumsangabe,
+kann der Nutzer das Datum manuell eingeben.
 
 ### 9.4 Zielordner
 
@@ -461,7 +473,11 @@ Viele Dokumente enthalten mehrere Datumsangaben, zum Beispiel:
 - Erstellungsdatum
 - Zeitraumangaben
 
-Das Tool muss diese Daten sichtbar machen und darf nicht intransparent ein Datum auswählen. Der Nutzer muss erkennen können, welches Datum für den Dateinamen vorgeschlagen wird.
+Das Tool muss **alle** diese Datumsangaben sichtbar machen und darf nicht intransparent ein
+Datum auswählen. Es legt sie dem Nutzer als auswählbare Vorschläge vor (siehe 9.3); der Nutzer
+wählt das für den Dateinamen relevante Datum bewusst aus. Eine Regel oder Heuristik darf einen
+Eintrag vorauswählen, aber nie die übrigen erkannten Daten ersetzen oder verbergen. Dies ist
+eine zentrale Anforderung des Produkts, kein optionales Komfortmerkmal.
 
 ### 17.2 Ungenaue Beschreibung
 

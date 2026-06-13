@@ -32,10 +32,10 @@ Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige,
 | # | Meilenstein | Scope | Spec | Plan | Status | Commit (fertig) |
 |---|---|---|---|---|---|---|
 | 1 | **Backend-Fundament + Config** | uv/pyproject/src-Layout, `config.py` (YAML laden + validieren), Startup-Validierung | — (Design-Spec §2, §5) | _tbd_ | 📋 geplant | — |
-| 2 | **Analyse-Kern** | `extractor` (PyMuPDF, „kein Text"→Fehler), `analyzer` (Datum/Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §5) | _tbd_ | 📋 geplant | — |
+| 2 | **Analyse-Kern** | `extractor` (PyMuPDF, „kein Text"→Fehler), `analyzer` (**alle** Datumskandidaten, Absender/Typ/Keywords/Beschreibung), `suggestion` (Pattern+Regeln, `preferred_date`, Regelpriorität) | — (Design-Spec §3, §4.3, §5) | _tbd_ | 📋 geplant | — |
 | 3 | **Dateioperationen** | `processor` (Copy an Zielordner, Original-Handling move/delete/keep, Namenskonflikt) | — (Design-Spec §4.1, §6) | _tbd_ | 📋 geplant | — |
 | 4 | **Ingestion** | `watcher` (watchdog-Events + initialer Scan), `queue` (in-memory Register, Pfad-Dedup) | — (Design-Spec §4) | _tbd_ | 📋 geplant | — |
-| 5 | **Web-UI** | FastAPI-Routen, Jinja2+HTMX (Queue-Liste, Review-View, Config-Verwaltung, Zusammenfassung), Playwright-Tests, `docs/ui/` | _tbd (UI-Spec empfohlen)_ | _tbd_ | 📋 geplant | — |
+| 5 | **Web-UI** | FastAPI-Routen, Jinja2+HTMX (Queue-Liste, Review-View mit **auswählbarer Datumsliste** §4.3, Config-Verwaltung, Zusammenfassung), Playwright-Tests, `docs/ui/` | _tbd (UI-Spec empfohlen)_ | _tbd_ | 📋 geplant | — |
 | 6 | **Endnutzer-Doku + Packaging** | `mkdocs/` (mkdocs-material), `Dockerfile.backend`, `Dockerfile.mkdocs`, `docker-compose.yml` | — (Design-Spec §2, §8) | _tbd_ | 📋 geplant | — |
 
 > **Scope-Ausschluss (gilt durchgängig):** kein CI/CD, keine Build-Automation, kein
