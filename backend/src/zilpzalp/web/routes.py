@@ -64,9 +64,17 @@ def _base_context(request: Request, active: str) -> dict:
     }
 
 
+def _safe_next(next: str) -> str:
+    # Only allow same-site absolute paths; reject protocol-relative ("//host")
+    # and backslash-escaped ("/\\host") URLs that browsers treat as external.
+    if next.startswith("/") and not next.startswith(("//", "/\\")):
+        return next
+    return "/"
+
+
 @router.get("/lang/{code}")
 def set_language(code: str, next: str = "/"):
-    target = next if next.startswith("/") else "/"
+    target = _safe_next(next)
     response = RedirectResponse(target, status_code=303)
     if code in SUPPORTED:
         response.set_cookie("lang", code, max_age=31_536_000, samesite="lax")

@@ -253,6 +253,13 @@ def test_set_language_ignores_external_next(client):
     assert response.headers["location"] == "/"
 
 
+def test_set_language_rejects_protocol_relative_next(client):
+    for evil in ("//evil.com", "/\\evil.com"):
+        response = client.get("/lang/en", params={"next": evil}, follow_redirects=False)
+        assert response.status_code == 303
+        assert response.headers["location"] == "/", evil
+
+
 def test_candidate_date_uses_config_date_format(client):
     cfg = app.state.config
     cfg.__dict__["summary_mode"] = "never"
