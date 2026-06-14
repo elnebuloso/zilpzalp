@@ -1,0 +1,35 @@
+site_name: ZilpZalp — Dokumentation
+site_description: Halb-automatische Dokumentenablage mit Mensch in der Schleife
+docs_dir: docs
+
+theme:
+  name: material
+  language: de
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Zu dunklem Modus wechseln
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Zu hellem Modus wechseln
+  features:
+    - navigation.instant
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Übersicht: index.md
+  - Installation: installation.md
+  - Bedienung: bedienung.md
+  - Konfiguration: konfiguration.md
+  - Fehlerbehebung: fehlerbehebung.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables

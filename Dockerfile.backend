@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1
+
+# --- Builder: Dependencies + venv via uv ------------------------------------
+FROM python:3.12-slim AS builder
+
+# uv-Binary aus dem offiziellen Image kopieren (kein pip-Bootstrap nötig).
+COPY --from=ghcr.io/astral-sh/uv:0.9.0 /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0
+
+WORKDIR /app/backend
+
+# Erst nur Lockfiles/Metadaten kopieren → maximaler Layer-Cache bei Dep-Änderungen.
+COPY backend/pyproject.toml backend/uv.lock ./
+COPY backend/src ./src
+
+# Reproduzierbare, dev-freie Installation in /app/backend/.venv
+RUN uv sync --frozen --no-dev
+
+# --- Runtime: schlankes Python + Temurin-JRE (headless) ---------------------
+FROM python:3.12-slim AS runtime
+
+# Headless Temurin-17-JRE aus dem offiziellen Temurin-Image übernehmen.
+# OpenDataLoader startet das gebündelte JAR über `java` aus dem PATH.
+ENV JAVA_HOME=/opt/java/openjdk
+COPY --from=eclipse-temurin:17-jre-jammy /opt/java/openjdk ${JAVA_HOME}
+
+# venv vor System-PATH; Java zusätzlich verfügbar machen.
+ENV PATH="/app/backend/.venv/bin:${JAVA_HOME}/bin:${PATH}"
+
+WORKDIR /app/backend
+
+# Anwendung + venv aus der Builder-Stage übernehmen.
+COPY --from=builder /app/backend/.venv ./.venv
+COPY backend/src ./src
+
+# Config wird als Volume gemountet; Default-Pfad zeigt dorthin.
+ENV ZILPZALP_CONFIG=/config/config.yaml
+
+EXPOSE 8000
+
+# Healthcheck ohne curl: stdlib-urllib gegen /health.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"
+
+CMD ["uvicorn", "zilpzalp.main:app", "--host", "0.0.0.0", "--port", "8000"]

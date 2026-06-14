@@ -1,0 +1,26 @@
+# Python / uv
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+
+# VCS / IDE
+.git/
+.gitignore
+.gitattributes
+.idea/
+
+# Interne Doku & Design (nicht im Laufzeit-Image nötig)
+docs/
+
+# Lokale Compose-Laufzeitdaten (niemals ins Image)
+data/
+config/
+targets/
+
+# Build-Artefakte der Doku-Site
+mkdocs/site/
+
+# Tests werden zur Laufzeit nicht gebraucht
+backend/tests/

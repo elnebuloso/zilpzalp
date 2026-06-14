@@ -2,6 +2,20 @@
 
 Self-hosted PDF renamer with a human in the loop. Zilpzalp watches a folder, reads incoming PDFs, and suggests clean filenames from date, sender and document type — you review, confirm, done. Docker, local, no cloud.
 
+## Documentation & Quickstart
+
+End-user documentation (installation, usage, configuration, troubleshooting) is built
+with mkdocs-material under [`mkdocs/`](mkdocs/) and served as its own container.
+
+```bash
+mkdir -p config data/inbox data/error data/processed targets/finanzen
+cp backend/config.example.yaml config/config.yaml   # then edit the paths
+docker compose up -d --build
+```
+
+- Web UI: <http://localhost:8000>
+- Documentation: <http://localhost:8001>
+
 ## Development
 
 ### Entwicklung: nächsten Meilenstein bearbeiten
