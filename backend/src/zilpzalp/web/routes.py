@@ -185,7 +185,8 @@ def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
 
 def _summary_response(request, entry, filename, target_paths, conflicts,
                       config, form_values):
-    selected = [t for t in config.targets if t.path in target_paths]
+    lang = resolve_language(request)
+    selected = [target for target in config.targets if target.path in target_paths]
     conflict_set = {str(p) for p in conflicts}
     context = {
         "entry": entry,
@@ -193,8 +194,10 @@ def _summary_response(request, entry, filename, target_paths, conflicts,
         "selected": selected,
         "conflict_set": conflict_set,
         "has_conflict": bool(conflicts),
-        "original_label": translate("original." + config.original_handling, resolve_language(request)),
+        "original_label": translate("original." + config.original_handling, lang),
         "form_values": form_values,
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
     }
     return templates.TemplateResponse(request, "_summary_modal.html", context)
 
