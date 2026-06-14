@@ -4,7 +4,7 @@ Sprachliche Beschreibung der Web-Oberfläche: was der Nutzer sieht, welche Funkt
 wie die Seiten zusammenhängen. Diese Beschreibung entsteht in Meilenstein 5a; die Umsetzung
 (Architektur, Routen) wird in 5b gebrainstormt und geplant. Übergeordnete Begründungen stehen im
 [MVP Design-Spec](../superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md); die Design-Vorlage
-liegt unter [docs/ui/design/](ui/design/).
+liegt unter [ui/design/](ui/design/).
 
 ## Grundlegendes Erscheinungsbild
 

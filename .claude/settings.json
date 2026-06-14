@@ -64,7 +64,8 @@
       "Bash(docker build *)",
       "Bash(docker run *)",
       "Bash(echo \"Exit code: $?\")",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(python3 -)"
     ]
   }
 }

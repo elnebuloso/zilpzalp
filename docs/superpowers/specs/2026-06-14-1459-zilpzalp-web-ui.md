@@ -5,7 +5,7 @@ Datum: 2026-06-14
 Meilenstein: 5b (Roadmap-Zeile 5b)
 Grundlagen:
 [MVP Design-Spec](2026-06-13-1435-zilpzalp-mvp-design.md) (§3, §3.1, §4, §4.3, §5, §6, §7) ·
-[docs/ui.md](../../mvp/ui.md) · [5a-Mockups](../../mvp/ui/design/)
+[../../mvp/ui.md](../../mvp/ui.md) · [5a-Mockups](../../mvp/ui/design/)
 
 Dieses Dokument verfeinert das MVP-Design-Spec für die konkrete Web-UI-Umsetzung. Es baut auf
 dem vorhandenen Backend (`queue`, `suggestion`, `processor`, `config`, `analyzer`, `extractor`,
