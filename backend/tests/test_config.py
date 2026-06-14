@@ -1,6 +1,7 @@
 import pytest
+import yaml
 
-from zilpzalp.config import Config, ConfigError, load_config
+from zilpzalp.config import Config, ConfigError, load_config, save_config
 
 
 def test_load_valid_config(valid_config, write_config):
@@ -193,3 +194,37 @@ def test_invalid_summary_mode_raises_config_error(valid_config, write_config):
     with pytest.raises(ConfigError) as exc:
         load_config(path)
     assert "summary_mode" in str(exc.value)
+
+
+def test_save_config_writes_and_returns_parsed(valid_config, write_config):
+    path = write_config(valid_config)
+    updated = dict(valid_config)
+    updated["summary_mode"] = "always"
+    text = yaml.safe_dump(updated, allow_unicode=True)
+
+    config = save_config(path, text)
+
+    assert config.summary_mode == "always"
+    assert path.read_text(encoding="utf-8") == text
+
+
+def test_save_config_rejects_invalid_value_and_keeps_old_file(valid_config, write_config):
+    path = write_config(valid_config)
+    original = path.read_text(encoding="utf-8")
+    bad = dict(valid_config)
+    bad["original_handling"] = "bogus"
+
+    with pytest.raises(ConfigError):
+        save_config(path, yaml.safe_dump(bad, allow_unicode=True))
+
+    assert path.read_text(encoding="utf-8") == original
+
+
+def test_save_config_rejects_invalid_yaml_and_keeps_old_file(valid_config, write_config):
+    path = write_config(valid_config)
+    original = path.read_text(encoding="utf-8")
+
+    with pytest.raises(ConfigError):
+        save_config(path, "paths: [this is not: valid yaml")
+
+    assert path.read_text(encoding="utf-8") == original

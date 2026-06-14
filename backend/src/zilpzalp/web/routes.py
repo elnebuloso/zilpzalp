@@ -1,0 +1,320 @@
+from __future__ import annotations
+
+import datetime
+import re
+from pathlib import Path
+from urllib.parse import quote
+
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import RedirectResponse, Response
+from fastapi.templating import Jinja2Templates
+
+from zilpzalp.config import Config, ConfigError, save_config
+from zilpzalp.processor import FileConflictError, ProcessorError, process
+from zilpzalp.queue import Queue
+from zilpzalp.web.naming import render_filename
+
+router = APIRouter()
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+
+# status key → (German label, badge css class)
+STATUS_META = {
+    "pending": ("wartet", "b-wait"),
+    "analyzing": ("Analyse", "b-ana"),
+    "ready": ("bereit", "b-ready"),
+    "error": ("Fehler", "b-err"),
+}
+
+ORIGINAL_LABEL = {"move": "verschieben", "delete": "löschen", "keep": "behalten"}
+SUMMARY_LABEL = {"always": "immer", "on_conflict": "bei Konflikt", "never": "nie"}
+
+_ISO_DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+
+
+def german_date(value: str | None) -> str:
+    if not value:
+        return "—"
+    m = _ISO_DATE.match(value)
+    if not m:
+        return value
+    return f"{m.group(3)}.{m.group(2)}.{m.group(1)}"
+
+
+templates.env.filters["german_date"] = german_date
+templates.env.globals["STATUS_META"] = STATUS_META
+
+
+def _counts(queue: Queue) -> dict[str, int]:
+    entries = queue.list()
+    return {
+        "ready": sum(e.status == "ready" for e in entries),
+        "analyzing": sum(e.status == "analyzing" for e in entries),
+        "pending": sum(e.status == "pending" for e in entries),
+        "error": sum(e.status == "error" for e in entries),
+    }
+
+
+def _preselected_date(suggestion) -> str | None:
+    if suggestion is None or not suggestion.date_candidates:
+        return None
+    idx = suggestion.preselected_date_index or 0
+    return suggestion.date_candidates[idx].normalized
+
+
+def _recent(queue: Queue, limit: int = 6):
+    return queue.list()[:limit]
+
+
+def _base_context(request: Request, active: str) -> dict:
+    queue: Queue = request.app.state.queue
+    counts = _counts(queue)
+    return {
+        "active": active,
+        "open_count": counts["ready"],
+        "counts": counts,
+        "flash": request.query_params.get("flash"),
+        "flash_kind": request.query_params.get("kind", "ok"),
+    }
+
+
+@router.get("/")
+def overview(request: Request):
+    queue: Queue = request.app.state.queue
+    config = request.app.state.config
+    context = _base_context(request, "overview")
+    context.update(
+        {
+            "recent": _recent(queue),
+            "config": config,
+            "config_path": str(request.app.state.config_path),
+            "original_label": ORIGINAL_LABEL[config.original_handling],
+            "summary_label": SUMMARY_LABEL[config.summary_mode],
+            "preselected_date": _preselected_date,
+        }
+    )
+    return templates.TemplateResponse(request, "overview.html", context)
+
+
+@router.get("/partials/overview")
+def overview_partial(request: Request):
+    queue: Queue = request.app.state.queue
+    context = _base_context(request, "overview")
+    context.update({"recent": _recent(queue), "preselected_date": _preselected_date})
+    return templates.TemplateResponse(request, "_overview.html", context)
+
+
+@router.get("/queue")
+def queue_page(request: Request):
+    queue: Queue = request.app.state.queue
+    context = _base_context(request, "queue")
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    return templates.TemplateResponse(request, "queue.html", context)
+
+
+@router.get("/partials/queue")
+def queue_partial(request: Request):
+    queue: Queue = request.app.state.queue
+    context = _base_context(request, "queue")
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    return templates.TemplateResponse(request, "_queue_list.html", context)
+
+
+@router.get("/review/{entry_id}")
+def review_page(request: Request, entry_id: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready" or entry.suggestion is None:
+        return RedirectResponse("/queue", status_code=303)
+    config = request.app.state.config
+    suggestion = entry.suggestion
+    recommended = {str(p) for p in suggestion.target_paths}
+    context = _base_context(request, "queue")
+    context.update(
+        {
+            "entry": entry,
+            "suggestion": suggestion,
+            "config": config,
+            "recommended": recommended,
+            "ext": entry.path.suffix or ".pdf",
+            "preselected_index": suggestion.preselected_date_index or 0,
+            "original_label": ORIGINAL_LABEL[config.original_handling],
+        }
+    )
+    return templates.TemplateResponse(request, "review.html", context)
+
+
+def _resolve_template(config: Config, pattern_name: str) -> str:
+    for pattern in config.patterns:
+        if pattern.name == pattern_name:
+            return pattern.template
+    return config.default_pattern
+
+
+def _normalize_date(date_kind: str, date_value: str, config: Config) -> str:
+    if date_kind == "manual":
+        try:
+            parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            return ""
+        return parsed.strftime(config.date_format)
+    return date_value
+
+
+def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
+                         description, pattern, targets):
+    config: Config = request.app.state.config
+    date = _normalize_date(date_kind, date_value, config)
+    template = _resolve_template(config, pattern)
+    ext = entry.path.suffix or ".pdf"
+    filename = render_filename(
+        template, date=date, sender=sender, doctype=doctype,
+        description=description, ext=ext,
+    )
+    target_paths = [Path(t) for t in targets]
+    conflicts = [t for t in target_paths if (t / filename).exists()]
+    return config, filename, target_paths, conflicts
+
+
+def _summary_response(request, entry, filename, target_paths, conflicts,
+                      config, form_values):
+    selected = [t for t in config.targets if t.path in target_paths]
+    conflict_set = {str(p) for p in conflicts}
+    context = {
+        "entry": entry,
+        "filename": filename,
+        "selected": selected,
+        "conflict_set": conflict_set,
+        "has_conflict": bool(conflicts),
+        "original_label": ORIGINAL_LABEL[config.original_handling],
+        "form_values": form_values,
+    }
+    return templates.TemplateResponse(request, "_summary_modal.html", context)
+
+
+def _execute(request, entry, filename, target_paths, config):
+    queue: Queue = request.app.state.queue
+    process(entry.path, filename, target_paths, config)
+    queue.remove(entry.path)
+    resp = Response(status_code=200)
+    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(
+        f'„{filename}“ wurde abgelegt.'
+    ) + "&kind=ok"
+    return resp
+
+
+def _execute_guarded(request, entry, filename, target_paths, conflicts, config,
+                     form_values):
+    if conflicts:
+        return _summary_response(
+            request, entry, filename, target_paths, conflicts, config, form_values
+        )
+    try:
+        return _execute(request, entry, filename, target_paths, config)
+    except FileConflictError as exc:
+        # a conflicting file appeared between check and copy; mark its target dir
+        return _summary_response(
+            request, entry, filename, target_paths, [exc.destination.parent],
+            config, form_values
+        )
+    except ProcessorError as exc:
+        return Response(
+            status_code=200,
+            headers={
+                "HX-Redirect": f"/review/{entry.id}?flash="
+                + quote(f"Fehler bei der Ablage: {exc}") + "&kind=err"
+            },
+        )
+
+
+@router.post("/documents/{entry_id}/confirm")
+def confirm(
+    request: Request,
+    entry_id: str,
+    date_kind: str = Form("candidate"),
+    date_value: str = Form(""),
+    sender: str = Form(""),
+    doctype: str = Form(""),
+    description: str = Form(""),
+    pattern: str = Form(""),
+    targets: list[str] = Form(default=[]),
+):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready":
+        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+    form_values = {
+        "date_kind": date_kind, "date_value": date_value, "sender": sender,
+        "doctype": doctype, "description": description, "pattern": pattern,
+        "targets": targets,
+    }
+    config, filename, target_paths, conflicts = _build_request_state(
+        request, entry, date_kind, date_value, sender, doctype, description,
+        pattern, targets,
+    )
+    need_summary = config.summary_mode == "always" or bool(conflicts)
+    if need_summary:
+        return _summary_response(
+            request, entry, filename, target_paths, conflicts, config, form_values
+        )
+    return _execute_guarded(request, entry, filename, target_paths, conflicts,
+                            config, form_values)
+
+
+@router.post("/documents/{entry_id}/execute")
+def execute(
+    request: Request,
+    entry_id: str,
+    date_kind: str = Form("candidate"),
+    date_value: str = Form(""),
+    sender: str = Form(""),
+    doctype: str = Form(""),
+    description: str = Form(""),
+    pattern: str = Form(""),
+    targets: list[str] = Form(default=[]),
+):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready":
+        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+    form_values = {
+        "date_kind": date_kind, "date_value": date_value, "sender": sender,
+        "doctype": doctype, "description": description, "pattern": pattern,
+        "targets": targets,
+    }
+    config, filename, target_paths, conflicts = _build_request_state(
+        request, entry, date_kind, date_value, sender, doctype, description,
+        pattern, targets,
+    )
+    return _execute_guarded(request, entry, filename, target_paths, conflicts,
+                            config, form_values)
+
+
+def _config_context(request: Request, text: str, errors: list[str], saved: bool):
+    context = _base_context(request, "config")
+    context.update({"config_text": text, "errors": errors, "saved": saved})
+    return context
+
+
+@router.get("/config")
+def config_page(request: Request):
+    path = Path(request.app.state.config_path)
+    text = path.read_text(encoding="utf-8")
+    return templates.TemplateResponse(
+        request, "config.html", _config_context(request, text, [], False)
+    )
+
+
+@router.post("/config")
+def config_save(request: Request, text: str = Form(...)):
+    path = Path(request.app.state.config_path)
+    try:
+        config = save_config(path, text)
+    except ConfigError as exc:
+        errors = str(exc).splitlines()
+        return templates.TemplateResponse(
+            request, "config.html", _config_context(request, text, errors, False)
+        )
+    request.app.state.config = config
+    return templates.TemplateResponse(
+        request, "config.html", _config_context(request, text, [], True)
+    )

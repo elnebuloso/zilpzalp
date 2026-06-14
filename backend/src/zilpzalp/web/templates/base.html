@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZilpZalp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="/static/app.js" defer></script>
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-inner">
+        <a class="brand" href="/" style="text-decoration:none;color:inherit">
+          <svg class="brand-mark" viewBox="0 0 26 26" fill="none">
+            <rect x="1" y="1" width="24" height="24" rx="7" fill="var(--accent-bg)" stroke="var(--accent-line)" stroke-width="1"/>
+            <circle cx="13" cy="13" r="6.4" fill="none" stroke="var(--accent)" stroke-width="1.7"/>
+            <circle cx="13" cy="13" r="1.9" fill="var(--accent)"/>
+          </svg>
+          <span class="brand-name">Zilp<span class="z2">Zalp</span></span>
+        </a>
+        <nav class="nav">
+          <a class="nav-item {% if active == 'overview' %}active{% endif %}" href="/">
+            {% if active == 'overview' %}<span class="nav-dot"></span>{% endif %}Übersicht
+          </a>
+          <a class="nav-item {% if active == 'queue' %}active{% endif %}" href="/queue">
+            {% if active == 'queue' %}<span class="nav-dot"></span>{% endif %}Warteschlange
+            {% if open_count and open_count > 0 %}<span class="nav-count">{{ open_count }}</span>{% endif %}
+          </a>
+          <a class="nav-item {% if active == 'config' %}active{% endif %}" href="/config">
+            {% if active == 'config' %}<span class="nav-dot"></span>{% endif %}Konfiguration
+          </a>
+        </nav>
+        <div class="header-spacer"></div>
+        <button class="theme-toggle" data-theme-toggle aria-label="Darstellung umschalten">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="main" id="app-root">
+      {% block content %}{% endblock %}
+    </main>
+
+    <div class="toasts" id="toasts">
+      {% if flash %}{% include "_toast.html" %}{% endif %}
+    </div>
+    <div id="modal-root"></div>
+  </div>
+</body>
+</html>
