@@ -8,10 +8,13 @@ End-user documentation (installation, usage, configuration, troubleshooting) is 
 with mkdocs-material under [`mkdocs/`](mkdocs/) and served as its own container.
 
 ```bash
-mkdir -p config data/inbox data/error data/processed targets/finanzen
-cp backend/config.example.yaml config/config.yaml   # then edit the paths
 docker compose up -d --build
 ```
+
+Compose ships with a ready-to-run demo under [`demo/`](demo/) (mounted as the volumes):
+a sample invoice already sits in the inbox, so a document shows up in the queue right
+away. For real use, edit [`demo/config/config.yaml`](demo/config/config.yaml) and drop
+your own PDFs into `demo/data/inbox` (or repoint the volumes in `docker-compose.yml`).
 
 - Web UI: <http://localhost:8000>
 - Documentation: <http://localhost:8001>

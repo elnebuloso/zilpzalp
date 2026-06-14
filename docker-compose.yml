@@ -9,11 +9,11 @@ services:
     environment:
       ZILPZALP_CONFIG: /config/config.yaml
     volumes:
-      - ./config:/config
-      - ./data/inbox:/data/inbox
-      - ./data/error:/data/error
-      - ./data/processed:/data/processed
-      - ./targets:/targets
+      - ./demo/config:/config
+      - ./demo/data/inbox:/data/inbox
+      - ./demo/data/error:/data/error
+      - ./demo/data/processed:/data/processed
+      - ./demo/targets:/targets
     restart: unless-stopped
 
   docs:
