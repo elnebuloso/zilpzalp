@@ -3,13 +3,28 @@
 Tracking der Weiterentwicklung nach der MVP-Bauphase. Die abgeschlossene
 MVP-Roadmap bleibt unter [mvp/roadmap.md](mvp/roadmap.md) als Verlauf erhalten.
 
-**Pflege-Regel:** Neue Vorhaben sammeln sich unten unter „Ideen / später".
-Sobald ein Vorhaben angegangen wird, wandert es als neue Zeile in die Tabelle
-„Umsetzung" und verschwindet aus der Ideenliste. Die Reihenfolge der Zeilen
-entspricht der Umsetzungsreihenfolge. Bei Abschluss: Status auf ✅ setzen und
-den finalen (Merge-)Commit-SHA eintragen.
+## Pflege-Regel
 
-**Status:** 🚧 in Arbeit · ✅ erledigt
+So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis):
+
+1. **Ideen sammeln:** Neue, noch nicht angegangene Vorhaben kommen als Stichpunkt
+   unter „## Ideen / später".
+2. **Angehen = in die Tabelle:** Sobald ein Vorhaben begonnen wird, wandert es als
+   neue Zeile ans Ende der Tabelle „## Umsetzung" und verschwindet aus der Ideenliste.
+3. **Reihenfolge:** Die Zeilenreihenfolge (Spalte `#`, fortlaufend) entspricht der
+   Umsetzungsreihenfolge.
+4. **Abschluss:** Bei Fertigstellung Status auf ✅ setzen und in der Spalte `Commit`
+   den finalen Commit-SHA eintragen — bei einem zusammengeführten Branch den
+   **Merge-Commit** (analog zur [Roadmap](mvp/roadmap.md)).
+
+**Spalten der Tabelle:**
+
+- `#` — fortlaufende Nummer = Umsetzungsreihenfolge
+- `Art` — `Meilenstein` (großes, mehrteiliges Vorhaben), `Feinschliff` (kleine
+  Politur) oder `Feature` (eigenständige Funktion)
+- `Thema` — kurze Beschreibung, ggf. mit Link auf Detail-Dokument
+- `Status` — 🚧 in Arbeit · ✅ erledigt
+- `Commit` — finaler (Merge-)Commit-SHA, der das Vorhaben abschließt; `—` solange offen
 
 ## Umsetzung
 
