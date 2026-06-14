@@ -51,7 +51,11 @@
       "Bash(git fetch*)",
       "Bash(git branch*)",
       "Bash(tail *)",
-      "Bash(head *)"
+      "Bash(head *)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_close"
     ]
   }
 }
