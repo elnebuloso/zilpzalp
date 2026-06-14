@@ -63,3 +63,26 @@ def test_overview_partial_returns_fragment(client):
 def test_overview_empty_state(client):
     response = client.get("/")
     assert "Die Warteschlange ist leer" in response.text
+
+
+def test_queue_page_lists_ready_document(client):
+    _add_ready(client, "rechnung.pdf")
+    response = client.get("/queue")
+    assert response.status_code == 200
+    body = response.text
+    assert "Warteschlange" in body
+    assert "rechnung.pdf" in body
+    assert "Prüfen" in body
+
+
+def test_queue_partial_returns_fragment(client):
+    _add_ready(client, "rechnung.pdf")
+    response = client.get("/partials/queue")
+    assert response.status_code == 200
+    assert "<html" not in response.text.lower()
+    assert "rechnung.pdf" in response.text
+
+
+def test_queue_empty_state(client):
+    response = client.get("/queue")
+    assert "Keine Dokumente in der Warteschlange" in response.text

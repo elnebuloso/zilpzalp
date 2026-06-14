@@ -93,3 +93,19 @@ def overview_partial(request: Request):
     context = _base_context(request, "overview")
     context.update({"recent": _recent(queue), "preselected_date": _preselected_date})
     return templates.TemplateResponse(request, "_overview.html", context)
+
+
+@router.get("/queue")
+def queue_page(request: Request):
+    queue: Queue = request.app.state.queue
+    context = _base_context(request, "queue")
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    return templates.TemplateResponse(request, "queue.html", context)
+
+
+@router.get("/partials/queue")
+def queue_partial(request: Request):
+    queue: Queue = request.app.state.queue
+    context = _base_context(request, "queue")
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    return templates.TemplateResponse(request, "_queue_list.html", context)
