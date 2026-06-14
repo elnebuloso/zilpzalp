@@ -42,3 +42,5 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Mehrsprachigkeit der UI:** Oberflächentexte aus den Templates lösen und über
   einen Übersetzungs-/i18n-Mechanismus bereitstellen (zunächst Deutsch, weitere
   Sprachen ergänzbar), inkl. Sprachauswahl.
+- **Helm Chart:** Kubernetes-Deployment per Helm Chart vereinfachen (Backend +
+  Doku-Container, Konfiguration und Volumes als Chart-Werte parametrisierbar).
