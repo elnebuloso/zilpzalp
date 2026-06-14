@@ -218,3 +218,36 @@ def test_config_save_invalid_shows_errors_and_keeps_config(client):
     assert response.status_code == 200
     assert "nicht übernommen" in response.text
     assert app.state.config.summary_mode == before
+
+
+def test_language_cookie_switches_nav_to_english(client):
+    response = client.get("/", cookies={"lang": "en"})
+    assert response.status_code == 200
+    body = response.text
+    assert "Overview" in body
+    assert "Operational details" in body
+    assert 'lang="en"' in body
+
+
+def test_default_language_is_german(client):
+    response = client.get("/")
+    assert "Übersicht" in response.text
+    assert 'lang="de"' in response.text
+
+
+def test_set_language_sets_cookie_and_redirects(client):
+    response = client.get("/lang/en?next=/queue", follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"] == "/queue"
+    assert "lang=en" in response.headers.get("set-cookie", "")
+
+
+def test_set_language_rejects_unknown_code(client):
+    response = client.get("/lang/fr", follow_redirects=False)
+    assert response.status_code == 303
+    assert "lang=" not in response.headers.get("set-cookie", "")
+
+
+def test_set_language_ignores_external_next(client):
+    response = client.get("/lang/en?next=https://evil.test", follow_redirects=False)
+    assert response.headers["location"] == "/"

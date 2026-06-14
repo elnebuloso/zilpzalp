@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from zilpzalp.config import Config, ConfigError, save_config
 from zilpzalp.processor import FileConflictError, ProcessorError, process
 from zilpzalp.queue import Queue
+from zilpzalp.web.i18n import SUPPORTED, resolve_language, translate
 from zilpzalp.web.naming import render_filename
 
 router = APIRouter()
@@ -68,13 +69,25 @@ def _recent(queue: Queue, limit: int = 6):
 def _base_context(request: Request, active: str) -> dict:
     queue: Queue = request.app.state.queue
     counts = _counts(queue)
+    lang = resolve_language(request)
     return {
         "active": active,
         "open_count": counts["ready"],
         "counts": counts,
         "flash": request.query_params.get("flash"),
         "flash_kind": request.query_params.get("kind", "ok"),
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
     }
+
+
+@router.get("/lang/{code}")
+def set_language(code: str, next: str = "/"):
+    target = next if next.startswith("/") else "/"
+    response = RedirectResponse(target, status_code=303)
+    if code in SUPPORTED:
+        response.set_cookie("lang", code, max_age=31_536_000, samesite="lax")
+    return response
 
 
 @router.get("/")

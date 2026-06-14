@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,18 +25,23 @@
         </a>
         <nav class="nav">
           <a class="nav-item {% if active == 'overview' %}active{% endif %}" href="/">
-            {% if active == 'overview' %}<span class="nav-dot"></span>{% endif %}Übersicht
+            {% if active == 'overview' %}<span class="nav-dot"></span>{% endif %}{{ t('nav.overview') }}
           </a>
           <a class="nav-item {% if active == 'queue' %}active{% endif %}" href="/queue">
-            {% if active == 'queue' %}<span class="nav-dot"></span>{% endif %}Warteschlange
+            {% if active == 'queue' %}<span class="nav-dot"></span>{% endif %}{{ t('nav.queue') }}
             {% if open_count and open_count > 0 %}<span class="nav-count">{{ open_count }}</span>{% endif %}
           </a>
           <a class="nav-item {% if active == 'config' %}active{% endif %}" href="/config">
-            {% if active == 'config' %}<span class="nav-dot"></span>{% endif %}Konfiguration
+            {% if active == 'config' %}<span class="nav-dot"></span>{% endif %}{{ t('nav.config') }}
           </a>
         </nav>
         <div class="header-spacer"></div>
-        <button class="theme-toggle" data-theme-toggle aria-label="Darstellung umschalten">
+        <div class="lang-switch" role="group" aria-label="{{ t('aria.language') }}">
+          {% for code in ['de', 'en'] %}
+          <a class="lang-opt {% if lang == code %}active{% endif %}" href="/lang/{{ code }}?next={{ request.url.path | urlencode }}">{{ code | upper }}</a>
+          {% endfor %}
+        </div>
+        <button class="theme-toggle" data-theme-toggle aria-label="{{ t('aria.theme_toggle') }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg>
         </button>
       </div>
