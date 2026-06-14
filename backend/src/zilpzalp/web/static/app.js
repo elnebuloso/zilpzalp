@@ -57,6 +57,8 @@
     form.setAttribute("data-init", "1");
 
     var ext = form.getAttribute("data-ext") || ".pdf";
+    var msgDate = form.getAttribute("data-msg-date") || "";
+    var msgTarget = form.getAttribute("data-msg-target") || "";
     var dateKind = form.querySelector("input[name=date_kind]");
     var dateValue = form.querySelector("input[name=date_value]");
     var manualInput = form.querySelector("#manual-date");
@@ -89,8 +91,8 @@
       var ok = !!date && targetCount() > 0;
       confirmBtn.disabled = !ok;
       if (hint) {
-        hint.textContent = !date ? "Bitte ein Datum wählen."
-          : targetCount() === 0 ? "Mindestens einen Zielordner wählen." : "";
+        hint.textContent = !date ? msgDate
+          : targetCount() === 0 ? msgTarget : "";
       }
     }
 
