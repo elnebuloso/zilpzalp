@@ -46,3 +46,10 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
   sichtbar machen — mit Fehlergrund je Eintrag und einer „erneut einreihen"-Aktion,
   statt nur im Dateisystem aufzulaufen.
+- **Lint-Fehler in `test_i18n.py` beheben:** Ungenutzter Import `pytest`
+  ([backend/tests/test_i18n.py:4](../../backend/tests/test_i18n.py#L4)) — vorbestehender
+  Ruff-Fehler (F401), unabhängig vom jeweiligen Feature. Entfernen, damit
+  `ruff check .` projektweit grün ist.
+- **Veralteten Design-Doc korrigieren:** `docs/superpowers/specs/2026-06-14-1459-zilpzalp-web-ui.md:161`
+  sagt noch „`/health` bleibt" — seit Backlog #4 überholt (`/health` entfällt, ersetzt durch
+  `/healthz/*`). Historisches MVP-Dokument an die aktuelle Realität anpassen oder als überholt markieren.
