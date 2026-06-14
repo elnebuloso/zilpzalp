@@ -34,7 +34,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 2 | Feinschliff | Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
 | 3 | Feature | **Mehrsprachigkeit der UI (DE/EN)** — Texte aus Templates/Code lösen, i18n-Mechanismus + Sprachumschalter (Details: [superpowers/specs/2026-06-14-2212-ui-i18n-design.md](superpowers/specs/2026-06-14-2212-ui-i18n-design.md)) | ✅ | `bc3f3c0` |
 | 4 | Feature | **Health-Endpunkte für Kubernetes-Probes** — `/healthz/startup`, `/healthz/ready`, `/healthz/live` mit Komponenten-Status; `/health` entfällt (Details: [superpowers/specs/2026-06-14-2348-health-probes-design.md](superpowers/specs/2026-06-14-2348-health-probes-design.md)) | ✅ | `7630595` |
-| 5 | Feature | **CI-Release-Pipeline (GitHub Actions)** — Auto-Semver aus Conventional Commits via `release-please`, Backend-Image nach Docker Hub `elnebuloso/zilpzalp-backend:vX.Y.Z` (Details: [superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md](superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md)) | 🚧 | — |
+| 5 | Feature | **CI-Release-Pipeline (GitHub Actions)** — Auto-Semver aus Conventional Commits via `release-please`, Backend-Image nach Docker Hub `elnebuloso/zilpzalp-backend:vX.Y.Z` (Details: [superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md](superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md)) | ✅ | `75a6378` |
 
 ## Ideen / später
 
