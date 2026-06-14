@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/elnebuloso/zilpzalp/compare/v0.2.0...v0.2.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **tests:** assert __version__ matches package metadata, not a pinned literal ([0f44e01](https://github.com/elnebuloso/zilpzalp/commit/0f44e014ffc7bf9b91d6d3a580fc209d916cfd15))
+
 ## [0.2.0](https://github.com/elnebuloso/zilpzalp/compare/v0.1.0...v0.2.0) (2026-06-14)
 
 
