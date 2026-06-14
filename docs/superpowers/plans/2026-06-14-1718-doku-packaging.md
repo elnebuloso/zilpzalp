@@ -860,10 +860,10 @@ git commit -m "docs: link end-user documentation and quickstart in README"
 
 ## Task 8: Roadmap auf „fertig" setzen
 
-Nach erfolgreicher Umsetzung Meilenstein #6 in `docs/roadmap.md` abschließen. **Diesen Schritt erst ausführen, wenn alle Tasks 1–7 grün sind und committet wurden.**
+Nach erfolgreicher Umsetzung Meilenstein #6 in `docs/mvp/roadmap.md` abschließen. **Diesen Schritt erst ausführen, wenn alle Tasks 1–7 grün sind und committet wurden.**
 
 **Files:**
-- Modify: `docs/roadmap.md`
+- Modify: `docs/mvp/roadmap.md`
 
 - [ ] **Step 1: Finalen Commit-SHA ermitteln**
 
@@ -872,7 +872,7 @@ Expected: ein Kurz-SHA (z. B. `abc1234`) — der letzte Commit aus Task 7.
 
 - [ ] **Step 2: Roadmap-Zeile #6 aktualisieren**
 
-In `docs/roadmap.md`, ersetze in der Zeile für Meilenstein `| 6 |`:
+In `docs/mvp/roadmap.md`, ersetze in der Zeile für Meilenstein `| 6 |`:
 - die Plan-Spalte `_tbd_` durch
   `[Plan](superpowers/plans/2026-06-14-1718-doku-packaging.md)`
 - den Status `📋 geplant` durch `✅ fertig`
