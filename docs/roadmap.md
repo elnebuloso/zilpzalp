@@ -1,6 +1,10 @@
 # ZilpZalp — Roadmap
 
-Lebendes Tracking-Dokument für die MVP-Umsetzung. Jeder Meilenstein wird in einer
+> **MVP-Bauphase abgeschlossen** (alle Meilensteine ✅). Dieses Dokument bleibt als
+> Verlauf erhalten. Laufende Weiterentwicklung wird in [docs/backlog.md](backlog.md)
+> getrackt.
+
+Tracking-Dokument der MVP-Umsetzung. Jeder Meilenstein wurde in einer
 eigenen, frischen Session bearbeitet:
 
 1. (falls nötig) **Spec** für den Meilenstein schreiben — verfeinert das master Design-Spec

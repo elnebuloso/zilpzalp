@@ -17,7 +17,7 @@
     <div class="dash-stack">
       <div class="card card-pad">
         <h2 class="card-h" style="margin-bottom:6px">Datum wählen</h2>
-        <p class="muted" style="font-size:13px;margin:0 0 16px">Alle im Dokument gefundenen Datumsangaben — nichts wird weggelassen. Eine ist vorgewählt; wechseln Sie bei Bedarf.</p>
+        <p class="muted" style="font-size:13px;margin:0 0 16px">Alle gefundenen Datumsangaben. Eine ist vorgewählt — bei Bedarf wechseln.</p>
         <div class="date-list">
           {% for c in suggestion.date_candidates %}
           <button type="button" class="date-opt {% if loop.index0 == preselected_index %}sel{% endif %}" data-date="{{ c.normalized }}">
@@ -88,8 +88,7 @@
 
     <div class="name-preview">
       <div class="np-box">
-        <h2 class="card-h" style="margin-bottom:4px">Endgültiger Dateiname</h2>
-        <p class="faint" style="font-size:12.5px;margin:0 0 10px">Aktualisiert sich fortlaufend.</p>
+        <h2 class="card-h" style="margin-bottom:10px">Endgültiger Dateiname</h2>
         <div class="np-final" id="np-final"></div>
         <div class="np-meta">
           <div class="np-meta-row"><span class="k">Muster</span><span class="v">{{ suggestion.pattern_name or '—' }}</span></div>

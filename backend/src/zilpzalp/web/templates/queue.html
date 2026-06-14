@@ -3,7 +3,7 @@
 <div class="view-enter">
   <div class="view-head">
     <h1 class="view-title">Warteschlange</h1>
-    <p class="view-sub">Alle Dokumente im überwachten Ordner, die noch nicht bestätigt verarbeitet wurden. Ein Eintrag bleibt sichtbar, bis er bestätigt verarbeitet oder als Fehler aussortiert wurde.</p>
+    <p class="view-sub">Dokumente im überwachten Ordner, die noch nicht bestätigt verarbeitet wurden.</p>
   </div>
   <div hx-get="/partials/queue" hx-trigger="every 2s" hx-swap="innerHTML">
     {% include "_queue_list.html" %}

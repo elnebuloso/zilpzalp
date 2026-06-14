@@ -3,7 +3,7 @@
 <div class="view-enter">
   <div class="view-head">
     <h1 class="view-title">Konfiguration</h1>
-    <p class="view-sub">Die einzige dauerhaft gespeicherte Einstellung — als reiner Text (YAML). Beim Speichern wird mit denselben Regeln wie beim Programmstart geprüft; eine fehlerhafte Eingabe kann den Betrieb nicht stören.</p>
+    <p class="view-sub">Konfiguration als YAML. Wird beim Speichern geprüft.</p>
   </div>
 
   <form class="config-wrap" method="post" action="/config">
@@ -17,12 +17,12 @@
     {% endif %}
 
     <div class="config-bar">
-      {% if saved %}<span class="faint" style="font-size:13px">Gespeichert · gilt für künftig hinzukommende Dokumente</span>{% else %}<span class="faint" style="font-size:13px">Gilt für künftig hinzukommende Dokumente.</span>{% endif %}
+      {% if saved %}<span class="faint" style="font-size:13px">Gespeichert</span>{% endif %}
       <div class="spacer"></div>
       <button class="btn primary" type="submit">Speichern &amp; prüfen</button>
     </div>
 
-    <p class="faint" style="font-size:12.5px;margin-top:4px;line-height:1.6">Eine geänderte Konfiguration gilt für künftig hinzukommende Dokumente. Bereits ausgewertete Einträge behalten ihren Vorschlag; für eine Neubewertung das Dokument erneut in den überwachten Ordner legen.</p>
+    <p class="faint" style="font-size:12.5px;margin-top:4px;line-height:1.6">Gilt für neu hinzukommende Dokumente; bereits ausgewertete behalten ihren Vorschlag. Für eine Neubewertung erneut in den überwachten Ordner legen.</p>
   </form>
 </div>
 {% endblock %}
