@@ -270,3 +270,35 @@ def test_candidate_date_uses_config_date_format(client):
     names = [p.name for p in target.iterdir()]
     # Candidate date now formatted via config.date_format (15.01.2026), not raw ISO.
     assert any(name.startswith("15.01.2026") for name in names), names
+
+
+def test_flash_message_is_localized_to_english(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+        cookies={"lang": "en"},
+    )
+
+    assert response.status_code == 200
+    redirect = response.headers.get("HX-Redirect", "")
+    assert "has+been+filed" in redirect or "has%20been%20filed" in redirect
+
+
+def test_summary_modal_is_localized_to_english(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "always"
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+        cookies={"lang": "en"},
+    )
+
+    assert response.status_code == 200
+    assert "Summary" in response.text
+    assert "Execute" in response.text

@@ -123,6 +123,7 @@ def review_page(request: Request, entry_id: str):
     suggestion = entry.suggestion
     recommended = {str(p) for p in suggestion.target_paths}
     context = _base_context(request, "queue")
+    lang = context["lang"]
     context.update(
         {
             "entry": entry,
@@ -131,7 +132,7 @@ def review_page(request: Request, entry_id: str):
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
             "preselected_index": suggestion.preselected_date_index or 0,
-            "original_label": translate("original." + config.original_handling, resolve_language(request)),
+            "original_label": translate("original." + config.original_handling, lang),
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
@@ -156,6 +157,8 @@ def _normalize_date(date_value: str, config: Config) -> str:
 
 def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
                          description, pattern, targets):
+    # date_kind is kept for form round-trip (stored in form_values) but is not
+    # used for normalization — both candidate and manual dates arrive as ISO.
     config: Config = request.app.state.config
     date = _normalize_date(date_value, config)
     template = _resolve_template(config, pattern)
@@ -190,12 +193,12 @@ def _summary_response(request, entry, filename, target_paths, conflicts,
 
 def _execute(request, entry, filename, target_paths, config):
     queue: Queue = request.app.state.queue
+    lang = resolve_language(request)
     process(entry.path, filename, target_paths, config)
     queue.remove(entry.path)
+    message = translate("toast.filed", lang, filename=filename)
     resp = Response(status_code=200)
-    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(
-        f'„{filename}“ wurde abgelegt.'
-    ) + "&kind=ok"
+    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(message) + "&kind=ok"
     return resp
 
 
@@ -214,11 +217,12 @@ def _execute_guarded(request, entry, filename, target_paths, conflicts, config,
             config, form_values
         )
     except ProcessorError as exc:
+        message = translate("toast.file_error", resolve_language(request), error=str(exc))
         return Response(
             status_code=200,
             headers={
                 "HX-Redirect": f"/review/{entry.id}?flash="
-                + quote(f"Fehler bei der Ablage: {exc}") + "&kind=err"
+                + quote(message) + "&kind=err"
             },
         )
 
