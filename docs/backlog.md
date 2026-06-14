@@ -33,6 +33,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 1 | Meilenstein | **MVP** — Backend-Fundament, Analyse-Kern, Dateioperationen, Ingestion, Web-UI, Doku + Packaging (Details: [mvp/roadmap.md](mvp/roadmap.md)) | ✅ | `eb516c5` |
 | 2 | Feinschliff | Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
 | 3 | Feature | **Mehrsprachigkeit der UI (DE/EN)** — Texte aus Templates/Code lösen, i18n-Mechanismus + Sprachumschalter (Details: [superpowers/specs/2026-06-14-2212-ui-i18n-design.md](superpowers/specs/2026-06-14-2212-ui-i18n-design.md)) | ✅ | `bc3f3c0` |
+| 4 | Feature | **Health-Endpunkte für Kubernetes-Probes** — `/healthz/startup`, `/healthz/ready`, `/healthz/live` mit Komponenten-Status; `/health` entfällt (Details: [superpowers/specs/2026-06-14-2348-health-probes-design.md](superpowers/specs/2026-06-14-2348-health-probes-design.md)) | 🚧 | — |
 
 ## Ideen / später
 
@@ -45,6 +46,3 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
   sichtbar machen — mit Fehlergrund je Eintrag und einer „erneut einreihen"-Aktion,
   statt nur im Dateisystem aufzulaufen.
-- **Health-Endpunkte für Kubernetes-Probes:** Separate Endpunkte für
-  `startupProbe`, `readinessProbe` und `livenessProbe` bereitstellen (ergänzt
-  Helm-Chart & CI-Pipeline fürs Container-Deployment).
