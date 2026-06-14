@@ -28,7 +28,7 @@
                 {% if c.label %}<span class="date-ctx"><span class="ctx-label">{{ c.label }}</span></span>{% endif %}
               </span>
               {% if c.snippet %}
-              <span class="date-snippet" style="display:block">„{{ c.snippet.split(c.raw)[0] }}<mark>{{ c.raw }}</mark>{{ c.snippet.split(c.raw)[1] if c.raw in c.snippet else '' }}"</span>
+              <span class="date-snippet" style="display:block">„{{ c.snippet.split(c.raw)[0] }}<mark>{{ c.raw }}</mark>{{ c.raw.join(c.snippet.split(c.raw)[1:]) }}"</span>
               {% endif %}
             </span>
           </button>

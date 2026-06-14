@@ -210,10 +210,11 @@ def _execute_guarded(request, entry, filename, target_paths, conflicts, config,
         )
     try:
         return _execute(request, entry, filename, target_paths, config)
-    except FileConflictError:
-        # a conflicting file appeared between check and copy
+    except FileConflictError as exc:
+        # a conflicting file appeared between check and copy; mark its target dir
         return _summary_response(
-            request, entry, filename, target_paths, [entry.path], config, form_values
+            request, entry, filename, target_paths, [exc.destination.parent],
+            config, form_values
         )
     except ProcessorError as exc:
         return Response(
