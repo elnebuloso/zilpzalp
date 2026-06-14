@@ -102,3 +102,13 @@ def test_remove_deletes_entry(tmp_path):
 
     assert q.get(pdf) is None
     assert q.list() == []
+
+
+def test_mark_error_on_unknown_path_is_noop(tmp_path):
+    pdf = tmp_path / "ghost.pdf"
+    q = Queue()
+
+    q.mark_error(pdf, "kein Text-Element")
+
+    assert q.get(pdf) is None
+    assert q.list() == []

@@ -73,10 +73,10 @@ class Queue:
         key = self._key(path)
         with self._lock:
             entry = self._entries.get(key)
-            entry_id = entry.id if entry is not None else uuid.uuid4().hex
-            self._entries[key] = QueueEntry(
-                id=entry_id, path=key, status="error", error_reason=reason
-            )
+            if entry is not None:
+                self._entries[key] = replace(
+                    entry, status="error", suggestion=None, error_reason=reason
+                )
 
     def remove(self, path: Path) -> None:
         key = self._key(path)
