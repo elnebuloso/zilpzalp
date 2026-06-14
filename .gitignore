@@ -5,3 +5,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 backend/config.yaml
+
+# Lokale Compose-Laufzeitordner (nicht versionieren)
+/data/
+/config/
+/targets/

@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: zilpzalp-backend
+    ports:
+      - "8000:8000"
+    environment:
+      ZILPZALP_CONFIG: /config/config.yaml
+    volumes:
+      - ./config:/config
+      - ./data/inbox:/data/inbox
+      - ./data/error:/data/error
+      - ./data/processed:/data/processed
+      - ./targets:/targets
+    restart: unless-stopped
+
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.mkdocs
+    image: zilpzalp-docs
+    ports:
+      - "8001:80"
+    restart: unless-stopped
