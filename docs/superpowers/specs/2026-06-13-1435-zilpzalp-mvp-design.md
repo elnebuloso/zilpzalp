@@ -340,7 +340,7 @@ Ziel: Fehler sichtbar machen, **ohne** eine fachliche Verarbeitungshistorie aufz
 | Ort | Zielgruppe | Inhalt |
 |---|---|---|
 | `docs/vision.md`, `docs/superpowers/specs/` | intern / Devs | Produktvision, Architektur, Entscheidungen |
-| `docs/ui/` | UI-Devs | sprachliche, seitenweise Beschreibung der Oberfläche; entsteht mit der UI-Implementierung. Start: `docs/ui/README.md` (Übersicht + Seitenindex), je Seite ein Abschnitt/Datei (`queue.md`, `review-view.md`, `config.md`) |
+| `docs/ui.md` | UI-Devs | eine einzige, rein sprachliche Beschreibung der Oberfläche (was der Nutzer sieht, Funktionen, Seitenführung); entsteht mit der UI-Implementierung |
 | `mkdocs/` | **Endnutzer** | Installations- & Benutzungs-Doku auf Basis von **squidfunk/mkdocs-material**: Installation (Docker Compose, Volumes/Mounts, Watchfolder/Zielordner/Error-Ordner), Bedienung (Review-Workflow), Konfiguration (`config.yaml`), Betrieb & typische Fehlerfälle. Gebaut/serviert via `Dockerfile.mkdocs`. `README.md` verweist hierauf |
 
 ---

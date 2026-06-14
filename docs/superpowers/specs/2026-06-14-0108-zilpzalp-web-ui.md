@@ -222,17 +222,14 @@ Laufzeit für neue Jobs greifen. Templates/Static werden über `Jinja2Templates`
 
 ---
 
-## 6. `docs/ui/` (Liefergegenstand)
+## 6. `docs/ui.md` (Liefergegenstand)
 
-Sprachliche, seitenweise Beschreibung (Design-Spec §8):
-
-- `docs/ui/README.md` — Übersicht, Navigation, Seitenindex, gemeinsame Muster (App-Shell,
-  Status-Badges, transiente Banner, HTMX-Polling, Theme).
-- `docs/ui/dashboard.md` — Dashboard / Startseite.
-- `docs/ui/queue.md` — Warteschlange.
-- `docs/ui/review-view.md` — Review-View inkl. Datumsliste (§4.3) und Live-Vorschau.
-- `docs/ui/summary.md` — Zusammenfassung & Konfliktbehandlung.
-- `docs/ui/config.md` — Roh-YAML-Editor & Validierung.
+Eine einzige, rein sprachliche Beschreibung der Oberfläche (Design-Spec §8) in
+[`docs/ui.md`](../../ui.md): was der Nutzer sieht, welche Funktionen es gibt und wie die Seiten
+zusammenhängen — ohne HTML/Technikdetails. Inhaltlich abgedeckt: Erscheinungsbild & Theme,
+wiederkehrende Elemente (Status, Aktualisierung, Meldungen, Bestätigungsprinzip), die Bereiche
+Übersicht, Warteschlange, Prüfungsansicht (inkl. Datumsliste §4.3), Zusammenfassung/Konflikt und
+Konfiguration sowie die Wege zwischen den Seiten. Wird mit der Implementierung aktuell gehalten.
 
 ---
 
