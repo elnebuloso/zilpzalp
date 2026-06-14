@@ -1,7 +1,7 @@
 {% if not entries %}
   <div class="empty">
-    <div class="e-title">Keine Dokumente in der Warteschlange</div>
-    <div class="e-sub">Sobald eine Datei im überwachten Ordner liegt, erscheint sie hier von allein.</div>
+    <div class="e-title">{{ t('queue.empty_title') }}</div>
+    <div class="e-sub">{{ t('queue.empty_sub') }}</div>
   </div>
 {% else %}
   <div class="qlist">
@@ -11,19 +11,19 @@
       <div class="qfile">
         <div class="qfile-name">{{ entry.path.name }}</div>
         {% if entry.status == 'ready' %}
-          <div class="qfile-prev"><span class="chip mono">{{ preselected_date(entry.suggestion) | german_date }}</span><span class="sep">·</span><span class="chip">{{ entry.suggestion.sender }}</span><span class="sep">·</span><span class="chip">{{ entry.suggestion.doctype }}</span></div>
+          <div class="qfile-prev"><span class="chip mono">{{ preselected_date(entry.suggestion) }}</span><span class="sep">·</span><span class="chip">{{ entry.suggestion.sender }}</span><span class="sep">·</span><span class="chip">{{ entry.suggestion.doctype }}</span></div>
         {% elif entry.status == 'error' %}
           <div class="qfile-prev" style="color: var(--st-err)">{{ entry.error_reason }}</div>
         {% elif entry.status == 'analyzing' %}
-          <div class="qfile-prev">wird ausgewertet …</div>
+          <div class="qfile-prev">{{ t('queue.analyzing') }}</div>
         {% else %}
-          <div class="qfile-prev">wartet auf Analyse</div>
+          <div class="qfile-prev">{{ t('queue.waiting') }}</div>
         {% endif %}
       </div>
-      <span class="badge {{ STATUS_META[entry.status][1] }}"><span class="dot"></span>{{ STATUS_META[entry.status][0] }}</span>
+      <span class="badge {{ STATUS_BADGE[entry.status] }}"><span class="dot"></span>{{ t('status.' ~ entry.status) }}</span>
       <div style="width:92px;display:flex;justify-content:flex-end">
         {% if entry.status == 'ready' %}
-          <a class="btn sm primary" href="/review/{{ entry.id }}">Prüfen
+          <a class="btn sm primary" href="/review/{{ entry.id }}">{{ t('action.review') }}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
         {% endif %}

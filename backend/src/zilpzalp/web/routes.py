@@ -18,16 +18,13 @@ from zilpzalp.web.naming import render_filename
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
-# status key → (German label, badge css class)
-STATUS_META = {
-    "pending": ("wartet", "b-wait"),
-    "analyzing": ("Analyse", "b-ana"),
-    "ready": ("bereit", "b-ready"),
-    "error": ("Fehler", "b-err"),
+# status key → badge css class (labels live in the i18n catalogs as status.<key>)
+STATUS_BADGE = {
+    "pending": "b-wait",
+    "analyzing": "b-ana",
+    "ready": "b-ready",
+    "error": "b-err",
 }
-
-ORIGINAL_LABEL = {"move": "verschieben", "delete": "löschen", "keep": "behalten"}
-SUMMARY_LABEL = {"always": "immer", "on_conflict": "bei Konflikt", "never": "nie"}
 
 _ISO_DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
 
@@ -42,7 +39,7 @@ def german_date(value: str | None) -> str:
 
 
 templates.env.filters["german_date"] = german_date
-templates.env.globals["STATUS_META"] = STATUS_META
+templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
 
 
 def _counts(queue: Queue) -> dict[str, int]:
@@ -100,8 +97,6 @@ def overview(request: Request):
             "recent": _recent(queue),
             "config": config,
             "config_path": str(request.app.state.config_path),
-            "original_label": ORIGINAL_LABEL[config.original_handling],
-            "summary_label": SUMMARY_LABEL[config.summary_mode],
             "preselected_date": _preselected_date,
         }
     )
@@ -150,7 +145,7 @@ def review_page(request: Request, entry_id: str):
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
             "preselected_index": suggestion.preselected_date_index or 0,
-            "original_label": ORIGINAL_LABEL[config.original_handling],
+            "original_label": translate("original." + config.original_handling, resolve_language(request)),
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
@@ -198,7 +193,7 @@ def _summary_response(request, entry, filename, target_paths, conflicts,
         "selected": selected,
         "conflict_set": conflict_set,
         "has_conflict": bool(conflicts),
-        "original_label": ORIGINAL_LABEL[config.original_handling],
+        "original_label": translate("original." + config.original_handling, resolve_language(request)),
         "form_values": form_values,
     }
     return templates.TemplateResponse(request, "_summary_modal.html", context)

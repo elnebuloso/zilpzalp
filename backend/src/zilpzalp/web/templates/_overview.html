@@ -3,22 +3,22 @@
     {% for kind, var in [('ready','--st-ready'),('analyzing','--st-ana'),('pending','--st-wait'),('error','--st-err')] %}
     <div class="counter" style="--c: var({{ var }})">
       <div class="c-num" style="color: {% if counts[kind] > 0 %}var({{ var }}){% else %}var(--text-3){% endif %}">{{ counts[kind] }}</div>
-      <div class="c-label"><span class="c-tag" style="color: var({{ var }})"><span class="dot"></span><span>{{ STATUS_META[kind][0] }}</span></span></div>
+      <div class="c-label"><span class="c-tag" style="color: var({{ var }})"><span class="dot"></span><span>{{ t('status.' ~ kind) }}</span></span></div>
     </div>
     {% endfor %}
   </div>
 
   <div class="card card-pad" style="margin-top: var(--gap)">
     <div class="section-head">
-      <h3>Jüngste Dokumente</h3>
-      <a class="link" href="/queue">Alle anzeigen
+      <h3>{{ t('overview.recent') }}</h3>
+      <a class="link" href="/queue">{{ t('overview.show_all') }}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
     {% if not recent %}
       <div class="empty">
-        <div class="e-title">Die Warteschlange ist leer</div>
-        <div class="e-sub">Neue Dokumente erscheinen hier, sobald sie im überwachten Ordner liegen.</div>
+        <div class="e-title">{{ t('overview.empty_title') }}</div>
+        <div class="e-sub">{{ t('overview.empty_sub') }}</div>
       </div>
     {% else %}
       <div class="preview-list">
@@ -29,17 +29,17 @@
             <div class="pi-name">{{ entry.path.name }}</div>
             <div class="pi-sub">
               {% if entry.status == 'ready' %}
-                {{ preselected_date(entry.suggestion) | german_date }} · {{ entry.suggestion.sender }} · {{ entry.suggestion.doctype }}
+                {{ preselected_date(entry.suggestion) }} · {{ entry.suggestion.sender }} · {{ entry.suggestion.doctype }}
               {% elif entry.status == 'error' %}
                 <span style="color: var(--st-err)">{{ entry.error_reason }}</span>
-              {% elif entry.status == 'analyzing' %}wird ausgewertet …
-              {% else %}wartet auf Analyse{% endif %}
+              {% elif entry.status == 'analyzing' %}{{ t('queue.analyzing') }}
+              {% else %}{{ t('queue.waiting') }}{% endif %}
             </div>
           </div>
           {% if entry.status == 'ready' %}
-            <a class="btn sm primary" href="/review/{{ entry.id }}">Prüfen</a>
+            <a class="btn sm primary" href="/review/{{ entry.id }}">{{ t('action.review') }}</a>
           {% else %}
-            <span class="badge {{ STATUS_META[entry.status][1] }}"><span class="dot"></span>{{ STATUS_META[entry.status][0] }}</span>
+            <span class="badge {{ STATUS_BADGE[entry.status] }}"><span class="dot"></span>{{ t('status.' ~ entry.status) }}</span>
           {% endif %}
         </div>
         {% endfor %}
