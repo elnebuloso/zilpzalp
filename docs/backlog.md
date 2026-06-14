@@ -32,6 +32,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 |---|-----|-------|--------|--------|
 | 1 | Meilenstein | **MVP** — Backend-Fundament, Analyse-Kern, Dateioperationen, Ingestion, Web-UI, Doku + Packaging (Details: [mvp/roadmap.md](mvp/roadmap.md)) | ✅ | `eb516c5` |
 | 2 | Feinschliff | Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
+| 3 | Feature | **Mehrsprachigkeit der UI (DE/EN)** — Texte aus Templates/Code lösen, i18n-Mechanismus + Sprachumschalter (Details: [superpowers/specs/2026-06-14-2212-ui-i18n-design.md](superpowers/specs/2026-06-14-2212-ui-i18n-design.md)) | 🚧 | `—` |
 
 ## Ideen / später
 
@@ -39,9 +40,6 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Docker-Hub-Namespace releasen, mit Semantic Versioning (Tags → semver,
   z. B. `vX.Y.Z`). Löst den durchgängigen MVP-Scope-Ausschluss „kein CI/CD"
   ([mvp/roadmap.md](mvp/roadmap.md)) bewusst als Post-MVP-Schritt ab.
-- **Mehrsprachigkeit der UI:** Oberflächentexte aus den Templates lösen und über
-  einen Übersetzungs-/i18n-Mechanismus bereitstellen (zunächst Deutsch, weitere
-  Sprachen ergänzbar), inkl. Sprachauswahl.
 - **Helm Chart:** Kubernetes-Deployment per Helm Chart vereinfachen (Backend +
   Doku-Container, Konfiguration und Volumes als Chart-Werte parametrisierbar).
 - **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
