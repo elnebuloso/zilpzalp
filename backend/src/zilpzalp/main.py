@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from zilpzalp.config import load_config
 from zilpzalp.queue import Queue
 from zilpzalp.watcher import Watcher
+from zilpzalp.web.health import router as health_router
 from zilpzalp.web.routes import router
 from zilpzalp.worker import Worker
 
@@ -49,6 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="ZilpZalp", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 app.include_router(router)
+app.include_router(health_router)
 
 
 @app.get("/health")
