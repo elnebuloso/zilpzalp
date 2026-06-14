@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from zilpzalp.web import i18n
 
 LOCALES = Path(i18n.__file__).parent / "locales"
