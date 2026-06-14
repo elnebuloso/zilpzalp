@@ -5,11 +5,17 @@ MVP-Roadmap bleibt unter [mvp/roadmap.md](mvp/roadmap.md) als Verlauf erhalten.
 
 **Status:** 📋 offen · 🚧 in Arbeit · ✅ erledigt
 
+## Umgesetzte Meilensteine
+
+| Meilenstein | Status | Commit |
+|---|---|---|
+| **MVP** — Backend-Fundament, Analyse-Kern, Dateioperationen, Ingestion, Web-UI, Doku + Packaging (Details: [mvp/roadmap.md](mvp/roadmap.md)) | ✅ | `eb516c5` |
+
 ## Feinschliff
 
 | Thema | Status | Commit |
 |---|---|---|
-| Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | — |
+| Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
 
 ## Ideen / später
 
