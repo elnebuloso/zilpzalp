@@ -24,6 +24,7 @@ def get_config_path() -> Path:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.started = False
     config_path = get_config_path()
     config = load_config(config_path)
     app.state.config = config
@@ -36,9 +37,11 @@ async def lifespan(app: FastAPI):
     watcher = Watcher(config.paths.watchfolder, worker.submit)
     app.state.watcher = watcher
     watcher.start()
+    app.state.started = True
     try:
         yield
     finally:
+        app.state.started = False
         watcher.stop()
         worker.stop()
 
