@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import re
 from pathlib import Path
 from urllib.parse import quote
 
@@ -26,19 +25,6 @@ STATUS_BADGE = {
     "error": "b-err",
 }
 
-_ISO_DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
-
-
-def german_date(value: str | None) -> str:
-    if not value:
-        return "—"
-    m = _ISO_DATE.match(value)
-    if not m:
-        return value
-    return f"{m.group(3)}.{m.group(2)}.{m.group(1)}"
-
-
-templates.env.filters["german_date"] = german_date
 templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
 
 
@@ -158,20 +144,20 @@ def _resolve_template(config: Config, pattern_name: str) -> str:
     return config.default_pattern
 
 
-def _normalize_date(date_kind: str, date_value: str, config: Config) -> str:
-    if date_kind == "manual":
-        try:
-            parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
-        except ValueError:
-            return ""
-        return parsed.strftime(config.date_format)
-    return date_value
+def _normalize_date(date_value: str, config: Config) -> str:
+    # Both candidate and manual dates arrive as ISO (YYYY-MM-DD); the rename
+    # format always comes from config.date_format.
+    try:
+        parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+    except ValueError:
+        return ""
+    return parsed.strftime(config.date_format)
 
 
 def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
                          description, pattern, targets):
     config: Config = request.app.state.config
-    date = _normalize_date(date_kind, date_value, config)
+    date = _normalize_date(date_value, config)
     template = _resolve_template(config, pattern)
     ext = entry.path.suffix or ".pdf"
     filename = render_filename(

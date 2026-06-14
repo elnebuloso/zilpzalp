@@ -251,3 +251,22 @@ def test_set_language_rejects_unknown_code(client):
 def test_set_language_ignores_external_next(client):
     response = client.get("/lang/en?next=https://evil.test", follow_redirects=False)
     assert response.headers["location"] == "/"
+
+
+def test_candidate_date_uses_config_date_format(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    cfg.__dict__["date_format"] = "%d.%m.%Y"  # in-memory override for this test
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path, date_kind="candidate", date_value="2026-01-15"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    target = Path(cfg.targets[0].path)
+    names = [p.name for p in target.iterdir()]
+    # Candidate date now formatted via config.date_format (15.01.2026), not raw ISO.
+    assert any(name.startswith("15.01.2026") for name in names), names
