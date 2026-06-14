@@ -12,11 +12,13 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app/backend
 
-# Erst nur Lockfiles/Metadaten kopieren → maximaler Layer-Cache bei Dep-Änderungen.
+# Erst nur Lockfiles/Metadaten kopieren → Dependency-Layer bleibt gecacht, solange
+# sich pyproject.toml/uv.lock nicht ändern (Quelländerungen invalidieren ihn nicht).
 COPY backend/pyproject.toml backend/uv.lock ./
-COPY backend/src ./src
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Reproduzierbare, dev-freie Installation in /app/backend/.venv
+# Dann den Quellcode kopieren und nur noch das (editable) Projekt selbst installieren.
+COPY backend/src ./src
 RUN uv sync --frozen --no-dev
 
 # --- Runtime: schlankes Python + Temurin-JRE (headless) ---------------------

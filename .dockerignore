@@ -11,8 +11,8 @@
 .gitattributes
 .idea/
 
-# Interne Doku & Design (nicht im Laufzeit-Image nötig)
-docs/
+# Interne Doku & Design (nur Root-Level docs/; mkdocs/docs/ bleibt im Build-Kontext)
+/docs/
 
 # Lokale Compose-Laufzeitdaten (niemals ins Image)
 data/
