@@ -51,8 +51,3 @@ app = FastAPI(title="ZilpZalp", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 app.include_router(router)
 app.include_router(health_router)
-
-
-@app.get("/health")
-def health() -> dict:
-    return {"status": "ok"}

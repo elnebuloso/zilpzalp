@@ -7,17 +7,6 @@ from zilpzalp.config import ConfigError
 from zilpzalp.main import CONFIG_ENV, app
 
 
-def test_health_with_valid_config(valid_config, write_config, monkeypatch):
-    path = write_config(valid_config)
-    monkeypatch.setenv(CONFIG_ENV, str(path))
-
-    with TestClient(app) as client:
-        response = client.get("/health")
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
 def test_config_available_on_app_state(valid_config, write_config, monkeypatch):
     path = write_config(valid_config)
     monkeypatch.setenv(CONFIG_ENV, str(path))
