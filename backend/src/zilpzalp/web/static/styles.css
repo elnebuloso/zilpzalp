@@ -476,3 +476,13 @@ input[type="date"].input { font-family: var(--font-mono); }
   .header-inner { gap: 14px; padding: 12px 16px; }
   .main { padding: 24px 16px 70px; }
 }
+
+/* Language switcher */
+.lang-switch { display: flex; gap: 2px; margin-right: 8px; }
+.lang-opt {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+  padding: 4px 8px; border-radius: 6px;
+  color: var(--text-3); text-decoration: none;
+}
+.lang-opt:hover { color: var(--text); }
+.lang-opt.active { color: var(--accent); background: var(--accent-bg); }

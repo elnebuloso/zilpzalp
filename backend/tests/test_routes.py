@@ -218,3 +218,94 @@ def test_config_save_invalid_shows_errors_and_keeps_config(client):
     assert response.status_code == 200
     assert "nicht übernommen" in response.text
     assert app.state.config.summary_mode == before
+
+
+def test_language_cookie_switches_nav_to_english(client):
+    response = client.get("/", cookies={"lang": "en"})
+    assert response.status_code == 200
+    body = response.text
+    assert "Overview" in body
+    assert "Operational details" in body
+    assert 'lang="en"' in body
+
+
+def test_default_language_is_german(client):
+    response = client.get("/")
+    assert "Übersicht" in response.text
+    assert 'lang="de"' in response.text
+
+
+def test_set_language_sets_cookie_and_redirects(client):
+    response = client.get("/lang/en?next=/queue", follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"] == "/queue"
+    assert "lang=en" in response.headers.get("set-cookie", "")
+
+
+def test_set_language_rejects_unknown_code(client):
+    response = client.get("/lang/fr", follow_redirects=False)
+    assert response.status_code == 303
+    assert "lang=" not in response.headers.get("set-cookie", "")
+
+
+def test_set_language_ignores_external_next(client):
+    response = client.get("/lang/en?next=https://evil.test", follow_redirects=False)
+    assert response.headers["location"] == "/"
+
+
+def test_set_language_rejects_protocol_relative_next(client):
+    for evil in ("//evil.com", "/\\evil.com"):
+        response = client.get("/lang/en", params={"next": evil}, follow_redirects=False)
+        assert response.status_code == 303
+        assert response.headers["location"] == "/", evil
+
+
+def test_candidate_date_uses_config_date_format(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    cfg.__dict__["date_format"] = "%d.%m.%Y"  # in-memory override for this test
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path, date_kind="candidate", date_value="2026-01-15"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    target = Path(cfg.targets[0].path)
+    names = [p.name for p in target.iterdir()]
+    # Candidate date now formatted via config.date_format (15.01.2026), not raw ISO.
+    assert any(name.startswith("15.01.2026") for name in names), names
+
+
+def test_flash_message_is_localized_to_english(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+        cookies={"lang": "en"},
+    )
+
+    assert response.status_code == 200
+    redirect = response.headers.get("HX-Redirect", "")
+    assert "has+been+filed" in redirect or "has%20been%20filed" in redirect
+
+
+def test_summary_modal_is_localized_to_english(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "always"
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+        cookies={"lang": "en"},
+    )
+
+    assert response.status_code == 200
+    assert "Summary" in response.text
+    assert "Execute" in response.text

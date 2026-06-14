@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import re
 from pathlib import Path
 from urllib.parse import quote
 
@@ -12,36 +11,21 @@ from fastapi.templating import Jinja2Templates
 from zilpzalp.config import Config, ConfigError, save_config
 from zilpzalp.processor import FileConflictError, ProcessorError, process
 from zilpzalp.queue import Queue
+from zilpzalp.web.i18n import SUPPORTED, resolve_language, translate
 from zilpzalp.web.naming import render_filename
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
-# status key → (German label, badge css class)
-STATUS_META = {
-    "pending": ("wartet", "b-wait"),
-    "analyzing": ("Analyse", "b-ana"),
-    "ready": ("bereit", "b-ready"),
-    "error": ("Fehler", "b-err"),
+# status key → badge css class (labels live in the i18n catalogs as status.<key>)
+STATUS_BADGE = {
+    "pending": "b-wait",
+    "analyzing": "b-ana",
+    "ready": "b-ready",
+    "error": "b-err",
 }
 
-ORIGINAL_LABEL = {"move": "verschieben", "delete": "löschen", "keep": "behalten"}
-SUMMARY_LABEL = {"always": "immer", "on_conflict": "bei Konflikt", "never": "nie"}
-
-_ISO_DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
-
-
-def german_date(value: str | None) -> str:
-    if not value:
-        return "—"
-    m = _ISO_DATE.match(value)
-    if not m:
-        return value
-    return f"{m.group(3)}.{m.group(2)}.{m.group(1)}"
-
-
-templates.env.filters["german_date"] = german_date
-templates.env.globals["STATUS_META"] = STATUS_META
+templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
 
 
 def _counts(queue: Queue) -> dict[str, int]:
@@ -68,13 +52,33 @@ def _recent(queue: Queue, limit: int = 6):
 def _base_context(request: Request, active: str) -> dict:
     queue: Queue = request.app.state.queue
     counts = _counts(queue)
+    lang = resolve_language(request)
     return {
         "active": active,
         "open_count": counts["ready"],
         "counts": counts,
         "flash": request.query_params.get("flash"),
         "flash_kind": request.query_params.get("kind", "ok"),
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
     }
+
+
+def _safe_next(next: str) -> str:
+    # Only allow same-site absolute paths; reject protocol-relative ("//host")
+    # and backslash-escaped ("/\\host") URLs that browsers treat as external.
+    if next.startswith("/") and not next.startswith(("//", "/\\")):
+        return next
+    return "/"
+
+
+@router.get("/lang/{code}")
+def set_language(code: str, next: str = "/"):
+    target = _safe_next(next)
+    response = RedirectResponse(target, status_code=303)
+    if code in SUPPORTED:
+        response.set_cookie("lang", code, max_age=31_536_000, samesite="lax")
+    return response
 
 
 @router.get("/")
@@ -87,8 +91,6 @@ def overview(request: Request):
             "recent": _recent(queue),
             "config": config,
             "config_path": str(request.app.state.config_path),
-            "original_label": ORIGINAL_LABEL[config.original_handling],
-            "summary_label": SUMMARY_LABEL[config.summary_mode],
             "preselected_date": _preselected_date,
         }
     )
@@ -129,6 +131,7 @@ def review_page(request: Request, entry_id: str):
     suggestion = entry.suggestion
     recommended = {str(p) for p in suggestion.target_paths}
     context = _base_context(request, "queue")
+    lang = context["lang"]
     context.update(
         {
             "entry": entry,
@@ -137,7 +140,7 @@ def review_page(request: Request, entry_id: str):
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
             "preselected_index": suggestion.preselected_date_index or 0,
-            "original_label": ORIGINAL_LABEL[config.original_handling],
+            "original_label": translate("original." + config.original_handling, lang),
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
@@ -150,20 +153,22 @@ def _resolve_template(config: Config, pattern_name: str) -> str:
     return config.default_pattern
 
 
-def _normalize_date(date_kind: str, date_value: str, config: Config) -> str:
-    if date_kind == "manual":
-        try:
-            parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
-        except ValueError:
-            return ""
-        return parsed.strftime(config.date_format)
-    return date_value
+def _normalize_date(date_value: str, config: Config) -> str:
+    # Both candidate and manual dates arrive as ISO (YYYY-MM-DD); the rename
+    # format always comes from config.date_format.
+    try:
+        parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+    except ValueError:
+        return ""
+    return parsed.strftime(config.date_format)
 
 
 def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
                          description, pattern, targets):
+    # date_kind is kept for form round-trip (stored in form_values) but is not
+    # used for normalization — both candidate and manual dates arrive as ISO.
     config: Config = request.app.state.config
-    date = _normalize_date(date_kind, date_value, config)
+    date = _normalize_date(date_value, config)
     template = _resolve_template(config, pattern)
     ext = entry.path.suffix or ".pdf"
     filename = render_filename(
@@ -177,7 +182,8 @@ def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
 
 def _summary_response(request, entry, filename, target_paths, conflicts,
                       config, form_values):
-    selected = [t for t in config.targets if t.path in target_paths]
+    lang = resolve_language(request)
+    selected = [target for target in config.targets if target.path in target_paths]
     conflict_set = {str(p) for p in conflicts}
     context = {
         "entry": entry,
@@ -185,20 +191,22 @@ def _summary_response(request, entry, filename, target_paths, conflicts,
         "selected": selected,
         "conflict_set": conflict_set,
         "has_conflict": bool(conflicts),
-        "original_label": ORIGINAL_LABEL[config.original_handling],
+        "original_label": translate("original." + config.original_handling, lang),
         "form_values": form_values,
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
     }
     return templates.TemplateResponse(request, "_summary_modal.html", context)
 
 
 def _execute(request, entry, filename, target_paths, config):
     queue: Queue = request.app.state.queue
+    lang = resolve_language(request)
     process(entry.path, filename, target_paths, config)
     queue.remove(entry.path)
+    message = translate("toast.filed", lang, filename=filename)
     resp = Response(status_code=200)
-    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(
-        f'„{filename}“ wurde abgelegt.'
-    ) + "&kind=ok"
+    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(message) + "&kind=ok"
     return resp
 
 
@@ -217,11 +225,12 @@ def _execute_guarded(request, entry, filename, target_paths, conflicts, config,
             config, form_values
         )
     except ProcessorError as exc:
+        message = translate("toast.file_error", resolve_language(request), error=str(exc))
         return Response(
             status_code=200,
             headers={
                 "HX-Redirect": f"/review/{entry.id}?flash="
-                + quote(f"Fehler bei der Ablage: {exc}") + "&kind=err"
+                + quote(message) + "&kind=err"
             },
         )
 
