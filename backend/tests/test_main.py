@@ -39,7 +39,18 @@ def test_startup_aborts_on_invalid_config(valid_config, write_config, monkeypatc
 def test_watcher_populates_queue_on_startup(
     valid_config, write_config, monkeypatch
 ):
-    # drop a PDF into the configured watchfolder before the app starts
+    # Avoid a real JVM call: stub the extractor used by the worker.
+    from zilpzalp import worker as worker_mod
+    from zilpzalp.document import Block, Document
+
+    monkeypatch.setattr(
+        worker_mod,
+        "extract",
+        lambda p: Document(
+            blocks=[Block(kind="paragraph", text="Datum 15.01.2026", page=1, bbox=(0, 0, 0, 0))]
+        ),
+    )
+
     watchfolder = Path(valid_config["paths"]["watchfolder"])
     (watchfolder / "incoming.pdf").write_bytes(b"%PDF-1.4")
     path = write_config(valid_config)
@@ -49,3 +60,14 @@ def test_watcher_populates_queue_on_startup(
         names = [entry.path.name for entry in app.state.queue.list()]
 
     assert "incoming.pdf" in names
+
+
+def test_static_css_is_served(valid_config, write_config, monkeypatch):
+    path = write_config(valid_config)
+    monkeypatch.setenv(CONFIG_ENV, str(path))
+
+    with TestClient(app) as client:
+        response = client.get("/static/styles.css")
+
+    assert response.status_code == 200
+    assert "ZilpZalp" in response.text

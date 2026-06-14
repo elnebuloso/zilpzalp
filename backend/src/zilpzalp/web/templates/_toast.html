@@ -1,0 +1,9 @@
+<div class="toast {{ flash_kind or 'ok' }}">
+  {% if flash_kind == 'err' %}
+    <svg class="t-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L22 20H2L12 3.5z"/><path d="M12 10v4.5M12 17.4v.1"/></svg>
+  {% else %}
+    <svg class="t-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+  {% endif %}
+  <span>{{ flash }}</span>
+  <button class="t-x" data-toast-close aria-label="schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
