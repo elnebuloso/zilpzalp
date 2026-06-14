@@ -96,3 +96,14 @@ def test_watcher_stops_observer_when_initial_scan_fails(tmp_path, monkeypatch):
 
     # the observer thread must not be left running after a failed start
     assert not watcher._observer.is_alive()
+
+
+def test_is_alive_reflects_observer_state(tmp_path):
+    from zilpzalp.watcher import Watcher
+
+    watcher = Watcher(tmp_path, lambda p: None)
+    assert watcher.is_alive() is False  # observer not started yet
+    watcher.start()
+    assert watcher.is_alive() is True
+    watcher.stop()
+    assert watcher.is_alive() is False
