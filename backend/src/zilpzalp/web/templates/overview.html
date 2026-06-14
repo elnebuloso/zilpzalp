@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="view-enter">
+  <div class="view-head">
+    <h1 class="view-title">Übersicht</h1>
+    <p class="view-sub">Das Werkzeug auf einen Blick. Zähler und Vorschau aktualisieren sich selbsttätig.</p>
+  </div>
+  <div class="dash-cols">
+    <div class="dash-stack" hx-get="/partials/overview" hx-trigger="every 2s" hx-swap="innerHTML">
+      {% include "_overview.html" %}
+    </div>
+
+    <div class="card card-pad">
+      <h2 class="card-h">Betriebsangaben</h2>
+      <div class="info-grid">
+        <div class="info-cell"><div class="info-k">Überwachter Ordner</div><div class="info-v mono">{{ config.paths.watchfolder }}</div></div>
+        <div class="info-cell"><div class="info-k">Konfigurationsdatei</div><div class="info-v mono">{{ config_path }}</div></div>
+        <div class="info-cell"><div class="info-k">Umgang mit Original</div><div class="info-v">{{ original_label }}</div></div>
+        <div class="info-cell"><div class="info-k">Zusammenfassung</div><div class="info-v">{{ summary_label }}</div></div>
+        <div class="info-cell"><div class="info-k">Zielordner</div><div class="info-v">{{ config.targets | length }}</div></div>
+        <div class="info-cell"><div class="info-k">Namensmuster</div><div class="info-v">{{ config.patterns | length }}</div></div>
+        <div class="info-cell span2"><div class="info-k">Regeln</div><div class="info-v">{{ config.rules | length }}</div></div>
+      </div>
+      <p class="faint" style="font-size:12.5px;margin:13px 2px 0">Reine Anzeige — geändert wird im Bereich Konfiguration.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
