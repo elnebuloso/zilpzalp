@@ -39,3 +39,6 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Docker-Hub-Namespace releasen, mit Semantic Versioning (Tags → semver,
   z. B. `vX.Y.Z`). Löst den durchgängigen MVP-Scope-Ausschluss „kein CI/CD"
   ([mvp/roadmap.md](mvp/roadmap.md)) bewusst als Post-MVP-Schritt ab.
+- **Mehrsprachigkeit der UI:** Oberflächentexte aus den Templates lösen und über
+  einen Übersetzungs-/i18n-Mechanismus bereitstellen (zunächst Deutsch, weitere
+  Sprachen ergänzbar), inkl. Sprachauswahl.
