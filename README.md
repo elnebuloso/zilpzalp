@@ -23,12 +23,12 @@ your own PDFs into `demo/data/inbox` (or repoint the volumes in `docker-compose.
 
 ### Entwicklung: nächsten Meilenstein bearbeiten
 
-Jeder Meilenstein wird in einer frischen Session geplant und umgesetzt (Tracking: [docs/roadmap.md](docs/roadmap.md)). Kopierfertiger Prompt — er erkennt den nächsten Meilenstein selbst, nichts manuell ausfüllen:
+Jeder Meilenstein wird in einer frischen Session geplant und umgesetzt (Tracking: [docs/mvp/roadmap.md](docs/mvp/roadmap.md)). Kopierfertiger Prompt — er erkennt den nächsten Meilenstein selbst, nichts manuell ausfüllen:
 
 ````text
-Schreibe den Implementierungsplan für den nächsten offenen Meilenstein aus docs/roadmap.md.
+Schreibe den Implementierungsplan für den nächsten offenen Meilenstein aus docs/mvp/roadmap.md.
 
-Lies zuerst docs/roadmap.md und bestimme den nächsten Meilenstein (oberste Zeile mit
+Lies zuerst docs/mvp/roadmap.md und bestimme den nächsten Meilenstein (oberste Zeile mit
 Status 📋). Entnimm ihm Name, Scope und die referenzierten §§. Lies die Architektur-Referenz
 docs/superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md (die genannten §§) sowie den
 bereits vorhandenen Code unter backend/src/zilpzalp/, auf dem der Meilenstein aufbaut.
@@ -39,7 +39,7 @@ backend/src/zilpzalp/. Halte dich strikt an den Scope der Roadmap-Zeile und schl
 aus, was laut Roadmap erst spätere Meilensteine liefern — frag nach, wenn der Scope unklar ist.
 
 Plan speichern als docs/superpowers/plans/YYYY-MM-DD-HHMM-<kurzname>.md, dann die betreffende
-Meilenstein-Zeile in docs/roadmap.md aktualisieren (Plan-Link, Status 📝).
+Meilenstein-Zeile in docs/mvp/roadmap.md aktualisieren (Plan-Link, Status 📝).
 ````
 
 ## Optimize `.claude/settings.json`

@@ -1,7 +1,7 @@
 # ZilpZalp — Backlog
 
 Laufende Weiterentwicklung nach der MVP-Bauphase. Die abgeschlossene
-MVP-Roadmap bleibt unter [docs/roadmap.md](roadmap.md) als Verlauf erhalten.
+MVP-Roadmap bleibt unter [docs/mvp/roadmap.md](mvp/roadmap.md) als Verlauf erhalten.
 
 **Status:** 📋 offen · 🚧 in Arbeit · ✅ erledigt
 

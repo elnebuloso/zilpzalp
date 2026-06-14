@@ -2,7 +2,7 @@
 
 Status: Entwurf zur Freigabe
 Datum: 2026-06-13
-Grundlage: [docs/vision.md](../../vision.md)
+Grundlage: [docs/vision.md](../../mvp/vision.md)
 
 Dieses Dokument überführt die Produktvision in ein umsetzbares technisches Design für
 das MVP. Es legt Tech-Stack, Projektstruktur, Komponenten, Datenfluss, Konfiguration,
