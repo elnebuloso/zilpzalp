@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import datetime
 import re
 from pathlib import Path
+from urllib.parse import quote
 
-from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
+from zilpzalp.config import Config
+from zilpzalp.processor import FileConflictError, ProcessorError, process
 from zilpzalp.queue import Queue
+from zilpzalp.web.naming import render_filename
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -67,6 +72,8 @@ def _base_context(request: Request, active: str) -> dict:
         "active": active,
         "open_count": counts["ready"],
         "counts": counts,
+        "flash": request.query_params.get("flash"),
+        "flash_kind": request.query_params.get("kind", "ok"),
     }
 
 
@@ -134,3 +141,148 @@ def review_page(request: Request, entry_id: str):
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
+
+
+def _resolve_template(config: Config, pattern_name: str) -> str:
+    for pattern in config.patterns:
+        if pattern.name == pattern_name:
+            return pattern.template
+    return config.default_pattern
+
+
+def _normalize_date(date_kind: str, date_value: str, config: Config) -> str:
+    if date_kind == "manual":
+        try:
+            parsed = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            return ""
+        return parsed.strftime(config.date_format)
+    return date_value
+
+
+def _build_request_state(request, entry, date_kind, date_value, sender, doctype,
+                         description, pattern, targets):
+    config: Config = request.app.state.config
+    date = _normalize_date(date_kind, date_value, config)
+    template = _resolve_template(config, pattern)
+    ext = entry.path.suffix or ".pdf"
+    filename = render_filename(
+        template, date=date, sender=sender, doctype=doctype,
+        description=description, ext=ext,
+    )
+    target_paths = [Path(t) for t in targets]
+    conflicts = [t for t in target_paths if (t / filename).exists()]
+    return config, filename, target_paths, conflicts
+
+
+def _summary_response(request, entry, filename, target_paths, conflicts,
+                      config, form_values):
+    selected = [t for t in config.targets if t.path in target_paths]
+    conflict_set = {str(p) for p in conflicts}
+    context = {
+        "entry": entry,
+        "filename": filename,
+        "selected": selected,
+        "conflict_set": conflict_set,
+        "has_conflict": bool(conflicts),
+        "original_label": ORIGINAL_LABEL[config.original_handling],
+        "form_values": form_values,
+    }
+    return templates.TemplateResponse(request, "_summary_modal.html", context)
+
+
+def _execute(request, entry, filename, target_paths, config):
+    queue: Queue = request.app.state.queue
+    process(entry.path, filename, target_paths, config)
+    queue.remove(entry.path)
+    resp = Response(status_code=200)
+    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(
+        f'„{filename}“ wurde abgelegt.'
+    ) + "&kind=ok"
+    return resp
+
+
+def _execute_guarded(request, entry, filename, target_paths, conflicts, config,
+                     form_values):
+    if conflicts:
+        return _summary_response(
+            request, entry, filename, target_paths, conflicts, config, form_values
+        )
+    try:
+        return _execute(request, entry, filename, target_paths, config)
+    except FileConflictError:
+        # a conflicting file appeared between check and copy
+        return _summary_response(
+            request, entry, filename, target_paths, [entry.path], config, form_values
+        )
+    except ProcessorError as exc:
+        return Response(
+            status_code=200,
+            headers={
+                "HX-Redirect": f"/review/{entry.id}?flash="
+                + quote(f"Fehler bei der Ablage: {exc}") + "&kind=err"
+            },
+        )
+
+
+@router.post("/documents/{entry_id}/confirm")
+def confirm(
+    request: Request,
+    entry_id: str,
+    date_kind: str = Form("candidate"),
+    date_value: str = Form(""),
+    sender: str = Form(""),
+    doctype: str = Form(""),
+    description: str = Form(""),
+    pattern: str = Form(""),
+    targets: list[str] = Form(default=[]),
+):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready":
+        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+    form_values = {
+        "date_kind": date_kind, "date_value": date_value, "sender": sender,
+        "doctype": doctype, "description": description, "pattern": pattern,
+        "targets": targets,
+    }
+    config, filename, target_paths, conflicts = _build_request_state(
+        request, entry, date_kind, date_value, sender, doctype, description,
+        pattern, targets,
+    )
+    need_summary = config.summary_mode == "always" or bool(conflicts)
+    if need_summary:
+        return _summary_response(
+            request, entry, filename, target_paths, conflicts, config, form_values
+        )
+    return _execute_guarded(request, entry, filename, target_paths, conflicts,
+                            config, form_values)
+
+
+@router.post("/documents/{entry_id}/execute")
+def execute(
+    request: Request,
+    entry_id: str,
+    date_kind: str = Form("candidate"),
+    date_value: str = Form(""),
+    sender: str = Form(""),
+    doctype: str = Form(""),
+    description: str = Form(""),
+    pattern: str = Form(""),
+    targets: list[str] = Form(default=[]),
+):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready":
+        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+    form_values = {
+        "date_kind": date_kind, "date_value": date_value, "sender": sender,
+        "doctype": doctype, "description": description, "pattern": pattern,
+        "targets": targets,
+    }
+    config, filename, target_paths, conflicts = _build_request_state(
+        request, entry, date_kind, date_value, sender, doctype, description,
+        pattern, targets,
+    )
+    return _execute_guarded(request, entry, filename, target_paths, conflicts,
+                            config, form_values)

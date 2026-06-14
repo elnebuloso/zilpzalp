@@ -36,9 +36,11 @@ def _ready_suggestion(target_path):
 def _add_ready(client, name="rechnung.pdf"):
     cfg = app.state.config
     pdf = Path(cfg.paths.watchfolder) / name
-    pdf.write_bytes(b"%PDF-1.4")
+    # Add to queue before writing so the watcher's worker.submit() sees
+    # queue.add() return False and does not enqueue the file for re-processing.
     app.state.queue.add(pdf)
     app.state.queue.set_ready(pdf, _ready_suggestion(cfg.targets[0].path))
+    pdf.write_bytes(b"%PDF-1.4")
     return app.state.queue.get(pdf)
 
 
@@ -117,3 +119,71 @@ def test_review_unknown_id_redirects(client):
     response = client.get("/review/deadbeef", follow_redirects=False)
     assert response.status_code in (302, 303, 307)
     assert response.headers["location"] == "/queue"
+
+
+def _form(target_path, **overrides):
+    data = {
+        "date_kind": "candidate",
+        "date_value": "2026-01-15",
+        "sender": "Stadtwerke",
+        "doctype": "Rechnung",
+        "description": "Strom",
+        "pattern": "standard",
+        "targets": [str(target_path)],
+    }
+    data.update(overrides)
+    return data
+
+
+def test_confirm_executes_directly_when_summary_never(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"  # in-memory override for this test
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.status_code == 200
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    # document left the queue and a copy landed in the target
+    assert app.state.queue.get_by_id(entry.id) is None
+    target = Path(cfg.targets[0].path)
+    assert any(target.iterdir())
+
+
+def test_confirm_shows_summary_when_always(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "always"
+    entry = _add_ready(client, "rechnung.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.status_code == 200
+    assert "Zusammenfassung" in response.text
+    assert "Ausführen" in response.text
+    # nothing executed yet
+    assert app.state.queue.get_by_id(entry.id) is not None
+
+
+def test_execute_with_conflict_locks_summary(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    entry = _add_ready(client, "rechnung.pdf")
+    target = Path(cfg.targets[0].path)
+    # pre-create the conflicting destination
+    (target / "2026-01-15__Stadtwerke_Rechnung_Strom.pdf").write_bytes(b"x")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(target),
+    )
+
+    assert response.status_code == 200
+    assert "Namenskonflikt" in response.text
+    # execution blocked, doc stays in queue
+    assert app.state.queue.get_by_id(entry.id) is not None
