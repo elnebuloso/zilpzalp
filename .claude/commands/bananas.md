@@ -1,0 +1,1 @@
+Alles sauber für diese session? Kann ich die session abschliessen? Oder liegen irgendwo noch "Bananenschalen" rum, auf denen wir in einer neuen, späten Session ausrutschen können?
