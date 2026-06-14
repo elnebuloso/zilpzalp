@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZilpZalp · Designsystem & Mockups (5a)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..620&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+  <script src="app.js" defer></script>
+  <style>
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .tile-link { display: block; padding: 1.2rem 1.3rem; }
+    .tile-link h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
+    .tile-link:hover { text-decoration: none; border-color: var(--border-strong); transform: translateY(-2px); }
+    .tile-link { transition: transform 0.15s, border-color 0.15s; }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.7rem; }
+    .sw { border-radius: var(--r-sm); border: 1px solid var(--border); overflow: hidden; }
+    .sw .chipc { height: 54px; }
+    .sw .lab { padding: 0.4rem 0.55rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+    .typerow { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .typerow:last-child { border-bottom: 0; }
+    .typerow .meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); width: 150px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      zilp<b>zalp</b>
+    </a>
+    <span class="spacer"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Thema wechseln">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <main class="page stack">
+    <div class="page-head">
+      <div class="eyebrow">Meilenstein 5a · Design-Lieferung</div>
+      <h1>Designsystem & Mockups</h1>
+      <p class="lead">Statische Vorlage für die Umsetzung (5b). Motiv ist der Zilpzalp, ein kleiner olivgrüner Laubsänger: warmes Papier im hellen, tiefes Waldtinten-Grün im dunklen Thema. Oben rechts umschaltbar.</p>
+    </div>
+
+    <section>
+      <div class="card-title">Seiten-Mockups</div>
+      <div class="gallery">
+        <a class="card tile-link" href="dashboard.html"><h3>Übersicht</h3><span class="muted">Startseite: Zähler, Betrieb, Vorschau</span></a>
+        <a class="card tile-link" href="queue.html"><h3>Warteschlange</h3><span class="muted">Alle Dokumente mit Status</span></a>
+        <a class="card tile-link" href="review.html"><h3>Prüfungsansicht</h3><span class="muted">Datumswahl, Felder, Namensvorschau</span></a>
+        <a class="card tile-link" href="summary.html"><h3>Zusammenfassung</h3><span class="muted">Bestätigen & Konflikt</span></a>
+        <a class="card tile-link" href="config.html"><h3>Konfiguration</h3><span class="muted">YAML-Editor & Validierung</span></a>
+      </div>
+    </section>
+
+    <section class="card pad">
+      <div class="card-title">Farben (folgen dem aktiven Thema)</div>
+      <div class="swatches">
+        <div class="sw"><div class="chipc" style="background: var(--accent)"></div><div class="lab">accent</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--ok)"></div><div class="lab">bereit</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--analyze)"></div><div class="lab">Analyse</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--wait)"></div><div class="lab">wartet</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--err)"></div><div class="lab">Fehler</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--surface)"></div><div class="lab">surface</div></div>
+        <div class="sw"><div class="chipc" style="background: var(--bg)"></div><div class="lab">bg</div></div>
+      </div>
+    </section>
+
+    <section class="card pad">
+      <div class="card-title">Typografie</div>
+      <div class="typerow"><span class="meta">Fraunces · display</span><span style="font-family: var(--font-display); font-size: 1.9rem;">Übersicht & Vorschläge</span></div>
+      <div class="typerow"><span class="meta">Hanken Grotesk · body</span><span style="font-size: 1.05rem;">Prüfen, korrigieren, mit einem Klick ablegen.</span></div>
+      <div class="typerow"><span class="meta">IBM Plex Mono · mono</span><span style="font-family: var(--font-mono);">2026-01-15__Stadtwerke_Rechnung.pdf</span></div>
+    </section>
+
+    <section class="card pad">
+      <div class="card-title">Komponenten</div>
+      <div class="row" style="align-items: center; gap: 0.6rem;">
+        <span class="badge ok"><span class="dot"></span>bereit</span>
+        <span class="badge analyze"><span class="dot"></span>Analyse</span>
+        <span class="badge wait"><span class="dot"></span>wartet</span>
+        <span class="badge err"><span class="dot"></span>Fehler</span>
+      </div>
+      <hr class="soft">
+      <div class="row" style="align-items: center; gap: 0.6rem;">
+        <button class="btn btn-primary">Primär</button>
+        <button class="btn btn-ghost">Sekundär</button>
+        <button class="btn btn-primary" disabled aria-disabled="true">Gesperrt</button>
+      </div>
+    </section>
+
+    <p class="note">Reine Design-Artefakte (HTML/CSS, kein Backend). In 5b werden Struktur und Designsystem in Jinja2-Templates + HTMX überführt; siehe <a href="../../ui.md">docs/ui.md</a> und das <a href="../../superpowers/specs/2026-06-14-0108-zilpzalp-web-ui.md">Web-UI-Spec</a>.</p>
+  </main>
+</body>
+</html>

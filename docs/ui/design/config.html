@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konfiguration · ZilpZalp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..620&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      zilp<b>zalp</b>
+    </a>
+    <nav class="nav">
+      <a href="dashboard.html">Übersicht</a>
+      <a href="queue.html">Warteschlange</a>
+      <a href="config.html" class="active">Konfiguration</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Thema wechseln">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <main class="page stack">
+    <div class="page-head">
+      <div class="eyebrow">Konfiguration</div>
+      <h1>config.yaml</h1>
+      <p class="lead">Die einzige dauerhaft gespeicherte Einstellung. Beim Speichern wird mit denselben Regeln wie beim Start geprüft; ist etwas ungültig, bleibt die bisherige Konfiguration in Kraft.</p>
+    </div>
+
+    <div class="banner err">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="b-body"><b>Nicht gespeichert — ungültig:</b><br>paths.watchfolder <code>/data/inbox</code> existiert nicht oder ist kein Verzeichnis. Die bisherige Konfiguration bleibt aktiv.</span>
+    </div>
+
+    <section class="card pad">
+      <div class="field" style="margin: 0;">
+        <label>Inhalt der Konfigurationsdatei</label>
+        <textarea class="textarea" spellcheck="false">paths:
+  watchfolder: /data/inbox
+  error_folder: /data/error
+  processed_folder: /data/processed
+
+original_handling: move
+summary_mode: on_conflict
+
+default_pattern: "{date}__{sender}_{doctype}_{description}"
+date_format: "%Y-%m-%d"
+
+targets:
+  - name: Finanzen
+    path: /targets/finanzen
+    default: false
+  - name: Versicherungen
+    path: /targets/versicherungen
+    default: false
+
+patterns:
+  - name: standard
+    template: "{date}__{sender}_{doctype}_{description}"
+
+rules:
+  - name: Stromrechnung Stadtwerke
+    match:
+      sender_contains: "Stadtwerke"
+      keywords_any: ["Stromabschlag", "Abschlag"]
+    apply:
+      sender: "Stadtwerke"
+      doctype: "Rechnung"
+      description: "Stromabschlag"
+      pattern: standard
+      preferred_date: rechnungsdatum
+      targets: ["Finanzen"]</textarea>
+      </div>
+    </section>
+
+    <div class="row" style="justify-content: flex-end;">
+      <button class="btn btn-primary">Speichern</button>
+    </div>
+  </main>
+</body>
+</html>

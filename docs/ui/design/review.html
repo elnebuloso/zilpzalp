@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prüfen: rechnung_jan.pdf · ZilpZalp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..620&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+      zilp<b>zalp</b>
+    </a>
+    <nav class="nav">
+      <a href="dashboard.html">Übersicht</a>
+      <a href="queue.html" class="active">Warteschlange</a>
+      <a href="config.html">Konfiguration</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Thema wechseln">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <main class="page stack">
+    <div class="page-head">
+      <a class="link-arrow" href="queue.html">← Zurück zur Warteschlange</a>
+      <div class="eyebrow" style="margin-top: 0.9rem;">Prüfen</div>
+      <h1>rechnung_jan.pdf</h1>
+    </div>
+
+    <section class="card pad">
+      <div class="card-title">Datum für den Dateinamen wählen</div>
+      <label class="choice">
+        <input type="radio" name="date" checked>
+        <span class="c-date">2026-01-15</span>
+        <span class="c-label">· Rechnungsdatum</span>
+        <span class="c-raw">15.01.2026</span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="date">
+        <span class="c-date">2026-02-14</span>
+        <span class="c-label">· fällig am</span>
+        <span class="c-raw">14.02.2026</span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="date">
+        <span class="c-date">2026-01-01</span>
+        <span class="c-label">· Leistungszeitraum</span>
+        <span class="c-raw">01.01.2026</span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="date">
+        <span class="c-main">manuell</span>
+        <input class="input" type="date" style="max-width: 200px; margin-left: 0.2rem;">
+      </label>
+      <p class="note" style="margin-top: 0.7rem;">Alle im Dokument gefundenen Datumsangaben — nichts wird weggelassen. Die Vorauswahl kannst du jederzeit ändern.</p>
+    </section>
+
+    <section class="card pad">
+      <div class="card-title">Angaben</div>
+      <div class="row" style="gap: 1.25rem;">
+        <div class="field" style="flex: 1 1 200px;">
+          <label>Absender</label>
+          <input class="input" value="Stadtwerke">
+        </div>
+        <div class="field" style="flex: 1 1 200px;">
+          <label>Typ</label>
+          <input class="input" value="Rechnung">
+        </div>
+      </div>
+      <div class="row" style="gap: 1.25rem;">
+        <div class="field" style="flex: 2 1 280px;">
+          <label>Beschreibung</label>
+          <input class="input" value="Stromabschlag">
+        </div>
+        <div class="field" style="flex: 1 1 160px;">
+          <label>Muster</label>
+          <select class="select">
+            <option>standard</option>
+            <option>kompakt</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom: 0;">
+        <label>Zielordner</label>
+        <label class="choice">
+          <input type="checkbox" checked>
+          <span class="c-main">Finanzen</span>
+          <span class="c-path">/targets/finanzen</span>
+        </label>
+        <label class="choice">
+          <input type="checkbox">
+          <span class="c-main">Versicherungen</span>
+          <span class="c-path">/targets/versicherungen</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="preview-name">
+      <span class="pn-label">Finaler Name</span>
+      <span class="pn-value">2026-01-15__Stadtwerke_Rechnung_Stromabschlag.pdf</span>
+    </section>
+
+    <div class="row" style="justify-content: flex-end;">
+      <a class="btn btn-ghost" href="queue.html">Abbrechen</a>
+      <a class="btn btn-primary" href="summary.html">Bestätigen →</a>
+    </div>
+  </main>
+</body>
+</html>
