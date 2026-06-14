@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/elnebuloso/zilpzalp/compare/v0.2.1...v0.2.2) (2026-06-14)
+
+
+### Bug Fixes
+
+* add package docstring and cut 0.2.2 to validate CI pipeline ([1aef065](https://github.com/elnebuloso/zilpzalp/commit/1aef06593bd2b268519525f070abee27bbbfb617))
+
 ## [0.2.1](https://github.com/elnebuloso/zilpzalp/compare/v0.2.0...v0.2.1) (2026-06-14)
 
 
