@@ -36,7 +36,7 @@ Reihenfolge = Bauabhängigkeit. Jeder Meilenstein liefert für sich lauffähige,
 | 3 | **Dateioperationen** | `processor` (Copy an Zielordner, Original-Handling move/delete/keep, Namenskonflikt) | — (Design-Spec §4.1, §6) | [Plan](superpowers/plans/2026-06-14-0006-dateioperationen.md) | ✅ fertig | `3c6651e` |
 | 4 | **Ingestion** | `watcher` (watchdog-Events + initialer Scan), `queue` (in-memory Register, Pfad-Dedup) | — (Design-Spec §4) | [Plan](superpowers/plans/2026-06-14-0038-ingestion.md) | ✅ fertig | `400e9bc` |
 | 5a | **UI-Design & Beschreibung** | `docs/ui.md` (vollständige UI-Beschreibung) · Designsystem + statische HTML/CSS-Mockups je Seite (hell/dunkel) → `docs/ui/design/` | [docs/ui.md](ui.md) | [Mockups](ui/design/) | ✅ fertig | `0ffb1ad` |
-| 5b | **Web-UI-Umsetzung** | FastAPI-Routen, Jinja2+HTMX, Worker + Queue-/Config-Erweiterung, Playwright-Tests. **Vorgehen: erst Design brainstormen (auf Basis von 5a), dann Umsetzungsplan, dann umsetzen** | _tbd (entsteht im 5b-Brainstorm)_ | _tbd (Plan nach Brainstorm)_ | 📋 geplant | — |
+| 5b | **Web-UI-Umsetzung** | FastAPI-Routen, Jinja2+HTMX, Worker + Queue-/Config-Erweiterung, Playwright-Tests. **Vorgehen: erst Design brainstormen (auf Basis von 5a), dann Umsetzungsplan, dann umsetzen** | [Spec](superpowers/specs/2026-06-14-1459-zilpzalp-web-ui.md) | [Plan](superpowers/plans/2026-06-14-1509-web-ui.md) | 📝 Plan in Arbeit | — |
 | 6 | **Endnutzer-Doku + Packaging** | `mkdocs/` (mkdocs-material), `Dockerfile.backend`, `Dockerfile.mkdocs`, `docker-compose.yml` | — (Design-Spec §2, §8) | _tbd_ | 📋 geplant | — |
 
 > **Scope-Ausschluss (gilt durchgängig):** kein CI/CD, keine Build-Automation, kein
