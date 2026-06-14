@@ -11,8 +11,9 @@ from zilpzalp.document import Document
 @dataclass(frozen=True)
 class DateCandidate:
     normalized: str            # date_format-konform (z. B. 2026-01-15)
-    raw: str                   # roher Treffer-Text aus dem PDF
+    raw: str                   # roher Treffer-Text aus dem PDF (zu markierende Teilzeichenkette)
     label: str | None = None   # strukturgestuetzter Kontext (z. B. "Rechnungsdatum")
+    snippet: str | None = None # umgebende Zeile aus dem Block; enthaelt raw
 
 
 @dataclass(frozen=True)
@@ -125,6 +126,15 @@ def _detect_doctype(document: Document) -> str | None:
     return None
 
 
+def _snippet_for(text: str, start: int) -> str:
+    """Die Zeile des Blocks, in der der Treffer an Position *start* liegt."""
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", start)
+    if line_end == -1:
+        line_end = len(text)
+    return text[line_start:line_end].strip()
+
+
 def analyze(document: Document, config: Config) -> Analysis:
     full_text = "\n".join(b.text for b in document.blocks)
     candidates: list[DateCandidate] = []
@@ -139,7 +149,12 @@ def analyze(document: Document, config: Config) -> Analysis:
                 label = _inline_label(block.text[:start])
             label = label or last_heading
             candidates.append(
-                DateCandidate(normalized=d.strftime(config.date_format), raw=hit, label=label)
+                DateCandidate(
+                    normalized=d.strftime(config.date_format),
+                    raw=hit,
+                    label=label,
+                    snippet=_snippet_for(block.text, start),
+                )
             )
         for dp in config.date_patterns:
             for m in re.finditer(dp.regex, block.text):
@@ -149,7 +164,10 @@ def analyze(document: Document, config: Config) -> Analysis:
                     _s, _e, hit, d = parsed[0]
                     candidates.append(
                         DateCandidate(
-                            normalized=d.strftime(config.date_format), raw=value, label=dp.label
+                            normalized=d.strftime(config.date_format),
+                            raw=value,
+                            label=dp.label,
+                            snippet=_snippet_for(block.text, m.start()),
                         )
                     )
     return Analysis(

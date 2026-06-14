@@ -117,3 +117,52 @@ def test_sender_and_doctype_heuristics(tmp_path):
     assert analysis.sender == "Stadtwerke Musterstadt GmbH"   # oberster Block auf Seite 1
     assert analysis.doctype == "Rechnung"                      # Heading aus Doctype-Vokabular
     assert "Rechnungsdatum: 15.01.2026" in analysis.full_text
+
+
+def test_inline_candidate_carries_context_snippet(tmp_path):
+    doc = Document(blocks=[
+        Block(
+            kind="paragraph",
+            text="Bitte zahlbar bis zum 02.06.2026 ohne Abzug.",
+            page=1,
+            bbox=(0, 0, 0, 0),
+        ),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    c = analysis.date_candidates[0]
+
+    assert c.raw == "02.06.2026"
+    assert c.snippet == "Bitte zahlbar bis zum 02.06.2026 ohne Abzug."
+    assert c.raw in c.snippet
+
+
+def test_snippet_is_only_the_hit_line_within_a_block(tmp_path):
+    doc = Document(blocks=[
+        Block(
+            kind="paragraph",
+            text="Zeile eins\nRechnungsdatum: 15.01.2026\nZeile drei",
+            page=1,
+            bbox=(0, 0, 0, 0),
+        ),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    c = analysis.date_candidates[0]
+
+    assert c.snippet == "Rechnungsdatum: 15.01.2026"
+
+
+def test_table_candidate_snippet_contains_hit(tmp_path):
+    doc = Document(blocks=[
+        Block(
+            kind="table",
+            text="Faellig am 01.02.2026",
+            page=1,
+            bbox=(0, 0, 0, 0),
+            cells=[["Faellig am", "01.02.2026"]],
+        ),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    c = analysis.date_candidates[0]
+
+    assert c.raw == "01.02.2026"
+    assert "01.02.2026" in c.snippet
