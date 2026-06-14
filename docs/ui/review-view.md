@@ -54,4 +54,3 @@ Client-Templating, kein Build-Step.
 
 „Bestätigen“ postet das vollständige Formular an `/review/{id}/confirm`. Je nach `summary_mode`
 und Konfliktlage folgt die [Zusammenfassung](summary.md) oder die direkte Ausführung.
-</content>

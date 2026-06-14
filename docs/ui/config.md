@@ -41,4 +41,3 @@ Konfiguration (config.yaml)
 Eine neue Config gilt für **neu hinzukommende** Dokumente. Bereits analysierte Warteschlangen-
 Einträge behalten ihren Vorschlag (zustandsarm, Design-Spec §4.2); sie werden nicht automatisch neu
 analysiert. Wer eine Neubewertung will, legt das PDF erneut in den Watchfolder.
-</content>

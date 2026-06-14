@@ -86,13 +86,17 @@ Design-Kernregel §3).
 ## 3. Seiten, Routen & Verhalten
 
 Stack: FastAPI + Jinja2 (`web/templates/`), HTMX + CSS vendored unter `web/static/`. Ein
-`base.html` mit Navigation (Warteschlange · Konfiguration); Fragmente für Liste und Namensvorschau.
-Server-rendered, kein Build-Step (Design-Spec §1).
+`base.html` definiert die App-Shell (Kopfleiste mit Produktname, aktive Navigation
+Übersicht · Warteschlange · Konfiguration, Theme-Umschalter) und ein gemeinsames Design-System
+(`style.css`); Seiten erweitern es, Fragmente liefern Teilbereiche für HTMX-Polling.
+Server-rendered, kein Build-Step (Design-Spec §1). Look & Feel und Zustände: siehe §3.6.
 
 | Route | Methode | Zweck |
 |---|---|---|
-| `/` | GET | Warteschlangen-Seite (Vollseite) |
-| `/queue` | GET | Listen-Fragment (`<tbody>`), HTMX-Poll alle 2 s |
+| `/` | GET | Dashboard / Startseite (Vollseite) |
+| `/dashboard/cards` | GET | Fragment: Status-Kacheln + Queue-Vorschau, HTMX-Poll alle 2 s |
+| `/queue` | GET | Warteschlange (Vollseite) |
+| `/queue/rows` | GET | Listen-Fragment (`<tbody>`), HTMX-Poll alle 2 s |
 | `/review/{id}` | GET | Review-View für einen `ready`-Eintrag |
 | `/review/{id}/preview` | POST | Live-Namensvorschau (HTMX-Fragment) |
 | `/review/{id}/confirm` | POST | Entscheidet Zusammenfassung vs. direkte Ausführung |
@@ -101,15 +105,31 @@ Server-rendered, kein Build-Step (Design-Spec §1).
 | `/config` | POST | Validieren + speichern |
 | `/health` | GET | bestehend |
 
-### 3.1 Warteschlange (`/`, Fragment `/queue`)
+### 3.1 Dashboard / Startseite (`/`, Fragment `/dashboard/cards`)
+
+Die Einstiegsseite. Soll dem Tool ein „vollwertiges“ Gesicht geben und auf einen Blick zeigen,
+was ansteht. Inhalt:
+
+- **Status-Kacheln** mit den Zählern je `QueueEntry.status` (`bereit` / `Analyse` / `wartet` /
+  `Fehler`), berechnet aus `queue.list()`.
+- **Betriebsinfo** (read-only Anzeige aus `app.state.config`): Watchfolder-Pfad, Config-Pfad,
+  `original_handling`, `summary_mode`, Anzahl Ziele/Regeln/Muster.
+- **Queue-Vorschau:** die jüngsten Einträge als kompakte Tabelle mit „Prüfen →“ (bei `ready`) und
+  „Alle anzeigen →“ zur Warteschlange.
+
+Die dynamischen Teile (Kacheln + Vorschau) liegen im Fragment `/dashboard/cards` und pollen sich
+per HTMX alle 2 s selbst neu. Reine Anzeige des In-Memory-Zustands — kein zusätzlicher
+Persistenz-/Statuspfad.
+
+### 3.2 Warteschlange (`/queue`, Fragment `/queue/rows`)
 
 Tabelle aller Einträge: Datei, Status-Badge (`wartet`/`Analyse`/`bereit`/`Fehler`), Vorschau
 (bei `ready`: gewähltes Datum · Absender · Typ; bei `error`: `error_reason`), Aktion „Prüfen →“
-nur bei `ready`. Das Listen-Fragment pollt sich per HTMX alle 2 s selbst neu, damit
-`analyzing → ready` ohne Reload erscheint. Transiente Erfolgs-/Fehler-Banner werden oberhalb der
-Liste gezeigt.
+nur bei `ready`. Das `<tbody>`-Fragment (`/queue/rows`) pollt sich per HTMX alle 2 s selbst neu,
+damit `analyzing → ready` ohne Reload erscheint. Transiente Erfolgs-/Fehler-Banner werden oberhalb
+der Liste gezeigt; leerer Zustand: „Keine Dokumente in der Warteschlange.“
 
-### 3.2 Review-View (`/review/{id}`)
+### 3.3 Review-View (`/review/{id}`)
 
 - **Datum (Kernanforderung §4.3):** alle `suggestion.date_candidates` als Radio-Liste (normalisiert
   · Label · Rohtext), vorausgewählt = `preselected_date_index`. Zusätzlich eine Option „manuell“
@@ -123,7 +143,7 @@ Liste gezeigt.
   zurück. Rendering serverseitig (kein JS-Templating, kein Build).
 - „Bestätigen“ postet an `/review/{id}/confirm`.
 
-### 3.3 Zusammenfassung & Konflikt (`/confirm`, `/execute`)
+### 3.4 Zusammenfassung & Konflikt (`/confirm`, `/execute`)
 
 `/confirm` berechnet finalen Namen + Zielpfade und führt eine **Dry-Run-Konfliktprüfung** aus
 (gleiche Vorbedingungen wie `processor.process`: Ziel existiert? bei `move` auch `processed`-Ziel?).
@@ -138,12 +158,33 @@ Liste gezeigt.
   Zusammenfassung mit Konfliktmarkierung. `ProcessorError`/Laufzeitfehler: stdout-Log + transienter
   Fehler an der Liste (§6).
 
-### 3.4 Konfiguration (`/config`)
+### 3.5 Konfiguration (`/config`)
 
 GET zeigt den aktuellen `config.yaml`-Rohtext in einer Textarea. POST ruft `save_config`:
 bei Erfolg atomar speichern, `app.state.config` neu laden, Erfolgs-Banner. Bei `ConfigError` die
 Validierungsmeldungen anzeigen und die alte Config aktiv lassen (§6). Neu hinzukommende Dokumente
 nutzen die neue Config; bereits analysierte Einträge bleiben unangetastet (zustandsarm, §4.2).
+
+### 3.6 Look & Feel, Zustände, Theme
+
+Die Oberfläche soll sich wie ein vollwertiges Tool anfühlen, nicht wie Roh-HTML — erreicht allein
+über handgeschriebenes `style.css` (kein Build-Step, kein CSS-Framework):
+
+- **App-Shell:** durchgängige Kopfleiste mit Produktname und Navigation (Übersicht · Warteschlange ·
+  Konfiguration), aktiver Menüpunkt hervorgehoben; konsistentes Seitenlayout mit zentriertem
+  Inhaltsbereich in angenehmer Laptop-Breite.
+- **Design-System:** abgestimmte Typografie, Abstände, Farbpalette und Status-Farben; wiederkehrende
+  Komponenten als CSS-Klassen — Karten, Tabellen, Buttons (primär/sekundär), Formularfelder,
+  Badges, Banner/Toasts.
+- **Zustände:** Lade-/Analyse-Indikator (für `analyzing`), leere Zustände, Erfolgs-Toasts,
+  transiente Fehler-Banner, deaktivierte Buttons (z. B. „Ausführen“ bei Konflikt). Klare primäre vs.
+  sekundäre Aktionen.
+- **Theme (hell/dunkel):** Farben über CSS-Variablen; Standard folgt `prefers-color-scheme`. Ein
+  Umschalter in der Kopfleiste setzt `data-theme` auf `<html>` und merkt die Wahl in
+  `localStorage` (wenige Zeilen Vanilla-JS — die einzige eigene JS-Datei neben HTMX). Keine
+  serverseitige Theme-Speicherung.
+- **Visuelle Grundrichtung:** ruhiges, modernes Utility — heller/dunkler Hintergrund mit viel
+  Weißraum, eine ruhige Akzentfarbe, abgerundete Karten, dezente Schatten.
 
 ---
 
@@ -168,13 +209,15 @@ Laufzeit für neue Jobs greifen. Templates/Static werden über `Jinja2Templates`
 ## 5. Teststrategie (§7)
 
 - **Routen-Tests (pytest + `TestClient`)** gegen einen synchron befüllten `Queue`:
-  Listen-Render (alle vier Status), Review-Render **mit mehreren Datumskandidaten** (§4.3:
-  alle sichtbar, Vorauswahl korrekt), Preview-Fragment, `confirm` → Zusammenfassung bei Konflikt
-  vs. direkte Ausführung, `execute` happy path, Config-Save-Fehlerpfad (alte Config bleibt aktiv).
+  Dashboard-Render (Status-Zähler + Betriebsinfo + Vorschau-Fragment), Warteschlangen-Render
+  (alle vier Status), Review-Render **mit mehreren Datumskandidaten** (§4.3: alle sichtbar,
+  Vorauswahl korrekt), Preview-Fragment, `confirm` → Zusammenfassung bei Konflikt vs. direkte
+  Ausführung, `execute` happy path, Config-Save-Fehlerpfad (alte Config bleibt aktiv).
 - **Worker-Tests:** `run_once()` synchron — Erfolgspfad (Suggestion gecacht, Status `ready`),
   `ExtractionError` (Datei nach `error/`, Status `error`) mit Hand-Fixtures/Fakes statt echter JVM.
-- **Playwright (Skill):** End-to-End-Klickpfad Liste → Prüfen → Datum wählen → Bestätigen →
-  Ausführen → Eintrag verschwindet; plus transiente Fehleranzeige.
+- **Playwright (Skill):** End-to-End-Klickpfad Dashboard → Warteschlange → Prüfen → Datum wählen →
+  Bestätigen → Ausführen → Eintrag verschwindet; Theme-Umschalter wechselt hell/dunkel; plus
+  transiente Fehleranzeige.
 - **Datensparsamkeit:** kein zusätzlicher Persistenzpfad außer Config + Zieldateien (§7).
 
 ---
@@ -183,8 +226,9 @@ Laufzeit für neue Jobs greifen. Templates/Static werden über `Jinja2Templates`
 
 Sprachliche, seitenweise Beschreibung (Design-Spec §8):
 
-- `docs/ui/README.md` — Übersicht, Navigation, Seitenindex, gemeinsame Muster (Status-Badges,
-  transiente Banner, HTMX-Polling).
+- `docs/ui/README.md` — Übersicht, Navigation, Seitenindex, gemeinsame Muster (App-Shell,
+  Status-Badges, transiente Banner, HTMX-Polling, Theme).
+- `docs/ui/dashboard.md` — Dashboard / Startseite.
 - `docs/ui/queue.md` — Warteschlange.
 - `docs/ui/review-view.md` — Review-View inkl. Datumsliste (§4.3) und Live-Vorschau.
 - `docs/ui/summary.md` — Zusammenfassung & Konfliktbehandlung.
@@ -198,5 +242,3 @@ Sprachliche, seitenweise Beschreibung (Design-Spec §8):
 - Keine strukturierten Config-Formulare (bewusst Roh-YAML).
 - Kein serverseitiger Entwurf-Speicher; In-Bearbeitung-Korrekturen leben im Request (§4.2).
 - Keine KI/OCR, keine Hash-Duplikate, kein Login (Design-Spec §1, §10).
-</content>
-</invoke>

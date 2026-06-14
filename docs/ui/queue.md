@@ -1,9 +1,10 @@
 # Warteschlange
 
-Route: `GET /` (Vollseite) · Listen-Fragment: `GET /queue`
+Route: `GET /queue` (Vollseite) · Listen-Fragment: `GET /queue/rows`
 
-Die Startseite. Zeigt alle Dokumente, die der Watchfolder aktuell enthält und die noch nicht
-bestätigt verarbeitet wurden — der Watchfolder ist Eingang **und** Arbeitsvorrat (Design-Spec §4.2).
+Erreichbar über die Navigation oder „Alle anzeigen →“ im [Dashboard](dashboard.md). Zeigt alle
+Dokumente, die der Watchfolder aktuell enthält und die noch nicht bestätigt verarbeitet wurden —
+der Watchfolder ist Eingang **und** Arbeitsvorrat (Design-Spec §4.2).
 
 ```
 ZilpZalp                                   [ Warteschlange ]  [ Konfiguration ]
@@ -35,11 +36,10 @@ Warteschlange (4)
 
 ## Verhalten
 
-- **Auto-Aktualisierung:** Das `<tbody>`-Fragment pollt `GET /queue` alle 2 s (HTMX
+- **Auto-Aktualisierung:** Das `<tbody>`-Fragment pollt `GET /queue/rows` alle 2 s (HTMX
   `hx-trigger="every 2s"`), sodass `wartet → Analyse → bereit` ohne Reload erscheint.
 - **Transiente Banner** oberhalb der Tabelle: Erfolgsmeldung nach einer Verarbeitung
   („`datei.pdf` verarbeitet“) oder transienter Laufzeitfehler an einem Eintrag (Design-Spec §6).
 - **Leerer Zustand:** „Keine Dokumente in der Warteschlange.“
 - **Fehlereinträge** sind informativ; die Datei liegt bereits in `error/`. Keine Aktion in der UI;
   ein Rescan/Neustart baut die Liste neu auf.
-</content>

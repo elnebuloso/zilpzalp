@@ -50,4 +50,3 @@ Liegt kein Konflikt vor und der Modus verlangt keine Zusammenfassung, führt `/c
   - **Sonstiger Laufzeitfehler** (Zielpfad weg, Permission): nach `stdout` geloggt, an der Liste als
     transienter Fehler angezeigt (Design-Spec §6).
 - **Abbrechen** führt zurück zur Review-View, ohne etwas zu schreiben.
-</content>
