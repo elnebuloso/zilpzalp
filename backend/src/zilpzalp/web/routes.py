@@ -9,7 +9,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from zilpzalp.config import Config
+from zilpzalp.config import Config, ConfigError, save_config
 from zilpzalp.processor import FileConflictError, ProcessorError, process
 from zilpzalp.queue import Queue
 from zilpzalp.web.naming import render_filename
@@ -286,3 +286,34 @@ def execute(
     )
     return _execute_guarded(request, entry, filename, target_paths, conflicts,
                             config, form_values)
+
+
+def _config_context(request: Request, text: str, errors: list[str], saved: bool):
+    context = _base_context(request, "config")
+    context.update({"config_text": text, "errors": errors, "saved": saved})
+    return context
+
+
+@router.get("/config")
+def config_page(request: Request):
+    path = Path(request.app.state.config_path)
+    text = path.read_text(encoding="utf-8")
+    return templates.TemplateResponse(
+        request, "config.html", _config_context(request, text, [], False)
+    )
+
+
+@router.post("/config")
+def config_save(request: Request, text: str = Form(...)):
+    path = Path(request.app.state.config_path)
+    try:
+        config = save_config(path, text)
+    except ConfigError as exc:
+        errors = str(exc).splitlines()
+        return templates.TemplateResponse(
+            request, "config.html", _config_context(request, text, errors, False)
+        )
+    request.app.state.config = config
+    return templates.TemplateResponse(
+        request, "config.html", _config_context(request, text, [], True)
+    )

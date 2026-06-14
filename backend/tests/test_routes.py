@@ -187,3 +187,34 @@ def test_execute_with_conflict_locks_summary(client):
     assert "Namenskonflikt" in response.text
     # execution blocked, doc stays in queue
     assert app.state.queue.get_by_id(entry.id) is not None
+
+
+def test_config_page_shows_current_yaml(client):
+    response = client.get("/config")
+    assert response.status_code == 200
+    assert "Konfiguration" in response.text
+    assert "watchfolder" in response.text          # current file content shown
+
+
+def test_config_save_valid_updates_state(client):
+    import yaml as _yaml
+
+    cfg_path = Path(app.state.config_path)
+    new = _yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    new["summary_mode"] = "always"
+    text = _yaml.safe_dump(new, allow_unicode=True)
+
+    response = client.post("/config", data={"text": text})
+
+    assert response.status_code == 200
+    assert "gespeichert" in response.text.lower()
+    assert app.state.config.summary_mode == "always"
+
+
+def test_config_save_invalid_shows_errors_and_keeps_config(client):
+    before = app.state.config.summary_mode
+    response = client.post("/config", data={"text": "original_handling: bogus"})
+
+    assert response.status_code == 200
+    assert "nicht übernommen" in response.text
+    assert app.state.config.summary_mode == before

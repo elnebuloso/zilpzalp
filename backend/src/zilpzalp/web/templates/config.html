@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="view-enter">
+  <div class="view-head">
+    <h1 class="view-title">Konfiguration</h1>
+    <p class="view-sub">Die einzige dauerhaft gespeicherte Einstellung — als reiner Text (YAML). Beim Speichern wird mit denselben Regeln wie beim Programmstart geprüft; eine fehlerhafte Eingabe kann den Betrieb nicht stören.</p>
+  </div>
+
+  <form class="config-wrap" method="post" action="/config">
+    <textarea class="code-editor" name="text" spellcheck="false">{{ config_text }}</textarea>
+
+    {% if errors %}
+    <div class="val-errors">
+      <div class="ve-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 3.5L22 20H2L12 3.5z"/><path d="M12 10v4.5M12 17.4v.1"/></svg> Konfiguration nicht übernommen — die bisherige bleibt in Kraft</div>
+      <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    <div class="config-bar">
+      {% if saved %}<span class="faint" style="font-size:13px">Gespeichert · gilt für künftig hinzukommende Dokumente</span>{% else %}<span class="faint" style="font-size:13px">Gilt für künftig hinzukommende Dokumente.</span>{% endif %}
+      <div class="spacer"></div>
+      <button class="btn primary" type="submit">Speichern &amp; prüfen</button>
+    </div>
+
+    <p class="faint" style="font-size:12.5px;margin-top:4px;line-height:1.6">Eine geänderte Konfiguration gilt für künftig hinzukommende Dokumente. Bereits ausgewertete Einträge behalten ihren Vorschlag; für eine Neubewertung das Dokument erneut in den überwachten Ordner legen.</p>
+  </form>
+</div>
+{% endblock %}
