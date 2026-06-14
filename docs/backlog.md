@@ -44,3 +44,9 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Sprachen ergänzbar), inkl. Sprachauswahl.
 - **Helm Chart:** Kubernetes-Deployment per Helm Chart vereinfachen (Backend +
   Doku-Container, Konfiguration und Volumes als Chart-Werte parametrisierbar).
+- **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
+  sichtbar machen — mit Fehlergrund je Eintrag und einer „erneut einreihen"-Aktion,
+  statt nur im Dateisystem aufzulaufen.
+- **Health-Endpunkte für Kubernetes-Probes:** Separate Endpunkte für
+  `startupProbe`, `readinessProbe` und `livenessProbe` bereitstellen (ergänzt
+  Helm-Chart & CI-Pipeline fürs Container-Deployment).
