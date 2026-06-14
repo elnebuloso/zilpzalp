@@ -86,3 +86,34 @@ def test_queue_partial_returns_fragment(client):
 def test_queue_empty_state(client):
     response = client.get("/queue")
     assert "Keine Dokumente in der Warteschlange" in response.text
+
+
+def test_review_renders_all_date_candidates_and_fields(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/review/{entry.id}")
+    assert response.status_code == 200
+    body = response.text
+    assert "Dokument prüfen" in body
+    assert "Rechnungsdatum" in body
+    assert "fällig am" in body          # all candidates shown, none dropped (§4.3)
+    assert 'name="sender"' in body
+    assert "Datum manuell eingeben" in body
+    assert "Finanzen" in body           # target folder chip from config
+
+
+def test_review_redirects_when_not_ready(client):
+    cfg = app.state.config
+    pdf = Path(cfg.paths.watchfolder) / "pending.pdf"
+    pdf.write_bytes(b"%PDF-1.4")
+    app.state.queue.add(pdf)            # status pending
+    entry = app.state.queue.get(pdf)
+
+    response = client.get(f"/review/{entry.id}", follow_redirects=False)
+    assert response.status_code in (302, 303, 307)
+    assert response.headers["location"] == "/queue"
+
+
+def test_review_unknown_id_redirects(client):
+    response = client.get("/review/deadbeef", follow_redirects=False)
+    assert response.status_code in (302, 303, 307)
+    assert response.headers["location"] == "/queue"

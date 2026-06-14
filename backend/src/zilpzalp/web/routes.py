@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.queue import Queue
@@ -109,3 +110,27 @@ def queue_partial(request: Request):
     context = _base_context(request, "queue")
     context.update({"entries": queue.list(), "preselected_date": _preselected_date})
     return templates.TemplateResponse(request, "_queue_list.html", context)
+
+
+@router.get("/review/{entry_id}")
+def review_page(request: Request, entry_id: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or entry.status != "ready" or entry.suggestion is None:
+        return RedirectResponse("/queue", status_code=303)
+    config = request.app.state.config
+    suggestion = entry.suggestion
+    recommended = {str(p) for p in suggestion.target_paths}
+    context = _base_context(request, "queue")
+    context.update(
+        {
+            "entry": entry,
+            "suggestion": suggestion,
+            "config": config,
+            "recommended": recommended,
+            "ext": entry.path.suffix or ".pdf",
+            "preselected_index": suggestion.preselected_date_index or 0,
+            "original_label": ORIGINAL_LABEL[config.original_handling],
+        }
+    )
+    return templates.TemplateResponse(request, "review.html", context)

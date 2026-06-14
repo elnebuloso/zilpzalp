@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="view-enter">
+  <a class="link back-link" href="/queue">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    Zurück zur Warteschlange
+  </a>
+  <div class="view-head" style="margin-bottom:22px">
+    <h1 class="view-title">Dokument prüfen</h1>
+    <p class="view-sub mono" style="font-size:13.5px">{{ entry.path.name }}</p>
+  </div>
+
+  <form id="review-form" class="review-grid" data-ext="{{ ext }}">
+    <input type="hidden" name="date_kind" value="candidate" />
+    <input type="hidden" name="date_value" data-selected-date="{{ suggestion.date_candidates[preselected_index].normalized if suggestion.date_candidates else '' }}" />
+
+    <div class="dash-stack">
+      <div class="card card-pad">
+        <h2 class="card-h" style="margin-bottom:6px">Datum wählen</h2>
+        <p class="muted" style="font-size:13px;margin:0 0 16px">Alle im Dokument gefundenen Datumsangaben — nichts wird weggelassen. Eine ist vorgewählt; wechseln Sie bei Bedarf.</p>
+        <div class="date-list">
+          {% for c in suggestion.date_candidates %}
+          <button type="button" class="date-opt {% if loop.index0 == preselected_index %}sel{% endif %}" data-date="{{ c.normalized }}">
+            <span class="date-radio"><span class="date-radio-dot"></span></span>
+            <span style="min-width:0">
+              <span style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+                <span class="date-iso">{{ c.normalized | german_date }}</span>
+                {% if c.label %}<span class="date-ctx"><span class="ctx-label">{{ c.label }}</span></span>{% endif %}
+              </span>
+              {% if c.snippet %}
+              <span class="date-snippet" style="display:block">„{{ c.snippet.split(c.raw)[0] }}<mark>{{ c.raw }}</mark>{{ c.snippet.split(c.raw)[1] if c.raw in c.snippet else '' }}"</span>
+              {% endif %}
+            </span>
+          </button>
+          {% endfor %}
+        </div>
+        <div class="manual-date" style="margin-top:10px">
+          <span class="date-radio" style="padding:0"><span class="date-radio-dot"></span></span>
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:560">Datum manuell eingeben</div>
+            <input type="date" id="manual-date" class="input" style="max-width:200px;margin-top:8px" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-pad">
+        <h2 class="card-h">Felder</h2>
+        <div class="field">
+          <label class="field-label">Absender</label>
+          <input class="input" name="sender" value="{{ suggestion.sender }}" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="field">
+            <label class="field-label">Dokumenttyp</label>
+            <input class="input" name="doctype" value="{{ suggestion.doctype }}" />
+          </div>
+          <div class="field">
+            <label class="field-label">Namensmuster</label>
+            <select class="select" name="pattern">
+              {% for p in config.patterns %}
+              <option value="{{ p.name }}" data-template="{{ p.template }}" {% if p.name == suggestion.pattern_name %}selected{% endif %}>{{ p.name }} — {{ p.template }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Beschreibung</label>
+          <textarea class="textarea" name="description">{{ suggestion.description }}</textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Zielordner <span class="faint" style="font-weight:400">· mindestens einer · empfohlen vorgewählt</span></label>
+          <div class="folder-grid">
+            {% for t in config.targets %}
+            {% set on = (t.path | string) in recommended %}
+            <button type="button" class="folder-chip {% if on %}on{% endif %}" data-path="{{ t.path }}">
+              <span class="fk-box">{% if on %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M5 12.5l4.5 4.5L19 7"/></svg>{% endif %}</span>
+              <span style="min-width:0">
+                <span style="display:flex;align-items:center;gap:6px">{{ t.name }}</span>
+                <span class="fk-path">{{ t.path }}</span>
+              </span>
+            </button>
+            <input type="checkbox" name="targets" value="{{ t.path }}" hidden {% if on %}checked{% endif %} />
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="name-preview">
+      <div class="np-box">
+        <h2 class="card-h" style="margin-bottom:4px">Endgültiger Dateiname</h2>
+        <p class="faint" style="font-size:12.5px;margin:0 0 10px">Aktualisiert sich fortlaufend.</p>
+        <div class="np-final" id="np-final"></div>
+        <div class="np-meta">
+          <div class="np-meta-row"><span class="k">Muster</span><span class="v">{{ suggestion.pattern_name or '—' }}</span></div>
+          <div class="np-meta-row"><span class="k">Original</span><span class="v">{{ original_label }}</span></div>
+        </div>
+        <div class="review-actions">
+          <a class="btn ghost" href="/queue">Abbrechen</a>
+          <button type="button" class="btn primary" id="confirm-btn" style="flex:1;justify-content:center"
+                  hx-post="/documents/{{ entry.id }}/confirm" hx-include="#review-form" hx-target="#modal-root" hx-swap="innerHTML">
+            Bestätigen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <p class="faint" id="confirm-hint" style="font-size:12px;margin:10px 2px 0;text-align:center"></p>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
