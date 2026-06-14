@@ -65,7 +65,8 @@
       "Bash(docker run *)",
       "Bash(echo \"Exit code: $?\")",
       "Bash(git mv *)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(git -C /workspace/github.com/elnebuloso/zilpzalp log --oneline -15)"
     ]
   }
 }
