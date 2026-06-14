@@ -1,10 +1,10 @@
 # ZilpZalp — Oberfläche
 
 Sprachliche Beschreibung der Web-Oberfläche: was der Nutzer sieht, welche Funktionen es gibt und
-wie die Seiten zusammenhängen. Die Oberfläche entsteht mit Meilenstein 5. Architektur und
-Begründungen stehen im
-[Web-UI-Spec](superpowers/specs/2026-06-14-0108-zilpzalp-web-ui.md) und im
-[MVP Design-Spec](superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md).
+wie die Seiten zusammenhängen. Diese Beschreibung entsteht in Meilenstein 5a; die Umsetzung
+(Architektur, Routen) wird in 5b gebrainstormt und geplant. Übergeordnete Begründungen stehen im
+[MVP Design-Spec](superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md); die Design-Vorlage
+liegt unter [docs/ui/design/](ui/design/).
 
 ## Grundlegendes Erscheinungsbild
 

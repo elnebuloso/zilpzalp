@@ -4,8 +4,9 @@ Statische Design-Lieferung als verbindliche Vorlage für die Umsetzung in **5b**
 HTML/CSS-Artefakte, kein Backend. Im Browser öffnen: [`index.html`](index.html) (Cover mit
 Seitenindex, Farb-/Typo-/Komponenten-Schau und Theme-Umschalter).
 
-Textliche Beschreibung der Oberfläche: [`../../ui.md`](../../ui.md) · Architektur/Routen:
-[Web-UI-Spec](../../superpowers/specs/2026-06-14-0108-zilpzalp-web-ui.md).
+Textliche Beschreibung der Oberfläche: [`../../ui.md`](../../ui.md). Die Umsetzungs-Architektur
+(Routen, Worker, Tests) wird in 5b gebrainstormt und geplant — siehe die 5b-Zeile der
+[Roadmap](../../roadmap.md).
 
 ## Dateien
 
