@@ -47,6 +47,9 @@ class Worker:
         self._work.put(_SHUTDOWN)
         self._thread.join(timeout=5)
 
+    def is_alive(self) -> bool:
+        return self._thread.is_alive()
+
     def _run(self) -> None:
         while True:
             item = self._work.get()

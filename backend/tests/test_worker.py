@@ -88,3 +88,15 @@ def test_submit_dedupes_paths(tmp_path, config):
     worker.submit(pdf)
 
     assert len(register.list()) == 1
+
+
+def test_is_alive_reflects_thread_state():
+    from zilpzalp.queue import Queue
+    from zilpzalp.worker import Worker
+
+    worker = Worker(Queue(), lambda: None)
+    assert worker.is_alive() is False  # not started yet
+    worker.start()
+    assert worker.is_alive() is True
+    worker.stop()
+    assert worker.is_alive() is False
