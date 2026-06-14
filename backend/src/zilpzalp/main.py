@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from zilpzalp.config import load_config
 from zilpzalp.queue import Queue
 from zilpzalp.watcher import Watcher
+from zilpzalp.web.health import router as health_router
 from zilpzalp.web.routes import router
 from zilpzalp.worker import Worker
 
@@ -24,6 +25,7 @@ def get_config_path() -> Path:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.started = False
     config_path = get_config_path()
     config = load_config(config_path)
     app.state.config = config
@@ -36,9 +38,11 @@ async def lifespan(app: FastAPI):
     watcher = Watcher(config.paths.watchfolder, worker.submit)
     app.state.watcher = watcher
     watcher.start()
+    app.state.started = True
     try:
         yield
     finally:
+        app.state.started = False
         watcher.stop()
         worker.stop()
 
@@ -46,8 +50,4 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="ZilpZalp", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 app.include_router(router)
-
-
-@app.get("/health")
-def health() -> dict:
-    return {"status": "ok"}
+app.include_router(health_router)

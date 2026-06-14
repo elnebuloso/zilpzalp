@@ -42,7 +42,7 @@ Watchfolder abgeleitet wird.
 
 ```bash
 docker compose ps                       # laufen beide Container?
-curl -fsS http://localhost:8000/health  # Backend gesund? -> {"status":"ok"}
+curl -fsS http://localhost:8000/healthz/live  # Backend gesund? -> {"status":"ok"}
 docker compose logs -f backend          # Live-Logs des Backends
 docker compose logs -f docs             # Live-Logs der Doku-Site
 ```

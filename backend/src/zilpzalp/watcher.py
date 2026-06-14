@@ -74,6 +74,9 @@ class Watcher:
             self.stop()
             raise
 
+    def is_alive(self) -> bool:
+        return self._observer.is_alive()
+
     def stop(self) -> None:
         if self._observer.is_alive():
             self._observer.stop()

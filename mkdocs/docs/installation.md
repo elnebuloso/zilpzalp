@@ -42,7 +42,7 @@ Status prüfen:
 
 ```bash
 docker compose ps
-curl -fsS http://localhost:8000/health
+curl -fsS http://localhost:8000/healthz/live
 ```
 
 Erwartet: `{"status":"ok"}`.

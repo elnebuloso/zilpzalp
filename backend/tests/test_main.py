@@ -7,17 +7,6 @@ from zilpzalp.config import ConfigError
 from zilpzalp.main import CONFIG_ENV, app
 
 
-def test_health_with_valid_config(valid_config, write_config, monkeypatch):
-    path = write_config(valid_config)
-    monkeypatch.setenv(CONFIG_ENV, str(path))
-
-    with TestClient(app) as client:
-        response = client.get("/health")
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-
-
 def test_config_available_on_app_state(valid_config, write_config, monkeypatch):
     path = write_config(valid_config)
     monkeypatch.setenv(CONFIG_ENV, str(path))
@@ -71,3 +60,12 @@ def test_static_css_is_served(valid_config, write_config, monkeypatch):
 
     assert response.status_code == 200
     assert "ZilpZalp" in response.text
+
+
+def test_started_flag_set_during_lifespan(valid_config, write_config, monkeypatch):
+    path = write_config(valid_config)
+    monkeypatch.setenv(CONFIG_ENV, str(path))
+
+    assert getattr(app.state, "started", False) is False
+    with TestClient(app):
+        assert app.state.started is True
