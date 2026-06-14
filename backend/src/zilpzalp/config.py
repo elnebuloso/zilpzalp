@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Literal
 
@@ -141,3 +143,30 @@ def _format_validation_error(path: str | Path, exc: ValidationError) -> str:
         loc = ".".join(str(part) for part in err["loc"]) or "(Wurzel)"
         lines.append(f"  - {loc}: {err['msg']}")
     return "\n".join(lines)
+
+
+def save_config(path: str | Path, text: str) -> Config:
+    """Validate *text* with the same rules as load_config and, only if valid,
+    write it to *path* atomically. On any error the existing file is left
+    untouched (Design-Spec §2.3 / ui.md Konfiguration)."""
+    path = Path(path)
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise ConfigError(f"Eingabe ist kein gültiges YAML: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ConfigError("Konfiguration muss ein YAML-Mapping enthalten")
+    try:
+        config = Config(**data)
+    except ValidationError as exc:
+        raise ConfigError(_format_validation_error(path, exc)) from exc
+
+    fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.replace(tmp_name, path)
+    except OSError:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+    return config
