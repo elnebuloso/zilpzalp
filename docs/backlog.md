@@ -1,21 +1,22 @@
 # ZilpZalp — Backlog
 
-Laufende Weiterentwicklung nach der MVP-Bauphase. Die abgeschlossene
+Tracking der Weiterentwicklung nach der MVP-Bauphase. Die abgeschlossene
 MVP-Roadmap bleibt unter [mvp/roadmap.md](mvp/roadmap.md) als Verlauf erhalten.
 
-**Status:** 📋 offen · 🚧 in Arbeit · ✅ erledigt
+**Pflege-Regel:** Neue Vorhaben sammeln sich unten unter „Ideen / später".
+Sobald ein Vorhaben angegangen wird, wandert es als neue Zeile in die Tabelle
+„Umsetzung" und verschwindet aus der Ideenliste. Die Reihenfolge der Zeilen
+entspricht der Umsetzungsreihenfolge. Bei Abschluss: Status auf ✅ setzen und
+den finalen (Merge-)Commit-SHA eintragen.
 
-## Umgesetzte Meilensteine
+**Status:** 🚧 in Arbeit · ✅ erledigt
 
-| Meilenstein | Status | Commit |
-|---|---|---|
-| **MVP** — Backend-Fundament, Analyse-Kern, Dateioperationen, Ingestion, Web-UI, Doku + Packaging (Details: [mvp/roadmap.md](mvp/roadmap.md)) | ✅ | `eb516c5` |
+## Umsetzung
 
-## Feinschliff
-
-| Thema | Status | Commit |
-|---|---|---|
-| Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
+| # | Art | Thema | Status | Commit |
+|---|-----|-------|--------|--------|
+| 1 | Meilenstein | **MVP** — Backend-Fundament, Analyse-Kern, Dateioperationen, Ingestion, Web-UI, Doku + Packaging (Details: [mvp/roadmap.md](mvp/roadmap.md)) | ✅ | `eb516c5` |
+| 2 | Feinschliff | Demo-/Dummie-Texte aus UI entfernen (Untertitel & Helfertexte knapp & funktional) | ✅ | `65983fa` |
 
 ## Ideen / später
 
