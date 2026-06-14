@@ -10,8 +10,7 @@
     var theme;
     try { theme = localStorage.getItem("zz-theme"); } catch (e) {}
     if (!theme) {
-      theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
-        ? "light" : "dark";
+      theme = "dark";  // Default: Dark, unabhängig von der OS-Einstellung
     }
     applyTheme(theme);
   }
