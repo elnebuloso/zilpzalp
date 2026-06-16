@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 backend/config.yaml
 
+# Persönliche Claude-Code-Einstellungen (nicht versionieren)
+.claude/settings.local.json
+
 # MkDocs lokaler Build-Output
 mkdocs/site/
 
