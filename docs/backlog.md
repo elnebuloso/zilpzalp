@@ -38,8 +38,23 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 
 ## Ideen / später
 
-- **Helm Chart:** Kubernetes-Deployment per Helm Chart vereinfachen (Backend +
-  Doku-Container, Konfiguration und Volumes als Chart-Werte parametrisierbar).
+- **Helm Chart:** Kubernetes-Deployment des **Backends** per Helm Chart (Doku wird
+  bewusst **nicht** ausgerollt). Entscheidungen aus dem Brainstorming:
+  - **Distribution:** OCI-Artefakt auf **GHCR** (`oci://ghcr.io/elnebuloso/...`),
+    Package muss einmalig manuell auf **public** gestellt werden (GHCR-Default ist privat).
+  - **Volumes:** flexibler Passthrough — `volumes`/`volumeMounts` (bzw. `existingClaim`)
+    in `values.yaml`, Chart bleibt unopinionated über das Storage-Backend (NFS,
+    bestehende PVC, hostPath). Passt zum Watchfolder-Modell (`inbox`/`error`/`processed`/`targets`).
+  - **Config:** `config.yaml` per Default aus `values.yaml` in eine ConfigMap gerendert
+    und nach `/config/config.yaml` gemountet; `existingConfigMap` als Override.
+  - **Release/Versionierung:** Chart als **zweites release-please-Paket** unter eigenem
+    Pfad (z. B. `chart/`) mit eigenem SemVer + Changelog. `backend` bleibt prefixlos
+    (`v1.4.0`), Chart bekommt Component-Prefix (`chart-v0.1.0`) via per-Paket
+    `include-component-in-tag`.
+  - **Offene Frage (vor Umsetzung klären):** `appVersion`-Strategie —
+    **A)** automatisch an Backend-Releases koppeln (release-please bumpt `appVersion`
+    + Chart-Patch-Release; fummelig) vs. **B)** entkoppeln, Image-Tag über
+    `values.yaml` (`image.tag`, Fallback `appVersion`) gepinnt; Releases unabhängig (einfacher).
 - **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
   sichtbar machen — mit Fehlergrund je Eintrag und einer „erneut einreihen"-Aktion,
   statt nur im Dateisystem aufzulaufen.
