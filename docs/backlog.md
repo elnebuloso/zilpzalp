@@ -77,3 +77,8 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Aktuell wird beim Start bewusst neu extrahiert (keine Invalidierungslogik).
 - **Manueller Re-Analyse-Button:** Global und/oder pro Eintrag, als Ergänzung zur
   automatischen Re-Analyse nach Config-Änderung.
+- **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
+  httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
+  `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
+  mit einem künftigen httpx-Major zu Fehlern — Testaufbau migrieren, damit die
+  pytest-Ausgabe wieder warnungsfrei ist.
