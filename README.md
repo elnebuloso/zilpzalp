@@ -7,7 +7,7 @@ date, sender, and document type — you review, confirm, done. Local, Docker-bas
 no cloud.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/elnebuloso/zilpzalp?sort=semver)](https://github.com/elnebuloso/zilpzalp/releases)
+[![Latest release](https://badgen.net/github/release/elnebuloso/zilpzalp/stable)](https://github.com/elnebuloso/zilpzalp/releases)
 [![Docker image](https://img.shields.io/badge/Docker%20Hub-elnebuloso%2Fzilpzalp--backend-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/elnebuloso/zilpzalp-backend)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs--material-526CFE)](https://elnebuloso.github.io/zilpzalp/)
 
