@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/elnebuloso/zilpzalp/compare/v0.4.0...v1.0.0) (2026-06-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* config.yaml enthält keine paths mehr (kommen aus ZILPZALP_PATH_*); original_handling akzeptiert nur noch delete|trash; patterns ist jetzt eine Map.
+
+### Features
+
+* Env-Pfade, delete|trash-Disposal, Skip & Extraktions-Cache ([#8](https://github.com/elnebuloso/zilpzalp/issues/8)) ([d885c7d](https://github.com/elnebuloso/zilpzalp/commit/d885c7de5ce400cff306aa2a844ba21a0a44d6d3))
+
 ## [0.4.0](https://github.com/elnebuloso/zilpzalp/compare/v0.3.0...v0.4.0) (2026-06-16)
 
 
