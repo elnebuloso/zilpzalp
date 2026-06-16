@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 backend/config.yaml
 
+# MkDocs lokaler Build-Output
+mkdocs/site/
+
 # Lokale Compose-Laufzeitordner (nicht versionieren)
 /data/
 /config/
