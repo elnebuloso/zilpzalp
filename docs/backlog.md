@@ -77,3 +77,8 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Aktuell wird beim Start bewusst neu extrahiert (keine Invalidierungslogik).
 - **Manueller Re-Analyse-Button:** Global und/oder pro Eintrag, als Ergänzung zur
   automatischen Re-Analyse nach Config-Änderung.
+- **Entrypoint-Seeding der Config:** Container-Entrypoint, der `/config/config.yaml`
+  aus einer eingebackenen Default-Datei seedet, falls sie fehlt — robustes
+  Persistieren bei gemountetem `/config` (leerer Bind-Mount verdeckt sonst die
+  eingebackene Datei). Aktuell wird die Config direkt nach `/config/config.yaml`
+  eingebacken.
