@@ -113,7 +113,7 @@ at load time with a clear message.
 
 ### `targets`
 
-Map of target folders, each with `name`, `path`, and `default` (pre-selection in the UI).
+List of target folders, each with `name`, `path`, and `default` (pre-selection in the UI).
 If this block is omitted entirely, ZilpZalp synthesises a single "Outbox" target pointing
 to `ZILPZALP_PATH_OUTBOX`.
 
