@@ -406,3 +406,12 @@ def test_upload_leaves_no_part_file(client):
     _upload(client, "rechnung.pdf", b"%PDF-1.4 hello")
     leftovers = list(Path(cfg.paths.watchfolder).glob(".upload-*"))
     assert leftovers == []
+
+
+def test_overview_shows_upload_zone(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    body = response.text
+    assert 'id="upload-zone"' in body
+    assert 'id="upload-input"' in body
+    assert "PDF" in body

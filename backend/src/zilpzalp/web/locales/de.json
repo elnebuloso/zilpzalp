@@ -87,6 +87,13 @@
   "datelabel.pdf_modified": "PDF geändert",
   "datelabel.file_modified": "Datei geändert",
 
+  "upload.title": "PDFs hochladen",
+  "upload.dropzone": "PDFs hierher ziehen oder klicken zum Auswählen",
+  "upload.hint": "Mehrere Dateien möglich · nur PDF",
+  "upload.status.queued": "wartet",
+  "upload.status.uploading": "lädt …",
+  "upload.status.done": "fertig",
+  "upload.status.error": "Fehler",
   "upload.err_not_pdf": "Nur PDF-Dateien werden akzeptiert.",
   "upload.err_write": "Die Datei konnte nicht gespeichert werden."
 }

@@ -477,6 +477,39 @@ input[type="date"].input { font-family: var(--font-mono); }
   .main { padding: 24px 16px 70px; }
 }
 
+/* ---------- Upload ---------- */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 16px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 12px;
+  color: var(--text-3);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.upload-zone:hover,
+.upload-zone.drag {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+.uz-text { font-weight: 600; }
+.uz-hint { font-size: 12px; }
+.upload-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.upload-row { display: flex; flex-direction: column; gap: 4px; }
+.upload-row .ur-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.upload-row .ur-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-row .ur-state { flex: none; color: var(--text-3); }
+.upload-row.done .ur-state { color: var(--st-ready); }
+.upload-row.error .ur-state { color: var(--st-err); }
+.ur-bar { height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.ur-bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+.upload-row.error .ur-bar > span { background: var(--st-err); }
+
 /* Language switcher */
 .lang-switch { display: flex; gap: 2px; margin-right: 8px; }
 .lang-opt {

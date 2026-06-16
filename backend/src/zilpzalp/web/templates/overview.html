@@ -10,6 +10,21 @@
     </div>
 
     <div class="card card-pad">
+      <h2 class="card-h">{{ t('upload.title') }}</h2>
+      <div id="upload-zone" class="upload-zone" data-msg-not-pdf="{{ t('upload.err_not_pdf') }}"
+           data-label-queued="{{ t('upload.status.queued') }}"
+           data-label-uploading="{{ t('upload.status.uploading') }}"
+           data-label-done="{{ t('upload.status.done') }}"
+           data-label-error="{{ t('upload.status.error') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <div class="uz-text">{{ t('upload.dropzone') }}</div>
+        <div class="uz-hint">{{ t('upload.hint') }}</div>
+        <input id="upload-input" type="file" accept="application/pdf,.pdf" multiple hidden />
+      </div>
+      <div id="upload-list" class="upload-list"></div>
+    </div>
+
+    <div class="card card-pad">
       <h2 class="card-h">{{ t('overview.operations') }}</h2>
       <div class="info-grid">
         <div class="info-cell"><div class="info-k">{{ t('overview.watchfolder') }}</div><div class="info-v mono">{{ config.paths.watchfolder }}</div></div>
