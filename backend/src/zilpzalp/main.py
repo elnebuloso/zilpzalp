@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from zilpzalp.config import load_config
+from zilpzalp.config import load_config, outbox_path
 from zilpzalp.queue import Queue
 from zilpzalp.watcher import Watcher
 from zilpzalp.web.health import router as health_router
@@ -23,11 +23,23 @@ def get_config_path() -> Path:
     return Path(os.environ.get(CONFIG_ENV, DEFAULT_CONFIG_PATH))
 
 
+def _ensure_dirs(config) -> None:
+    for folder in (
+        config.paths.watchfolder,
+        config.paths.error_folder,
+        config.paths.trash,
+        config.paths.cache,
+        outbox_path(),
+    ):
+        folder.mkdir(parents=True, exist_ok=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.started = False
     config_path = get_config_path()
     config = load_config(config_path)
+    _ensure_dirs(config)
     app.state.config = config
     app.state.config_path = config_path
     queue = Queue()

@@ -49,12 +49,12 @@ def test_invalid_enum_raises_config_error(valid_config, write_config):
 
 
 def test_missing_required_field_raises_config_error(valid_config, write_config):
-    del valid_config["paths"]
+    del valid_config["original_handling"]
     path = write_config(valid_config)
 
     with pytest.raises(ConfigError) as exc:
         load_config(path)
-    assert "paths" in str(exc.value)
+    assert "original_handling" in str(exc.value)
 
 
 def test_non_utf8_file_raises_config_error(tmp_path):
@@ -65,48 +65,27 @@ def test_non_utf8_file_raises_config_error(tmp_path):
         load_config(path)
 
 
-def test_missing_watchfolder_raises(valid_config, write_config):
-    valid_config["paths"]["watchfolder"] = "/this/does/not/exist"
-    path = write_config(valid_config)
-
-    with pytest.raises(ConfigError, match="watchfolder"):
-        load_config(path)
-
-
-def test_move_without_processed_folder_raises(valid_config, write_config):
-    valid_config["original_handling"] = "move"
-    del valid_config["paths"]["processed_folder"]
-    path = write_config(valid_config)
-
-    with pytest.raises(ConfigError, match="processed_folder ist erforderlich"):
-        load_config(path)
-
-
-def test_keep_without_processed_folder_is_valid(valid_config, write_config):
-    valid_config["original_handling"] = "keep"
-    del valid_config["paths"]["processed_folder"]
+def test_paths_come_from_env_not_yaml(valid_config, write_config, env_paths):
+    valid_config["paths"] = {"watchfolder": "/ignored/in/yaml"}  # must be ignored
     path = write_config(valid_config)
 
     cfg = load_config(path)
 
-    assert cfg.original_handling == "keep"
+    assert cfg.paths.watchfolder == env_paths["ZILPZALP_PATH_INBOX"]
+    assert cfg.paths.error_folder == env_paths["ZILPZALP_PATH_ERROR"]
+    assert cfg.paths.trash == env_paths["ZILPZALP_PATH_TRASH"]
+    assert cfg.paths.cache == env_paths["ZILPZALP_PATH_CACHE"]
 
 
-def test_missing_error_folder_raises(valid_config, write_config):
-    valid_config["paths"]["error_folder"] = "/this/does/not/exist"
-    path = write_config(valid_config)
+def test_paths_use_defaults_when_env_unset(valid_config, write_config, monkeypatch):
+    for var in ("INBOX", "ERROR", "TRASH", "CACHE"):
+        monkeypatch.delenv(f"ZILPZALP_PATH_{var}", raising=False)
+    from pathlib import Path
+    from zilpzalp.config import load_paths
 
-    with pytest.raises(ConfigError, match="error_folder"):
-        load_config(path)
-
-
-def test_move_with_nonexistent_processed_folder_raises(valid_config, write_config):
-    valid_config["original_handling"] = "move"
-    valid_config["paths"]["processed_folder"] = "/this/does/not/exist"
-    path = write_config(valid_config)
-
-    with pytest.raises(ConfigError, match="processed_folder"):
-        load_config(path)
+    paths = load_paths()
+    assert paths.watchfolder == Path("/data/inbox")
+    assert paths.trash == Path("/data/trash")
 
 
 def test_unknown_placeholder_in_default_pattern_raises(valid_config, write_config):

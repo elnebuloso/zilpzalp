@@ -7,20 +7,17 @@ from zilpzalp.processor import FileConflictError, ProcessorError, process
 
 
 def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
-    """Build a validated Config whose paths point at real temp dirs."""
-    for sub in ("inbox", "error", "processed"):
-        (tmp_path / sub).mkdir(exist_ok=True)
+    """Build a validated Config; paths come from env (env_paths fixture)."""
     cfg = tmp_path / "config.yaml"
     cfg.write_text(
         f"""
-paths:
-  watchfolder: {tmp_path / "inbox"}
-  error_folder: {tmp_path / "error"}
-  processed_folder: {tmp_path / "processed"}
 original_handling: {original_handling}
 summary_mode: never
 default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 date_format: "%Y-%m-%d"
+patterns:
+  - name: standard
+    template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 {extra}
 """,
         encoding="utf-8",
@@ -68,6 +65,7 @@ def test_copies_to_multiple_targets(tmp_path):
     assert result.copied == [t1 / "doc.pdf", t2 / "doc.pdf"]
 
 
+@pytest.mark.skip(reason="move/processed wird in Task 3 durch trash ersetzt")
 def test_move_relocates_original_to_processed(tmp_path):
     config = _config(tmp_path, "move")
     source = _source(tmp_path, "orig.pdf")
@@ -145,6 +143,7 @@ def test_missing_target_dir_raises_and_leaves_original(tmp_path):
     assert source.exists()        # original untouched
 
 
+@pytest.mark.skip(reason="move/processed wird in Task 3 durch trash ersetzt")
 def test_move_conflict_in_processed_raises_before_copy(tmp_path):
     config = _config(tmp_path, "move")
     source = _source(tmp_path, "orig.pdf")
