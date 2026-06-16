@@ -85,5 +85,8 @@
 
   "datelabel.pdf_created": "PDF erstellt",
   "datelabel.pdf_modified": "PDF geändert",
-  "datelabel.file_modified": "Datei geändert"
+  "datelabel.file_modified": "Datei geändert",
+
+  "upload.err_not_pdf": "Nur PDF-Dateien werden akzeptiert.",
+  "upload.err_write": "Die Datei konnte nicht gespeichert werden."
 }
