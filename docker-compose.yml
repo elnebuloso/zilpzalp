@@ -6,14 +6,8 @@ services:
     image: zilpzalp-backend
     ports:
       - "8000:8000"
-    environment:
-      ZILPZALP_CONFIG: /config/config.yaml
     volumes:
-      - ./demo/config:/config
-      - ./demo/data/inbox:/data/inbox
-      - ./demo/data/error:/data/error
-      - ./demo/data/processed:/data/processed
-      - ./demo/targets:/targets
+      - ./demo/data:/data
     restart: unless-stopped
 
   docs:
