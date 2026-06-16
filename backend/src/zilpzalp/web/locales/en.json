@@ -11,9 +11,8 @@
   "status.ready": "ready",
   "status.error": "Error",
 
-  "original.move": "move",
   "original.delete": "delete",
-  "original.keep": "keep",
+  "original.trash": "trash",
 
   "summary_mode.always": "always",
   "summary_mode.on_conflict": "on conflict",
@@ -21,6 +20,7 @@
 
   "toast.filed": "“{filename}” has been filed.",
   "toast.file_error": "Error while filing: {error}",
+  "toast.skipped": "“{filename}” was skipped.",
 
   "overview.title": "Overview",
   "overview.operations": "Operational details",
@@ -47,6 +47,8 @@
   "action.cancel": "Cancel",
   "action.confirm": "Confirm",
   "action.execute": "Execute",
+  "action.skip": "Skip",
+  "confirm.skip": "Permanently delete this document?",
 
   "review.back": "Back to the queue",
   "review.title": "Review document",

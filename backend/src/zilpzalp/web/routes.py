@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
-from zilpzalp.processor import FileConflictError, ProcessorError, process
+from zilpzalp.processor import FileConflictError, ProcessorError, process, skip
 from zilpzalp.queue import Queue
 from zilpzalp.web.i18n import SUPPORTED, resolve_language, translate
 from zilpzalp.web.naming import render_filename
@@ -129,7 +129,8 @@ def overview_partial(request: Request):
 def queue_page(request: Request):
     queue: Queue = request.app.state.queue
     context = _base_context(request, "queue")
-    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date,
+                    "config": request.app.state.config})
     return templates.TemplateResponse(request, "queue.html", context)
 
 
@@ -137,7 +138,8 @@ def queue_page(request: Request):
 def queue_partial(request: Request):
     queue: Queue = request.app.state.queue
     context = _base_context(request, "queue")
-    context.update({"entries": queue.list(), "preselected_date": _preselected_date})
+    context.update({"entries": queue.list(), "preselected_date": _preselected_date,
+                    "config": request.app.state.config})
     return templates.TemplateResponse(request, "_queue_list.html", context)
 
 
@@ -223,6 +225,7 @@ def _execute(request, entry, filename, target_paths, config):
     lang = resolve_language(request)
     process(entry.path, filename, target_paths, config)
     queue.remove(entry.path)
+    request.app.state.cache.remove(entry.path)
     message = translate("toast.filed", lang, filename=filename)
     resp = Response(status_code=200)
     resp.headers["HX-Redirect"] = "/queue?flash=" + quote(message) + "&kind=ok"
@@ -317,6 +320,29 @@ def execute(
                             config, form_values)
 
 
+@router.post("/documents/{entry_id}/skip")
+def skip_document(request: Request, entry_id: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None:
+        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+    config: Config = request.app.state.config
+    lang = resolve_language(request)
+    try:
+        skip(entry.path, config)
+    except ProcessorError as exc:
+        message = translate("toast.file_error", lang, error=str(exc))
+        return Response(status_code=200, headers={
+            "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=err"
+        })
+    queue.remove(entry.path)
+    request.app.state.cache.remove(entry.path)
+    message = translate("toast.skipped", lang, filename=entry.path.name)
+    return Response(status_code=200, headers={
+        "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=ok"
+    })
+
+
 def _config_context(request: Request, text: str, errors: list[str], saved: bool):
     context = _base_context(request, "config")
     context.update({"config_text": text, "errors": errors, "saved": saved})
@@ -343,6 +369,7 @@ def config_save(request: Request, text: str = Form(...)):
             request, "config.html", _config_context(request, text, errors, False)
         )
     request.app.state.config = config
+    request.app.state.worker.reanalyze_all()
     return templates.TemplateResponse(
         request, "config.html", _config_context(request, text, [], True)
     )

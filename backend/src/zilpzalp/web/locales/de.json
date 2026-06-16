@@ -11,9 +11,8 @@
   "status.ready": "bereit",
   "status.error": "Fehler",
 
-  "original.move": "verschieben",
   "original.delete": "löschen",
-  "original.keep": "behalten",
+  "original.trash": "Papierkorb",
 
   "summary_mode.always": "immer",
   "summary_mode.on_conflict": "bei Konflikt",
@@ -21,6 +20,7 @@
 
   "toast.filed": "„{filename}“ wurde abgelegt.",
   "toast.file_error": "Fehler bei der Ablage: {error}",
+  "toast.skipped": "„{filename}“ wurde übersprungen.",
 
   "overview.title": "Übersicht",
   "overview.operations": "Betriebsangaben",
@@ -47,6 +47,8 @@
   "action.cancel": "Abbrechen",
   "action.confirm": "Bestätigen",
   "action.execute": "Ausführen",
+  "action.skip": "Überspringen",
+  "confirm.skip": "Dieses Dokument endgültig löschen?",
 
   "review.back": "Zurück zur Warteschlange",
   "review.title": "Dokument prüfen",
