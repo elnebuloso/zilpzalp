@@ -1,5 +1,6 @@
 site_name: ZilpZalp — Dokumentation
 site_description: Halb-automatische Dokumentenablage mit Mensch in der Schleife
+site_url: https://elnebuloso.github.io/zilpzalp/
 docs_dir: docs
 
 theme:
