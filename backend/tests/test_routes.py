@@ -403,9 +403,17 @@ def test_upload_strips_path_components(client):
 
 def test_upload_leaves_no_part_file(client):
     cfg = app.state.config
-    _upload(client, "rechnung.pdf", b"%PDF-1.4 hello")
+    resp = _upload(client, "rechnung.pdf", b"%PDF-1.4 hello")
+    assert resp.status_code == 200
     leftovers = list(Path(cfg.paths.watchfolder).glob(".upload-*"))
     assert leftovers == []
+
+
+def test_upload_rejects_empty_stem_name(client):
+    cfg = app.state.config
+    resp = _upload(client, ".pdf", b"%PDF-1.4 x")
+    assert resp.status_code == 400
+    assert not (Path(cfg.paths.watchfolder) / ".pdf").exists()
 
 
 def test_overview_shows_upload_zone(client):

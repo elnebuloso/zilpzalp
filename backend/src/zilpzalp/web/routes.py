@@ -354,7 +354,7 @@ async def upload(request: Request, file: UploadFile = File(...)):
     config: Config = request.app.state.config
     lang = resolve_language(request)
     name = Path(file.filename or "").name  # strip any path components
-    if not name.lower().endswith(".pdf"):
+    if Path(name).suffix.lower() != ".pdf":
         return JSONResponse(
             {"error": translate("upload.err_not_pdf", lang)}, status_code=400
         )
