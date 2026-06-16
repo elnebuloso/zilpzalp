@@ -349,3 +349,77 @@ def test_review_renders_localized_file_date_label(client):
 
     assert response.status_code == 200
     assert "Datei geändert" in response.text  # de default locale
+
+
+def _upload(client, filename, content):
+    return client.post(
+        "/upload",
+        files={"file": (filename, content, "application/pdf")},
+    )
+
+
+def test_upload_valid_pdf_lands_in_watchfolder(client):
+    cfg = app.state.config
+    resp = _upload(client, "rechnung.pdf", b"%PDF-1.4 hello")
+    assert resp.status_code == 200
+    assert resp.json()["filename"] == "rechnung.pdf"
+    landed = Path(cfg.paths.watchfolder) / "rechnung.pdf"
+    assert landed.exists()
+    assert landed.read_bytes() == b"%PDF-1.4 hello"
+
+
+def test_upload_rejects_non_pdf_extension(client):
+    cfg = app.state.config
+    resp = _upload(client, "notes.txt", b"%PDF-1.4 hello")
+    assert resp.status_code == 400
+    assert not (Path(cfg.paths.watchfolder) / "notes.txt").exists()
+
+
+def test_upload_rejects_bad_magic_bytes(client):
+    cfg = app.state.config
+    resp = _upload(client, "fake.pdf", b"NOT A PDF")
+    assert resp.status_code == 400
+    assert not (Path(cfg.paths.watchfolder) / "fake.pdf").exists()
+
+
+def test_upload_name_conflict_gets_suffix(client):
+    cfg = app.state.config
+    existing = Path(cfg.paths.watchfolder) / "rechnung.pdf"
+    existing.write_bytes(b"%PDF-1.4 original")
+    resp = _upload(client, "rechnung.pdf", b"%PDF-1.4 second")
+    assert resp.status_code == 200
+    assert resp.json()["filename"] == "rechnung (1).pdf"
+    assert existing.read_bytes() == b"%PDF-1.4 original"
+    assert (Path(cfg.paths.watchfolder) / "rechnung (1).pdf").exists()
+
+
+def test_upload_strips_path_components(client):
+    cfg = app.state.config
+    resp = _upload(client, "../evil.pdf", b"%PDF-1.4 x")
+    assert resp.status_code == 200
+    assert resp.json()["filename"] == "evil.pdf"
+    assert (Path(cfg.paths.watchfolder) / "evil.pdf").exists()
+
+
+def test_upload_leaves_no_part_file(client):
+    cfg = app.state.config
+    resp = _upload(client, "rechnung.pdf", b"%PDF-1.4 hello")
+    assert resp.status_code == 200
+    leftovers = list(Path(cfg.paths.watchfolder).glob(".upload-*"))
+    assert leftovers == []
+
+
+def test_upload_rejects_empty_stem_name(client):
+    cfg = app.state.config
+    resp = _upload(client, ".pdf", b"%PDF-1.4 x")
+    assert resp.status_code == 400
+    assert not (Path(cfg.paths.watchfolder) / ".pdf").exists()
+
+
+def test_overview_shows_upload_zone(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    body = response.text
+    assert 'id="upload-zone"' in body
+    assert 'id="upload-input"' in body
+    assert "PDF" in body

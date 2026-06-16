@@ -140,4 +140,110 @@
   }
   initReview(document);
   document.body.addEventListener("htmx:afterSwap", function (e) { initReview(e.target); });
+
+  // ---------- Sequential PDF uploader ----------
+  function initUpload() {
+    var zone = document.getElementById("upload-zone");
+    var input = document.getElementById("upload-input");
+    var list = document.getElementById("upload-list");
+    if (!zone || !input || !list) return;
+
+    var L = {
+      queued: zone.getAttribute("data-label-queued"),
+      uploading: zone.getAttribute("data-label-uploading"),
+      done: zone.getAttribute("data-label-done"),
+      error: zone.getAttribute("data-label-error"),
+    };
+    var notPdfMsg = zone.getAttribute("data-msg-not-pdf");
+    var pending = [];      // {file, row, bar, state}
+    var busy = false;
+
+    function isPdf(file) {
+      return /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+    }
+    function addRow(label, stateText) {
+      var row = document.createElement("div");
+      row.className = "upload-row";
+      row.innerHTML =
+        '<div class="ur-head"><span class="ur-name"></span>' +
+        '<span class="ur-state"></span></div>' +
+        '<div class="ur-bar"><span></span></div>';
+      row.querySelector(".ur-name").textContent = label;
+      row.querySelector(".ur-state").textContent = stateText;
+      list.appendChild(row);
+      return row;
+    }
+    function setState(item, cls, stateText) {
+      item.row.className = "upload-row" + (cls ? " " + cls : "");
+      item.row.querySelector(".ur-state").textContent = stateText;
+    }
+    function enqueue(files) {
+      Array.prototype.forEach.call(files, function (file) {
+        if (!isPdf(file)) {
+          var row = addRow(file.name, notPdfMsg);
+          row.className = "upload-row error";
+          return;
+        }
+        var r = addRow(file.name, L.queued);
+        pending.push({ file: file, row: r, bar: r.querySelector(".ur-bar > span") });
+      });
+      pump();
+    }
+    function pump() {
+      if (busy) return;
+      var item = pending.shift();
+      if (!item) return;
+      busy = true;
+      setState(item, "", L.uploading);
+      var form = new FormData();
+      form.append("file", item.file, item.file.name);
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/upload");
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+          item.bar.style.width = Math.round((e.loaded / e.total) * 100) + "%";
+        }
+      };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          item.bar.style.width = "100%";
+          setState(item, "done", L.done);
+        } else {
+          var msg = L.error;
+          try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) {}
+          setState(item, "error", msg);
+        }
+        busy = false;
+        pump();
+      };
+      xhr.onerror = function () {
+        setState(item, "error", L.error);
+        busy = false;
+        pump();
+      };
+      xhr.send(form);
+    }
+
+    zone.addEventListener("click", function () { input.click(); });
+    input.addEventListener("change", function () {
+      if (input.files && input.files.length) enqueue(input.files);
+      input.value = "";
+    });
+    ["dragenter", "dragover"].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        zone.classList.add("drag");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        zone.classList.remove("drag");
+      });
+    });
+    zone.addEventListener("drop", function (e) {
+      if (e.dataTransfer && e.dataTransfer.files.length) enqueue(e.dataTransfer.files);
+    });
+  }
+  initUpload();
 })();

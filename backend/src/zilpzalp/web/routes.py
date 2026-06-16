@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import datetime
+import os
+import tempfile
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
@@ -26,6 +28,24 @@ STATUS_BADGE = {
 }
 
 templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
+
+PDF_MAGIC = b"%PDF"
+_UPLOAD_CHUNK = 1024 * 1024
+
+
+def _unique_pdf_name(folder: Path, name: str) -> Path:
+    """Return a non-existing path in *folder* for *name*, appending ' (n)' to
+    the stem on collision so an upload never overwrites an existing inbox file."""
+    candidate = folder / name
+    if not candidate.exists():
+        return candidate
+    stem, suffix = candidate.stem, candidate.suffix
+    counter = 1
+    while True:
+        candidate = folder / f"{stem} ({counter}){suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
 
 
 def _counts(queue: Queue) -> dict[str, int]:
@@ -327,3 +347,34 @@ def config_save(request: Request, text: str = Form(...)):
     return templates.TemplateResponse(
         request, "config.html", _config_context(request, text, [], True)
     )
+
+
+@router.post("/upload")
+async def upload(request: Request, file: UploadFile = File(...)):
+    config: Config = request.app.state.config
+    lang = resolve_language(request)
+    name = Path(file.filename or "").name  # strip any path components
+    if Path(name).suffix.lower() != ".pdf":
+        return JSONResponse(
+            {"error": translate("upload.err_not_pdf", lang)}, status_code=400
+        )
+    head = await file.read(len(PDF_MAGIC))
+    if head != PDF_MAGIC:
+        return JSONResponse(
+            {"error": translate("upload.err_not_pdf", lang)}, status_code=400
+        )
+    folder = Path(config.paths.watchfolder)
+    target = _unique_pdf_name(folder, name)
+    fd, tmp = tempfile.mkstemp(dir=str(folder), prefix=".upload-", suffix=".part")
+    try:
+        with os.fdopen(fd, "wb") as out:
+            out.write(head)
+            while chunk := await file.read(_UPLOAD_CHUNK):
+                out.write(chunk)
+        os.replace(tmp, target)
+    except OSError:
+        Path(tmp).unlink(missing_ok=True)
+        return JSONResponse(
+            {"error": translate("upload.err_write", lang)}, status_code=500
+        )
+    return JSONResponse({"filename": target.name})
