@@ -27,7 +27,7 @@
             <span style="min-width:0">
               <span style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
                 <span class="date-iso">{{ c.normalized }}</span>
-                {% if c.label %}<span class="date-ctx"><span class="ctx-label">{{ c.label }}</span></span>{% endif %}
+                {% if c.label_key %}<span class="date-ctx"><span class="ctx-label">{{ t('datelabel.' + c.label_key) }}</span></span>{% elif c.label %}<span class="date-ctx"><span class="ctx-label">{{ c.label }}</span></span>{% endif %}
               </span>
               {% if c.snippet %}
               <span class="date-snippet" style="display:block">„{{ c.snippet.split(c.raw)[0] }}<mark>{{ c.raw }}</mark>{{ c.raw.join(c.snippet.split(c.raw)[1:]) }}"</span>

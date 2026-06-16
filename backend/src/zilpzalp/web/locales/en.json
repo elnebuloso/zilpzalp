@@ -81,5 +81,9 @@
   "summary.final_name": "Final name",
   "summary.destinations": "Destinations",
   "summary.exists": "· already exists",
-  "summary.original": "Original"
+  "summary.original": "Original",
+
+  "datelabel.pdf_created": "PDF created",
+  "datelabel.pdf_modified": "PDF modified",
+  "datelabel.file_modified": "File modified"
 }

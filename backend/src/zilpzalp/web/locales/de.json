@@ -81,5 +81,9 @@
   "summary.final_name": "Endgültiger Name",
   "summary.destinations": "Ablageorte",
   "summary.exists": "· existiert bereits",
-  "summary.original": "Original"
+  "summary.original": "Original",
+
+  "datelabel.pdf_created": "PDF erstellt",
+  "datelabel.pdf_modified": "PDF geändert",
+  "datelabel.file_modified": "Datei geändert"
 }

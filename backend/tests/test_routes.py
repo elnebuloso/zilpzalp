@@ -309,3 +309,28 @@ def test_summary_modal_is_localized_to_english(client):
     assert response.status_code == 200
     assert "Summary" in response.text
     assert "Execute" in response.text
+
+
+def test_review_renders_localized_file_date_label(client):
+    cfg = app.state.config
+    pdf = Path(cfg.paths.watchfolder) / "fallback.pdf"
+    app.state.queue.add(pdf)
+    app.state.queue.set_ready(pdf, Suggestion(
+        filename="2020-07-09__Unbekannt_Dokument_.pdf",
+        date_candidates=[
+            DateCandidate(normalized="2020-07-09", raw="", label_key="file_modified"),
+        ],
+        preselected_date_index=0,
+        sender="",
+        doctype="",
+        description="",
+        pattern_name="standard",
+        target_paths=[Path(cfg.targets[0].path)],
+    ))
+    pdf.write_bytes(b"%PDF-1.4")
+    entry = app.state.queue.get(pdf)
+
+    response = client.get(f"/review/{entry.id}")
+
+    assert response.status_code == 200
+    assert "Datei geändert" in response.text  # de default locale
