@@ -182,7 +182,11 @@ def _snippet_for(text: str, start: int) -> str:
     return text[line_start:line_end].strip()
 
 
-def analyze(document: Document, config: Config) -> Analysis:
+def analyze(
+    document: Document,
+    config: Config,
+    file_dates: list[DateCandidate] | None = None,
+) -> Analysis:
     full_text = "\n".join(b.text for b in document.blocks)
     candidates: list[DateCandidate] = []
     last_heading: str | None = None
@@ -217,6 +221,11 @@ def analyze(document: Document, config: Config) -> Analysis:
                             snippet=_snippet_for(block.text, m.start()),
                         )
                     )
+    seen = {c.normalized for c in candidates}
+    for fc in file_dates or []:
+        if fc.normalized not in seen:
+            candidates.append(fc)
+            seen.add(fc.normalized)
     return Analysis(
         date_candidates=candidates,
         sender=_detect_sender(document),

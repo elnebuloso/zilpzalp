@@ -242,3 +242,41 @@ def test_file_dates_returns_only_metadata_when_file_vanishes(tmp_path):
     pdf.unlink()
     result = file_dates(pdf, _config(tmp_path))
     assert [c.label_key for c in result] == []  # both PDF read and stat fail -> empty
+
+
+def test_analyze_appends_file_dates_after_text_dates(tmp_path):
+    from zilpzalp.analyzer import DateCandidate, analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    extra = [DateCandidate(normalized="2020-07-09", raw="", label_key="file_modified")]
+
+    analysis = analyze(doc, _config(tmp_path), file_dates=extra)
+    normalized = [c.normalized for c in analysis.date_candidates]
+
+    assert normalized == ["2026-01-15", "2020-07-09"]   # text first, file date appended
+
+
+def test_analyze_dedups_file_date_equal_to_text_date(tmp_path):
+    from zilpzalp.analyzer import DateCandidate, analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    extra = [DateCandidate(normalized="2026-01-15", raw="", label_key="pdf_created")]
+
+    analysis = analyze(doc, _config(tmp_path), file_dates=extra)
+
+    assert [c.normalized for c in analysis.date_candidates] == ["2026-01-15"]  # no duplicate
+
+
+def test_analyze_without_file_dates_is_unchanged(tmp_path):
+    from zilpzalp.analyzer import analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+
+    assert [c.normalized for c in analysis.date_candidates] == ["2026-01-15"]
