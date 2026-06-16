@@ -69,16 +69,11 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   JSON + Markdown (siehe [superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md](superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md))
   dem User in der Review-Ansicht lesbar machen, damit er die Analyse nachvollziehen
   kann. Fundament (persistierter Extraktions-Cache) ist mit jenem Spec gelegt.
-- **Papierkorb beim Inbox-Löschen:** Statt hartem Löschen die Datei wiederherstellbar
-  machen (z. B. in den `error/`-Ordner verschieben) — Ergänzung zum harten
-  Lösch-Button aus dem Cache-/Config-Spec.
+- **„Trash leeren"-Aktion in der UI:** Für den `original_handling: trash`-Modus
+  einen Weg schaffen, `/data/trash` über die Oberfläche zu leeren, statt nur im
+  Dateisystem (siehe [superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md](superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md)).
 - **Cache-Wiederverwendung über Neustart:** Beim Start vorhandenen Extraktions-Cache
   nutzen und `extract` überspringen, mit Invalidierung über Dateigröße + mtime.
   Aktuell wird beim Start bewusst neu extrahiert (keine Invalidierungslogik).
 - **Manueller Re-Analyse-Button:** Global und/oder pro Eintrag, als Ergänzung zur
   automatischen Re-Analyse nach Config-Änderung.
-- **Entrypoint-Seeding der Config:** Container-Entrypoint, der `/config/config.yaml`
-  aus einer eingebackenen Default-Datei seedet, falls sie fehlt — robustes
-  Persistieren bei gemountetem `/config` (leerer Bind-Mount verdeckt sonst die
-  eingebackene Datei). Aktuell wird die Config direkt nach `/config/config.yaml`
-  eingebacken.
