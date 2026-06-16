@@ -90,6 +90,27 @@ def test_submit_dedupes_paths(tmp_path, config):
     assert len(register.list()) == 1
 
 
+def test_process_supplies_fallback_date_when_no_text_date(tmp_path, config, monkeypatch):
+    pdf = Path(config.paths.watchfolder) / "nodate.pdf"
+    pdf.write_bytes(b"%PDF-1.4")  # invalid PDF -> pypdf falls back to mtime
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Kein Datum hier drin.", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    monkeypatch.setattr(worker_mod, "extract", lambda p: doc)
+
+    register, worker = _make_worker(config)
+    register.add(pdf)
+    worker._process(pdf)
+
+    entry = register.get(pdf)
+    assert entry.status == "ready"
+    candidates = entry.suggestion.date_candidates
+    assert candidates, "expected a fallback candidate when no text date is found"
+    assert candidates[0].label_key == "file_modified"
+    assert entry.suggestion.preselected_date_index == 0
+    assert not entry.suggestion.filename.startswith("__")  # date segment is filled
+
+
 def test_is_alive_reflects_thread_state():
     from zilpzalp.queue import Queue
     from zilpzalp.worker import Worker
