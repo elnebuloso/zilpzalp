@@ -279,6 +279,21 @@ def test_candidate_date_uses_config_date_format(client):
     assert any(name.startswith("15.01.2026") for name in names), names
 
 
+def test_confirm_uses_manually_entered_date(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"  # in-memory override for this test
+    entry = _add_ready(client, "manual.pdf")
+
+    response = client.post(
+        f"/documents/{entry.id}/confirm",
+        data=_form(cfg.targets[0].path, date_kind="manual", date_value="2020-07-09"),
+    )
+
+    assert response.status_code == 200
+    target = Path(cfg.targets[0].path)
+    assert any(f.name.startswith("2020-07-09") for f in target.iterdir())
+
+
 def test_flash_message_is_localized_to_english(client):
     cfg = app.state.config
     cfg.__dict__["summary_mode"] = "never"
