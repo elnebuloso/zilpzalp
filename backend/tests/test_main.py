@@ -10,7 +10,7 @@ def test_config_available_on_app_state(valid_config, write_config, monkeypatch):
     monkeypatch.setenv(CONFIG_ENV, str(path))
 
     with TestClient(app):
-        assert app.state.config.original_handling == "move"
+        assert app.state.config.original_handling == "delete"
 
 
 def test_startup_aborts_on_invalid_config(valid_config, write_config, monkeypatch):

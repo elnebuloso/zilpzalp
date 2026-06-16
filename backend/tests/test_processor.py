@@ -3,10 +3,10 @@ from pathlib import Path
 import pytest
 
 from zilpzalp.config import load_config
-from zilpzalp.processor import FileConflictError, ProcessorError, process
+from zilpzalp.processor import FileConflictError, ProcessorError, process, skip
 
 
-def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
+def _config(tmp_path: Path, original_handling: str = "delete", extra: str = ""):
     """Build a validated Config; paths come from env (env_paths fixture)."""
     cfg = tmp_path / "config.yaml"
     cfg.write_text(
@@ -37,23 +37,71 @@ def _target(tmp_path: Path, name: str) -> Path:
     return d
 
 
-def test_copies_to_single_target_and_keeps_original(tmp_path):
-    config = _config(tmp_path, "keep")
+def test_delete_removes_original_after_copy(tmp_path):
+    config = _config(tmp_path, "delete")
     source = _source(tmp_path)
     target = _target(tmp_path, "finanzen")
 
-    result = process(source, "2026-01-15__Acme.pdf", [target], config)
+    result = process(source, "doc.pdf", [target], config)
 
-    dest = target / "2026-01-15__Acme.pdf"
-    assert dest.read_bytes() == b"%PDF-1.4 hello"   # copy created with confirmed name
-    assert source.exists()                          # keep: original untouched
-    assert result.copied == [dest]
-    assert result.original_action == "kept"
+    assert (target / "doc.pdf").read_bytes() == b"%PDF-1.4 hello"
+    assert not source.exists()
+    assert result.original_action == "deleted"
     assert result.original_destination is None
 
 
+def test_trash_moves_original_after_copy(tmp_path):
+    config = _config(tmp_path, "trash")
+    source = _source(tmp_path, "orig.pdf")
+    target = _target(tmp_path, "finanzen")
+
+    result = process(source, "doc.pdf", [target], config)
+
+    assert (target / "doc.pdf").exists()
+    assert not source.exists()
+    trashed = Path(config.paths.trash) / "orig.pdf"
+    assert trashed.read_bytes() == b"%PDF-1.4 hello"
+    assert result.original_action == "trashed"
+    assert result.original_destination == trashed
+
+
+def test_trash_uses_unique_name_on_collision(tmp_path):
+    config = _config(tmp_path, "trash")
+    source = _source(tmp_path, "orig.pdf")
+    target = _target(tmp_path, "finanzen")
+    (Path(config.paths.trash) / "orig.pdf").write_bytes(b"old")
+
+    result = process(source, "doc.pdf", [target], config)
+
+    assert (Path(config.paths.trash) / "orig.pdf").read_bytes() == b"old"  # untouched
+    assert result.original_destination == Path(config.paths.trash) / "orig (1).pdf"
+    assert result.original_destination.read_bytes() == b"%PDF-1.4 hello"
+
+
+def test_skip_deletes_without_copy(tmp_path):
+    config = _config(tmp_path, "delete")
+    source = _source(tmp_path)
+
+    result = skip(source, config)
+
+    assert not source.exists()
+    assert result.copied == []
+    assert result.original_action == "deleted"
+
+
+def test_skip_trashes_without_copy(tmp_path):
+    config = _config(tmp_path, "trash")
+    source = _source(tmp_path, "orig.pdf")
+
+    result = skip(source, config)
+
+    assert not source.exists()
+    assert (Path(config.paths.trash) / "orig.pdf").exists()
+    assert result.original_action == "trashed"
+
+
 def test_copies_to_multiple_targets(tmp_path):
-    config = _config(tmp_path, "keep")
+    config = _config(tmp_path, "delete")
     source = _source(tmp_path)
     t1 = _target(tmp_path, "finanzen")
     t2 = _target(tmp_path, "versicherungen")
@@ -63,35 +111,6 @@ def test_copies_to_multiple_targets(tmp_path):
     assert (t1 / "doc.pdf").read_bytes() == b"%PDF-1.4 hello"
     assert (t2 / "doc.pdf").read_bytes() == b"%PDF-1.4 hello"
     assert result.copied == [t1 / "doc.pdf", t2 / "doc.pdf"]
-
-
-@pytest.mark.skip(reason="move/processed wird in Task 3 durch trash ersetzt")
-def test_move_relocates_original_to_processed(tmp_path):
-    config = _config(tmp_path, "move")
-    source = _source(tmp_path, "orig.pdf")
-    target = _target(tmp_path, "finanzen")
-
-    result = process(source, "doc.pdf", [target], config)
-
-    assert (target / "doc.pdf").exists()                      # copy made
-    assert not source.exists()                                # original moved away
-    processed = tmp_path / "processed" / "orig.pdf"           # keeps original name
-    assert processed.read_bytes() == b"%PDF-1.4 hello"
-    assert result.original_action == "moved"
-    assert result.original_destination == processed
-
-
-def test_delete_removes_original(tmp_path):
-    config = _config(tmp_path, "delete")
-    source = _source(tmp_path)
-    target = _target(tmp_path, "finanzen")
-
-    result = process(source, "doc.pdf", [target], config)
-
-    assert (target / "doc.pdf").exists()                      # copy made
-    assert not source.exists()                                # original deleted
-    assert result.original_action == "deleted"
-    assert result.original_destination is None
 
 
 def test_conflict_at_target_raises_and_leaves_original(tmp_path):
@@ -109,7 +128,7 @@ def test_conflict_at_target_raises_and_leaves_original(tmp_path):
 
 
 def test_conflict_preflight_prevents_partial_copy(tmp_path):
-    config = _config(tmp_path, "keep")
+    config = _config(tmp_path, "delete")
     source = _source(tmp_path)
     t1 = _target(tmp_path, "finanzen")
     t2 = _target(tmp_path, "versicherungen")
@@ -141,18 +160,3 @@ def test_missing_target_dir_raises_and_leaves_original(tmp_path):
         process(source, "doc.pdf", [missing], config)
 
     assert source.exists()        # original untouched
-
-
-@pytest.mark.skip(reason="move/processed wird in Task 3 durch trash ersetzt")
-def test_move_conflict_in_processed_raises_before_copy(tmp_path):
-    config = _config(tmp_path, "move")
-    source = _source(tmp_path, "orig.pdf")
-    target = _target(tmp_path, "finanzen")
-    (tmp_path / "processed" / "orig.pdf").write_bytes(b"old")   # would be overwritten by move
-
-    with pytest.raises(FileConflictError):
-        process(source, "doc.pdf", [target], config)
-
-    assert not (target / "doc.pdf").exists()   # nothing copied
-    assert source.exists()                     # original not moved
-    assert (tmp_path / "processed" / "orig.pdf").read_bytes() == b"old"  # not overwritten

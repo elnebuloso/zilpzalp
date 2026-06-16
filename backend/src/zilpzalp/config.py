@@ -73,7 +73,7 @@ class DatePattern(BaseModel):
 
 class Config(BaseModel):
     paths: Paths
-    original_handling: Literal["move", "delete", "keep"]
+    original_handling: Literal["delete", "trash"]
     summary_mode: Literal["always", "on_conflict", "never"]
     default_pattern: str
     date_format: str
@@ -115,6 +115,11 @@ class Config(BaseModel):
         return self
 
 
+def _apply_default_target(config: Config) -> None:
+    if not config.targets:
+        config.targets = [Target(name="Outbox", path=outbox_path(), default=True)]
+
+
 def load_config(path: str | Path) -> Config:
     try:
         raw = Path(path).read_text(encoding="utf-8")
@@ -135,9 +140,11 @@ def load_config(path: str | Path) -> Config:
     data.pop("paths", None)  # paths come from env, never from YAML
     data["paths"] = load_paths()
     try:
-        return Config(**data)
+        config = Config(**data)
     except ValidationError as exc:
         raise ConfigError(_format_validation_error(path, exc)) from exc
+    _apply_default_target(config)
+    return config
 
 
 def _format_validation_error(path: str | Path, exc: ValidationError) -> str:
@@ -165,6 +172,7 @@ def save_config(path: str | Path, text: str) -> Config:
         config = Config(**data)
     except ValidationError as exc:
         raise ConfigError(_format_validation_error(path, exc)) from exc
+    _apply_default_target(config)
 
     fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     try:

@@ -10,7 +10,7 @@ def test_load_valid_config(valid_config, write_config):
     cfg = load_config(path)
 
     assert isinstance(cfg, Config)
-    assert cfg.original_handling == "move"
+    assert cfg.original_handling == "delete"
     assert cfg.summary_mode == "on_conflict"
     assert cfg.date_format == "%Y-%m-%d"
     assert cfg.paths.watchfolder.name == "inbox"
@@ -218,3 +218,34 @@ def test_save_config_rejects_invalid_yaml_and_keeps_old_file(valid_config, write
         save_config(path, "paths: [this is not: valid yaml")
 
     assert path.read_text(encoding="utf-8") == original
+
+
+def test_trash_handling_is_valid(valid_config, write_config):
+    valid_config["original_handling"] = "trash"
+    path = write_config(valid_config)
+    assert load_config(path).original_handling == "trash"
+
+
+def test_move_handling_is_rejected(valid_config, write_config):
+    valid_config["original_handling"] = "move"
+    path = write_config(valid_config)
+    with pytest.raises(ConfigError, match="original_handling"):
+        load_config(path)
+
+
+def test_default_outbox_target_synthesized_when_none(valid_config, write_config, env_paths):
+    valid_config["targets"] = []
+    path = write_config(valid_config)
+
+    cfg = load_config(path)
+
+    assert len(cfg.targets) == 1
+    assert cfg.targets[0].name == "Outbox"
+    assert cfg.targets[0].path == env_paths["ZILPZALP_PATH_OUTBOX"]
+    assert cfg.targets[0].default is True
+
+
+def test_explicit_targets_suppress_outbox_default(valid_config, write_config):
+    path = write_config(valid_config)  # valid_config has one explicit target
+    cfg = load_config(path)
+    assert [t.name for t in cfg.targets] == ["Finanzen"]

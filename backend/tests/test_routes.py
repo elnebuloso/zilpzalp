@@ -10,9 +10,6 @@ from zilpzalp.suggestion import Suggestion
 
 @pytest.fixture
 def client(valid_config, write_config, monkeypatch):
-    # Use "delete" so confirm tests do not trigger the move branch
-    # (processed_folder removed in this task; move support restored in Task 3).
-    valid_config["original_handling"] = "delete"
     monkeypatch.setenv(CONFIG_ENV, str(write_config(valid_config)))
     with TestClient(app) as client:
         yield client
