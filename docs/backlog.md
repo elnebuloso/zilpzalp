@@ -65,3 +65,15 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Veralteten Design-Doc korrigieren:** `docs/superpowers/specs/2026-06-14-1459-zilpzalp-web-ui.md:161`
   sagt noch „`/health` bleibt" — seit Backlog #4 überholt (`/health` entfällt, ersetzt durch
   `/healthz/*`). Historisches MVP-Dokument an die aktuelle Realität anpassen oder als überholt markieren.
+- **Extrahierte Inhalte in der Review-Preview anzeigen:** Das pro Dokument gecachte
+  JSON + Markdown (siehe [superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md](superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md))
+  dem User in der Review-Ansicht lesbar machen, damit er die Analyse nachvollziehen
+  kann. Fundament (persistierter Extraktions-Cache) ist mit jenem Spec gelegt.
+- **Papierkorb beim Inbox-Löschen:** Statt hartem Löschen die Datei wiederherstellbar
+  machen (z. B. in den `error/`-Ordner verschieben) — Ergänzung zum harten
+  Lösch-Button aus dem Cache-/Config-Spec.
+- **Cache-Wiederverwendung über Neustart:** Beim Start vorhandenen Extraktions-Cache
+  nutzen und `extract` überspringen, mit Invalidierung über Dateigröße + mtime.
+  Aktuell wird beim Start bewusst neu extrahiert (keine Invalidierungslogik).
+- **Manueller Re-Analyse-Button:** Global und/oder pro Eintrag, als Ergänzung zur
+  automatischen Re-Analyse nach Config-Änderung.
