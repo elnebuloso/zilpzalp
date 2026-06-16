@@ -1,49 +1,72 @@
-# zilpzalp
+# ZilpZalp
 
-Self-hosted PDF renamer with a human in the loop. Zilpzalp watches a folder, reads incoming PDFs, and suggests clean filenames from date, sender and document type — you review, confirm, done. Docker, local, no cloud.
+**Self-hosted PDF renamer with a human in the loop.**
 
-## Documentation & Quickstart
+ZilpZalp watches a folder, reads incoming PDFs, and suggests clean filenames from
+date, sender, and document type — you review, confirm, done. Local, Docker-based,
+no cloud.
 
-End-user documentation (installation, usage, configuration, troubleshooting) is built
-with mkdocs-material under [`mkdocs/`](mkdocs/) and served as its own container.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/elnebuloso/zilpzalp?sort=semver)](https://github.com/elnebuloso/zilpzalp/releases)
+[![Docker image](https://img.shields.io/badge/Docker%20Hub-elnebuloso%2Fzilpzalp--backend-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/elnebuloso/zilpzalp-backend)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs--material-526CFE)](https://elnebuloso.github.io/zilpzalp/)
+
+> 📖 **Full documentation:** <https://elnebuloso.github.io/zilpzalp/>
+
+## Why ZilpZalp
+
+- **Human in the loop.** ZilpZalp pre-fills only what it knows for sure. The final
+  decision is always yours.
+- **Every date stays visible.** A document often carries several dates (invoice,
+  service, due date). ZilpZalp surfaces *all* detected candidates for you to pick
+  from instead of silently choosing one.
+- **Data-frugal.** No history, no database. The watched folder is the single source
+  of truth; the only persistent setting is `config.yaml`.
+
+## How it works
+
+```
+Watchfolder → Analyze (date / sender / type) → Suggest → Review in browser
+→ Confirm → Copy to target folder → Original moved / deleted / kept
+```
+
+## Quick start
+
+ZilpZalp runs as two containers — the **backend** (web UI + processing) and the
+**docs site** — orchestrated by `docker-compose.yml`. The shipped `demo/` folder is
+ready to run: a sample invoice already sits in the inbox, so a document shows up in
+the queue right away.
 
 ```bash
 docker compose up -d --build
 ```
 
-Compose ships with a ready-to-run demo under [`demo/`](demo/) (mounted as the volumes):
-a sample invoice already sits in the inbox, so a document shows up in the queue right
-away. For real use, edit [`demo/config/config.yaml`](demo/config/config.yaml) and drop
-your own PDFs into `demo/data/inbox` (or repoint the volumes in `docker-compose.yml`).
-
 - Web UI: <http://localhost:8000>
 - Documentation: <http://localhost:8001>
 
-## Development
+For real use, edit [`demo/config/config.yaml`](demo/config/config.yaml) and drop your
+own PDFs into `demo/data/inbox` — or repoint the volumes in `docker-compose.yml` to
+your own host paths. See the
+[installation guide](https://elnebuloso.github.io/zilpzalp/installation/) for details.
 
-### Entwicklung: nächsten Meilenstein bearbeiten
+## Documentation
 
-Jeder Meilenstein wird in einer frischen Session geplant und umgesetzt (Tracking: [docs/mvp/roadmap.md](docs/mvp/roadmap.md)). Kopierfertiger Prompt — er erkennt den nächsten Meilenstein selbst, nichts manuell ausfüllen:
+End-user documentation is built with
+[mkdocs-material](https://squidfunk.github.io/mkdocs-material/) (sources under
+[`mkdocs/`](mkdocs/)) and published at <https://elnebuloso.github.io/zilpzalp/>:
 
-````text
-Schreibe den Implementierungsplan für den nächsten offenen Meilenstein aus docs/mvp/roadmap.md.
+- [Installation](https://elnebuloso.github.io/zilpzalp/installation/) — setup with Docker Compose
+- [Usage](https://elnebuloso.github.io/zilpzalp/bedienung/) — the browser review workflow
+- [Configuration](https://elnebuloso.github.io/zilpzalp/konfiguration/) — `config.yaml` in detail
+- [Troubleshooting](https://elnebuloso.github.io/zilpzalp/fehlerbehebung/) — operation and common errors
 
-Lies zuerst docs/mvp/roadmap.md und bestimme den nächsten Meilenstein (oberste Zeile mit
-Status 📋). Entnimm ihm Name, Scope und die referenzierten §§. Lies die Architektur-Referenz
-docs/superpowers/specs/2026-06-13-1435-zilpzalp-mvp-design.md (die genannten §§) sowie den
-bereits vorhandenen Code unter backend/src/zilpzalp/, auf dem der Meilenstein aufbaut.
+> The end-user documentation is currently in **German**.
 
-Nutze das superpowers:writing-plans Skill. Bite-sized TDD-Tasks, exakte Pfade, vollständiger
-Code/Tests in jedem Schritt. Tech: Python + FastAPI, uv, pytest, src-Layout unter
-backend/src/zilpzalp/. Halte dich strikt an den Scope der Roadmap-Zeile und schließe alles
-aus, was laut Roadmap erst spätere Meilensteine liefern — frag nach, wenn der Scope unklar ist.
+## Security
 
-Plan speichern als docs/superpowers/plans/YYYY-MM-DD-HHMM-<kurzname>.md, dann die betreffende
-Meilenstein-Zeile in docs/mvp/roadmap.md aktualisieren (Plan-Link, Status 📝).
-````
+⚠️ **ZilpZalp has no authentication.** It is designed to run inside a trusted home
+network. Do not expose the web UI to the internet unprotected.
 
-## Optimize `.claude/settings.json`
+## License
 
-````shell
-/fewer-permission-prompts
-````
+Released under the [MIT License](LICENSE).
