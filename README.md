@@ -67,6 +67,11 @@ End-user documentation is built with
 ⚠️ **ZilpZalp has no authentication.** It is designed to run inside a trusted home
 network. Do not expose the web UI to the internet unprotected.
 
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development setup, tests, and commit conventions.
+
 ## License
 
 Released under the [MIT License](LICENSE).
