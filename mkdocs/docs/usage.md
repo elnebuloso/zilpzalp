@@ -36,3 +36,13 @@ asking.
 The **Configuration** page shows the current `config.yaml` and allows changes. Invalid
 input is rejected with an error message; the previous configuration then stays active.
 Reference for the contents: [Configuration](configuration.md).
+
+## Upload from the browser
+
+Besides dropping files into the watchfolder on disk, you can upload PDFs directly
+from the **Overview** page. Drag one or more PDFs onto the upload area, or click it
+to pick files. Each file is uploaded individually with its own progress bar, then
+appears in the queue within a couple of seconds — exactly as if it had been placed
+in the watchfolder by hand. Only PDF files are accepted; if a file name already
+exists in the inbox, the upload is kept under a numbered name such as
+`invoice (1).pdf` rather than overwriting the original.
