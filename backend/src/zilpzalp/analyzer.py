@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
+
+from pypdf import PdfReader
 
 from zilpzalp.config import Config
 from zilpzalp.document import Document
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -14,6 +20,7 @@ class DateCandidate:
     raw: str                   # roher Treffer-Text aus dem PDF (zu markierende Teilzeichenkette)
     label: str | None = None   # strukturgestuetzter Kontext (z. B. "Rechnungsdatum")
     snippet: str | None = None # umgebende Zeile aus dem Block; enthaelt raw
+    label_key: str | None = None  # i18n-Schluessel fuer app-erzeugte Labels (z. B. "pdf_created")
 
 
 @dataclass(frozen=True)
@@ -81,6 +88,46 @@ def _find_dates_in_text(text: str) -> list[tuple[int, int, str, datetime.date]]:
     return kept
 
 
+def _pdf_metadata_dates(path: Path) -> list[tuple[str, datetime.date]]:
+    """(label_key, Datum) aus CreationDate/ModDate des PDFs. [] bei jedem Lesefehler."""
+    try:
+        meta = PdfReader(path).metadata
+        out: list[tuple[str, datetime.date]] = []
+        if meta is not None:
+            if meta.creation_date is not None:
+                out.append(("pdf_created", meta.creation_date.date()))
+            if meta.modification_date is not None:
+                out.append(("pdf_modified", meta.modification_date.date()))
+        return out
+    except Exception:
+        logger.debug("PDF-Metadaten von %s nicht lesbar", path, exc_info=True)
+        return []
+
+
+def file_dates(path: Path, config: Config) -> list[DateCandidate]:
+    """Datei-Ebene-Fallback-Daten, immer nach den Text-Kandidaten angehaengt.
+
+    Reihenfolge: PDF CreationDate, PDF ModDate, dann Dateisystem-mtime. Fehlende
+    Eintraege werden uebersprungen; wirft nie (der Worker darf ein Dokument nicht
+    wegen eines Metadaten-Problems verlieren)."""
+    entries = _pdf_metadata_dates(path)
+    try:
+        mtime = datetime.date.fromtimestamp(path.stat().st_mtime)
+        entries.append(("file_modified", mtime))
+    except OSError:
+        logger.debug("Dateisystem-mtime von %s nicht lesbar", path, exc_info=True)
+    return [
+        DateCandidate(
+            normalized=d.strftime(config.date_format),
+            raw="",
+            label=None,
+            snippet=None,
+            label_key=key,
+        )
+        for key, d in entries
+    ]
+
+
 _INLINE_LABEL = re.compile(r"([A-Za-zäöüÄÖÜ][A-Za-zäöüÄÖÜ ]{1,39}?)[:\s]*$")
 
 
@@ -135,7 +182,11 @@ def _snippet_for(text: str, start: int) -> str:
     return text[line_start:line_end].strip()
 
 
-def analyze(document: Document, config: Config) -> Analysis:
+def analyze(
+    document: Document,
+    config: Config,
+    file_dates: list[DateCandidate] | None = None,
+) -> Analysis:
     full_text = "\n".join(b.text for b in document.blocks)
     candidates: list[DateCandidate] = []
     last_heading: str | None = None
@@ -170,6 +221,11 @@ def analyze(document: Document, config: Config) -> Analysis:
                             snippet=_snippet_for(block.text, m.start()),
                         )
                     )
+    seen = {c.normalized for c in candidates}
+    for fc in file_dates or []:
+        if fc.normalized not in seen:
+            candidates.append(fc)
+            seen.add(fc.normalized)
     return Analysis(
         date_candidates=candidates,
         sender=_detect_sender(document),

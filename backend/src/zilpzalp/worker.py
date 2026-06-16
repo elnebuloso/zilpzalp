@@ -7,7 +7,7 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-from zilpzalp.analyzer import analyze
+from zilpzalp.analyzer import analyze, file_dates
 from zilpzalp.config import Config
 from zilpzalp.extractor import ExtractionError, extract
 from zilpzalp.queue import Queue
@@ -74,7 +74,7 @@ class Worker:
             self._register.mark_error(path, "technischer Fehler bei der Analyse")
             return
         try:
-            analysis = analyze(document, config)
+            analysis = analyze(document, config, file_dates=file_dates(path, config))
             suggestion = suggest(analysis, config)
         except Exception:
             logger.exception("Analysefehler bei %s", path)

@@ -166,3 +166,117 @@ def test_table_candidate_snippet_contains_hit(tmp_path):
 
     assert c.raw == "01.02.2026"
     assert "01.02.2026" in c.snippet
+
+
+def test_date_candidate_carries_label_key():
+    from zilpzalp.analyzer import DateCandidate
+
+    c = DateCandidate(normalized="2026-01-15", raw="", label_key="pdf_created")
+    assert c.label_key == "pdf_created"
+    assert c.label is None
+
+
+def _pdf_with_metadata(path, *, created=None, modified=None):
+    """Write a minimal PDF carrying the given PDF-date strings (D:YYYYMMDDHHmmSS)."""
+    from pypdf import PdfWriter
+
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    meta = {}
+    if created is not None:
+        meta["/CreationDate"] = created
+    if modified is not None:
+        meta["/ModDate"] = modified
+    if meta:
+        writer.add_metadata(meta)
+    with open(path, "wb") as fh:
+        writer.write(fh)
+
+
+def test_file_dates_reads_pdf_metadata_in_priority_order(tmp_path):
+    from zilpzalp.analyzer import file_dates
+
+    pdf = tmp_path / "doc.pdf"
+    _pdf_with_metadata(pdf, created="D:20260115120000", modified="D:20260201120000")
+
+    result = file_dates(pdf, _config(tmp_path))
+    by_key = [(c.label_key, c.normalized) for c in result]
+
+    assert by_key[0] == ("pdf_created", "2026-01-15")
+    assert by_key[1] == ("pdf_modified", "2026-02-01")
+    assert by_key[2][0] == "file_modified"
+    assert all(c.raw == "" and c.snippet is None and c.label is None for c in result)
+
+
+def test_file_dates_falls_back_to_mtime_when_no_metadata(tmp_path):
+    from zilpzalp.analyzer import file_dates
+
+    pdf = tmp_path / "nometa.pdf"
+    _pdf_with_metadata(pdf)  # blank PDF, no /CreationDate or /ModDate
+
+    result = file_dates(pdf, _config(tmp_path))
+    keys = [c.label_key for c in result]
+
+    assert keys == ["file_modified"]
+
+
+def test_file_dates_falls_back_to_mtime_when_pdf_unreadable(tmp_path):
+    from zilpzalp.analyzer import file_dates
+
+    junk = tmp_path / "broken.pdf"
+    junk.write_bytes(b"%PDF-1.4 not a real pdf")
+
+    result = file_dates(junk, _config(tmp_path))
+    keys = [c.label_key for c in result]
+
+    assert keys == ["file_modified"]
+
+
+def test_file_dates_returns_empty_when_file_vanishes(tmp_path):
+    from zilpzalp.analyzer import file_dates
+
+    pdf = tmp_path / "gone.pdf"
+    _pdf_with_metadata(pdf, created="D:20260115120000")
+    # Simulate the file vanishing before file_dates runs: both the PDF read and
+    # the stat() fall through their guards, so no candidate is produced.
+    pdf.unlink()
+    result = file_dates(pdf, _config(tmp_path))
+    assert [c.label_key for c in result] == []  # both PDF read and stat fail -> empty
+
+
+def test_analyze_appends_file_dates_after_text_dates(tmp_path):
+    from zilpzalp.analyzer import DateCandidate, analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    extra = [DateCandidate(normalized="2020-07-09", raw="", label_key="file_modified")]
+
+    analysis = analyze(doc, _config(tmp_path), file_dates=extra)
+    normalized = [c.normalized for c in analysis.date_candidates]
+
+    assert normalized == ["2026-01-15", "2020-07-09"]   # text first, file date appended
+
+
+def test_analyze_dedups_file_date_equal_to_text_date(tmp_path):
+    from zilpzalp.analyzer import DateCandidate, analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    extra = [DateCandidate(normalized="2026-01-15", raw="", label_key="pdf_created")]
+
+    analysis = analyze(doc, _config(tmp_path), file_dates=extra)
+
+    assert [c.normalized for c in analysis.date_candidates] == ["2026-01-15"]  # no duplicate
+
+
+def test_analyze_without_file_dates_is_unchanged(tmp_path):
+    from zilpzalp.analyzer import analyze
+
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Rechnungsdatum: 15.01.2026", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+
+    assert [c.normalized for c in analysis.date_candidates] == ["2026-01-15"]
