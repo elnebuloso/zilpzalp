@@ -1,33 +1,33 @@
-site_name: ZilpZalp — Dokumentation
-site_description: Halb-automatische Dokumentenablage mit Mensch in der Schleife
+site_name: ZilpZalp — Documentation
+site_description: Semi-automatic document filing with a human in the loop
 site_url: https://elnebuloso.github.io/zilpzalp/
 docs_dir: docs
 
 theme:
   name: material
-  language: de
+  language: en
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       toggle:
         icon: material/weather-night
-        name: Zu dunklem Modus wechseln
+        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       toggle:
         icon: material/weather-sunny
-        name: Zu hellem Modus wechseln
+        name: Switch to light mode
   features:
     - navigation.instant
     - navigation.top
     - content.code.copy
 
 nav:
-  - Übersicht: index.md
+  - Overview: index.md
   - Installation: installation.md
-  - Bedienung: bedienung.md
-  - Konfiguration: konfiguration.md
-  - Fehlerbehebung: fehlerbehebung.md
+  - Usage: usage.md
+  - Configuration: configuration.md
+  - Troubleshooting: troubleshooting.md
 
 markdown_extensions:
   - admonition

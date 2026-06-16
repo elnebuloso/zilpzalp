@@ -56,11 +56,9 @@ End-user documentation is built with
 [`mkdocs/`](mkdocs/)) and published at <https://elnebuloso.github.io/zilpzalp/>:
 
 - [Installation](https://elnebuloso.github.io/zilpzalp/installation/) — setup with Docker Compose
-- [Usage](https://elnebuloso.github.io/zilpzalp/bedienung/) — the browser review workflow
-- [Configuration](https://elnebuloso.github.io/zilpzalp/konfiguration/) — `config.yaml` in detail
-- [Troubleshooting](https://elnebuloso.github.io/zilpzalp/fehlerbehebung/) — operation and common errors
-
-> The end-user documentation is currently in **German**.
+- [Usage](https://elnebuloso.github.io/zilpzalp/usage/) — the browser review workflow
+- [Configuration](https://elnebuloso.github.io/zilpzalp/configuration/) — `config.yaml` in detail
+- [Troubleshooting](https://elnebuloso.github.io/zilpzalp/troubleshooting/) — operation and common errors
 
 ## Security
 

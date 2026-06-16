@@ -1,74 +1,72 @@
 # Installation
 
-ZilpZalp wird als zwei Container betrieben: das **Backend** (Weboberfläche +
-Verarbeitung) und die **Doku-Site** (diese Dokumentation). Beide werden über
-`docker-compose.yml` gestartet.
+ZilpZalp runs as two containers: the **backend** (web UI + processing) and the
+**docs site** (this documentation). Both are started via `docker-compose.yml`.
 
-## Voraussetzungen
+## Requirements
 
-- Docker und Docker Compose v2
-- Ein Linux-Host (oder WSL2). **Hinweis:** Auf gemounteten Windows-Pfaden (`/mnt/c/…`)
-  sind Dateisystem-Events unzuverlässig — lege Watchfolder/Zielordner auf native
-  Linux-Pfade.
+- Docker and Docker Compose v2
+- A Linux host (or WSL2). **Note:** On mounted Windows paths (`/mnt/c/…`), filesystem
+  events are unreliable — put the watchfolder and target folders on native Linux paths.
 
-## Ordner und Volumes
+## Folders and volumes
 
-ZilpZalp arbeitet ausschließlich über gemountete Verzeichnisse. Das Compose-Setup
-mountet standardmäßig den mitgelieferten `demo/`-Ordner (relativ zum Repo-Root):
+ZilpZalp works exclusively through mounted directories. By default the Compose setup
+mounts the bundled `demo/` folder (relative to the repo root):
 
-| Host-Ordner | Container-Pfad | Zweck |
+| Host folder | Container path | Purpose |
 |---|---|---|
-| `./demo/config` | `/config` | enthält `config.yaml` (einzige dauerhafte Einstellung) |
-| `./demo/data/inbox` | `/data/inbox` | **Watchfolder** — hier landen neue PDFs |
-| `./demo/data/error` | `/data/error` | unlesbare/fehlerhafte PDFs |
-| `./demo/data/processed` | `/data/processed` | verarbeitete Originale (bei `original_handling: move`) |
-| `./demo/targets` | `/targets` | Zielordner für die abgelegten Dateien |
+| `./demo/config` | `/config` | contains `config.yaml` (the only persistent setting) |
+| `./demo/data/inbox` | `/data/inbox` | **watchfolder** — new PDFs land here |
+| `./demo/data/error` | `/data/error` | unreadable/faulty PDFs |
+| `./demo/data/processed` | `/data/processed` | processed originals (with `original_handling: move`) |
+| `./demo/targets` | `/targets` | target folders for filed documents |
 
-## Schnellstart (Demo)
+## Quick start (demo)
 
-Der `demo/`-Ordner ist startklar und enthält bereits eine Beispiel-Rechnung in der
-Inbox. Einfach bauen und starten:
+The `demo/` folder is ready to run and already contains a sample invoice in the inbox.
+Just build and start:
 
 ```bash
 docker compose up -d --build
 ```
 
-Dann aufrufen:
+Then open:
 
-- Weboberfläche: <http://localhost:8000> — die Beispiel-Rechnung erscheint sofort in der Queue
-- Diese Dokumentation: <http://localhost:8001>
+- Web UI: <http://localhost:8000> — the sample invoice shows up in the queue right away
+- This documentation: <http://localhost:8001>
 
-Status prüfen:
+Check status:
 
 ```bash
 docker compose ps
 curl -fsS http://localhost:8000/healthz/live
 ```
 
-Erwartet: `{"status":"ok"}`.
+Expected: `{"status":"ok"}`.
 
-## Eigene Dokumente / Echtbetrieb
+## Your own documents / production use
 
-Für den Echtbetrieb passt du die Demo an deine Bedürfnisse an:
+For production use, adapt the demo to your needs:
 
-1. **Konfiguration anpassen:** [`demo/config/config.yaml`](https://github.com/elnebuloso/zilpzalp/blob/main/demo/config/config.yaml)
-   editieren (Ziele, Regeln, Namensmuster). Die Pfade darin sind **Container-Pfade**
-   (`/data/inbox`, `/targets/finanzen`, …), nicht Host-Pfade — Details in der
-   [Konfiguration](konfiguration.md).
+1. **Adjust the configuration:** edit [`demo/config/config.yaml`](https://github.com/elnebuloso/zilpzalp/blob/main/demo/config/config.yaml)
+   (targets, rules, naming patterns). The paths in it are **container paths**
+   (`/data/inbox`, `/targets/finanzen`, …), not host paths — details in
+   [Configuration](configuration.md).
 
-2. **PDFs ablegen:** eigene Dateien in `demo/data/inbox` legen.
+2. **Drop in PDFs:** put your own files into `demo/data/inbox`.
 
-3. **Optional eigene Ordner:** Statt `demo/` kannst du in `docker-compose.yml` beliebige
-   Host-Pfade auf dieselben Container-Pfade mounten.
+3. **Optional custom folders:** instead of `demo/`, you can mount any host paths to the
+   same container paths in `docker-compose.yml`.
 
-## Stoppen / Aktualisieren
+## Stop / update
 
 ```bash
-docker compose down          # stoppt beide Container
-docker compose up -d --build # nach Änderungen neu bauen und starten
+docker compose down          # stops both containers
+docker compose up -d --build # rebuild and start after changes
 ```
 
-!!! note "Startverhalten"
-    Beim Start scannt ZilpZalp den Watchfolder einmalig und nimmt danach neue Dateien
-    live über Dateisystem-Events auf. Ein unbestätigtes PDF taucht nach einem Neustart
-    wieder in der Queue auf — der Watchfolder ist die Quelle der Wahrheit.
+!!! note "Startup behavior"
+    On startup ZilpZalp scans the watchfolder once and then picks up new files live via
+    filesystem events. An unconfirmed PDF reappears in the queue after a restart — the
+    watchfolder is the source of truth.

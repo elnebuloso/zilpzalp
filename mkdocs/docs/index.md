@@ -1,34 +1,33 @@
 # ZilpZalp
 
-ZilpZalp ist eine **halb-automatische Dokumentenablage** für den Eigenbetrieb im
-Heimnetz. Es beobachtet einen Ordner, liest eingehende PDFs und schlägt einen
-sauberen Dateinamen aus Datum, Absender und Dokumenttyp vor — **du prüfst, bestätigst,
-fertig**. Lokal, ohne Cloud.
+ZilpZalp is a **semi-automatic document filing tool** for self-hosting on your home
+network. It watches a folder, reads incoming PDFs, and suggests a clean filename from
+date, sender, and document type — **you review, confirm, done**. Local, no cloud.
 
-## Kerngedanke
+## Core idea
 
-- **Mensch in der Schleife:** ZilpZalp füllt vor, was es sicher weiß. Die endgültige
-  Entscheidung triffst immer du.
-- **Mehrere Datumsangaben sichtbar:** Ein Dokument enthält oft mehrere Daten
-  (Rechnungs-, Leistungs-, Fälligkeitsdatum). ZilpZalp zeigt **alle** erkannten
-  Kandidaten zur Auswahl an, statt im Hintergrund eines festzulegen.
-- **Datensparsam:** Es entsteht keine Historie und keine Datenbank. Quelle der Wahrheit
-  ist der überwachte Ordner selbst; einzige dauerhafte Einstellung ist `config.yaml`.
+- **Human in the loop:** ZilpZalp pre-fills what it knows for sure. The final decision
+  is always yours.
+- **Every date stays visible:** A document often contains several dates (invoice,
+  service, due date). ZilpZalp shows **all** detected candidates for you to choose from
+  instead of silently picking one in the background.
+- **Data-frugal:** No history and no database are created. The watched folder itself is
+  the source of truth; the only persistent setting is `config.yaml`.
 
-## Wie es funktioniert
+## How it works
 
 ```
-Watchfolder → Analyse (Datum/Absender/Typ) → Vorschlag → Review im Browser
-→ Bestätigung → Kopie in den Zielordner → Original verschoben/gelöscht/behalten
+Watchfolder → Analysis (date/sender/type) → Suggestion → Review in browser
+→ Confirmation → Copy to target folder → Original moved/deleted/kept
 ```
 
-## Loslegen
+## Get started
 
-- [Installation](installation.md) — Einrichtung mit Docker Compose
-- [Bedienung](bedienung.md) — der Review-Workflow im Browser
-- [Konfiguration](konfiguration.md) — `config.yaml` im Detail
-- [Fehlerbehebung](fehlerbehebung.md) — Betrieb und typische Fehlerfälle
+- [Installation](installation.md) — setup with Docker Compose
+- [Usage](usage.md) — the review workflow in the browser
+- [Configuration](configuration.md) — `config.yaml` in detail
+- [Troubleshooting](troubleshooting.md) — operation and common errors
 
-!!! warning "Kein Zugriffsschutz"
-    ZilpZalp hat **kein Login**. Es ist für den Betrieb im vertrauenswürdigen Heimnetz
-    gedacht. Mache die Weboberfläche nicht ungeschützt aus dem Internet erreichbar.
+!!! warning "No access protection"
+    ZilpZalp has **no login**. It is designed to run inside a trusted home network.
+    Do not expose the web UI to the internet unprotected.

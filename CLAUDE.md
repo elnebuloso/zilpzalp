@@ -12,6 +12,10 @@ Trivial tasks (one-liners, obvious fixes): just do it.
   refactor what isn't broken. Remove orphans your change creates; mention pre-existing
   dead code, don't delete it unasked.
 
+## Documentation language
+
+- README.md and the mkdocs documentation under `mkdocs/` are written in English.
+
 ## Git
 
 - Conventional Commits, English. Example: `fix(auth): handle expired tokens on refresh`
