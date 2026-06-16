@@ -230,3 +230,15 @@ def test_file_dates_falls_back_to_mtime_when_pdf_unreadable(tmp_path):
     keys = [c.label_key for c in result]
 
     assert keys == ["file_modified"]
+
+
+def test_file_dates_returns_only_metadata_when_file_vanishes(tmp_path):
+    from zilpzalp.analyzer import file_dates
+
+    pdf = tmp_path / "gone.pdf"
+    _pdf_with_metadata(pdf, created="D:20260115120000")
+    # read metadata-bearing copy into memory is not needed; PdfReader runs first,
+    # then stat() — simulate the file vanishing by deleting before the call.
+    pdf.unlink()
+    result = file_dates(pdf, _config(tmp_path))
+    assert [c.label_key for c in result] == []  # both PDF read and stat fail -> empty

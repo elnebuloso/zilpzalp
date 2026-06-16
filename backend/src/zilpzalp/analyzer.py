@@ -89,9 +89,9 @@ def _find_dates_in_text(text: str) -> list[tuple[int, int, str, datetime.date]]:
 
 
 def _pdf_metadata_dates(path: Path) -> list[tuple[str, datetime.date]]:
-    """(label_key, date) for the PDF's CreationDate/ModDate. [] on any read error."""
+    """(label_key, Datum) aus CreationDate/ModDate des PDFs. [] bei jedem Lesefehler."""
     try:
-        meta = PdfReader(str(path)).metadata
+        meta = PdfReader(path).metadata
         out: list[tuple[str, datetime.date]] = []
         if meta is not None:
             if meta.creation_date is not None:
@@ -105,14 +105,17 @@ def _pdf_metadata_dates(path: Path) -> list[tuple[str, datetime.date]]:
 
 
 def file_dates(path: Path, config: Config) -> list[DateCandidate]:
-    """File-level fallback dates, always appended after text candidates.
+    """Datei-Ebene-Fallback-Daten, immer nach den Text-Kandidaten angehaengt.
 
-    Priority: PDF CreationDate, PDF ModDate, then filesystem mtime. Each entry
-    is skipped when unavailable; never raises (the worker must not lose a
-    document over a metadata hiccup)."""
-    entries = list(_pdf_metadata_dates(Path(path)))
-    mtime = datetime.date.fromtimestamp(Path(path).stat().st_mtime)
-    entries.append(("file_modified", mtime))
+    Reihenfolge: PDF CreationDate, PDF ModDate, dann Dateisystem-mtime. Fehlende
+    Eintraege werden uebersprungen; wirft nie (der Worker darf ein Dokument nicht
+    wegen eines Metadaten-Problems verlieren)."""
+    entries = _pdf_metadata_dates(path)
+    try:
+        mtime = datetime.date.fromtimestamp(path.stat().st_mtime)
+        entries.append(("file_modified", mtime))
+    except OSError:
+        logger.debug("Dateisystem-mtime von %s nicht lesbar", path, exc_info=True)
     return [
         DateCandidate(
             normalized=d.strftime(config.date_format),
