@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -105,19 +106,27 @@ class ExtractionError(Exception):
     """PDF lieferte keinen verwertbaren Text (korrupt, leer oder reiner Scan)."""
 
 
-def extract(pdf_path: str | Path) -> Document:
+def extract(pdf_path: str | Path, cache_dir: str | Path) -> Document:
     pdf_path = Path(pdf_path)
+    cache_dir = Path(cache_dir)
+    stem = pdf_path.stem
     with tempfile.TemporaryDirectory() as tmp:
         opendataloader_pdf.convert(
             input_path=[str(pdf_path)],
             output_dir=tmp,
-            format="json",
+            format=["json", "markdown"],
         )
-        outputs = list(Path(tmp).glob("*.json"))
-        if not outputs:
-            raise ExtractionError(f"OpenDataLoader erzeugte keine Ausgabe fuer {pdf_path.name!r}")
-        data = json.loads(outputs[0].read_text(encoding="utf-8"))
-    # TemporaryDirectory ist hier bereits geloescht -> kein Volltext bleibt auf Platte.
+        json_outputs = list(Path(tmp).glob("*.json"))
+        if not json_outputs:
+            raise ExtractionError(
+                f"OpenDataLoader erzeugte keine Ausgabe fuer {pdf_path.name!r}"
+            )
+        json_dest = cache_dir / f"{stem}.json"
+        shutil.move(str(json_outputs[0]), str(json_dest))
+        md_outputs = list(Path(tmp).glob("*.md")) or list(Path(tmp).glob("*.markdown"))
+        if md_outputs:
+            shutil.move(str(md_outputs[0]), str(cache_dir / f"{stem}.md"))
+        data = json.loads(json_dest.read_text(encoding="utf-8"))
     document = document_from_odl(data)
     if not any(block.text.strip() for block in document.blocks):
         raise ExtractionError(f"Kein Text im PDF {pdf_path.name!r} gefunden")
