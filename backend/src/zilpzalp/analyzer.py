@@ -14,6 +14,7 @@ class DateCandidate:
     raw: str                   # roher Treffer-Text aus dem PDF (zu markierende Teilzeichenkette)
     label: str | None = None   # strukturgestuetzter Kontext (z. B. "Rechnungsdatum")
     snippet: str | None = None # umgebende Zeile aus dem Block; enthaelt raw
+    label_key: str | None = None  # i18n-Schluessel fuer app-erzeugte Labels (z. B. "pdf_created")
 
 
 @dataclass(frozen=True)

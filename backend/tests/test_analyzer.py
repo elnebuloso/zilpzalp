@@ -166,3 +166,11 @@ def test_table_candidate_snippet_contains_hit(tmp_path):
 
     assert c.raw == "01.02.2026"
     assert "01.02.2026" in c.snippet
+
+
+def test_date_candidate_carries_label_key():
+    from zilpzalp.analyzer import DateCandidate
+
+    c = DateCandidate(normalized="2026-01-15", raw="", label_key="pdf_created")
+    assert c.label_key == "pdf_created"
+    assert c.label is None
