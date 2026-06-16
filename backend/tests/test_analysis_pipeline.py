@@ -17,8 +17,11 @@ paths:
   error_folder: {tmp_path / "error"}
 original_handling: keep
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 rules:
   - name: Stadtwerke
     match:

@@ -167,10 +167,9 @@ def review_page(request: Request, entry_id: str):
 
 
 def _resolve_template(config: Config, pattern_name: str) -> str:
-    for pattern in config.patterns:
-        if pattern.name == pattern_name:
-            return pattern.template
-    return config.default_pattern
+    if pattern_name and pattern_name in config.patterns:
+        return config.patterns[pattern_name].template
+    return config.patterns[config.default_pattern].template
 
 
 def _normalize_date(date_value: str, config: Config) -> str:

@@ -12,8 +12,11 @@ def _config(tmp_path: Path):
         """
 original_handling: keep
 summary_mode: never
-default_pattern: "{date}__{sender}_{doctype}_{description}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{date}__{sender}_{doctype}_{description}"
 """,
         encoding="utf-8",
     )
@@ -58,8 +61,11 @@ paths:
   error_folder: {tmp_path / "error"}
 original_handling: keep
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 date_patterns:
   - label: leistungsdatum
     regex: 'Leistungszeitraum bis (\\d{{2}}\\.\\d{{2}}\\.\\d{{4}})'

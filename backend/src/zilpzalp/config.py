@@ -54,7 +54,6 @@ class Target(BaseModel):
 
 
 class Pattern(BaseModel):
-    name: str
     template: str
 
 
@@ -80,7 +79,7 @@ class Config(BaseModel):
     date_format: str
     date_patterns: list[DatePattern] = []
     targets: list[Target] = []
-    patterns: list[Pattern] = []
+    patterns: dict[str, Pattern] = {}
     # rules are consumed by the analyzer/suggestion engine (Milestone 2);
     # kept opaque here on purpose.
     rules: list[dict] = []
@@ -95,20 +94,22 @@ class Config(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _check_placeholders(self) -> "Config":
-        templates = [("default_pattern", self.default_pattern)]
-        templates += [
-            (f"patterns[{i}].template ({p.name})", p.template)
-            for i, p in enumerate(self.patterns)
-        ]
-        for where, template in templates:
-            found = set(_PLACEHOLDER_RE.findall(template))
+    def _check_patterns(self) -> "Config":
+        if not self.patterns:
+            raise ValueError("patterns darf nicht leer sein")
+        if self.default_pattern not in self.patterns:
+            raise ValueError(
+                f"default_pattern {self.default_pattern!r} verweist auf kein "
+                f"definiertes Pattern; verfügbar: {sorted(self.patterns)}"
+            )
+        for name, pattern in self.patterns.items():
+            found = set(_PLACEHOLDER_RE.findall(pattern.template))
             if "" in found:
-                raise ValueError(f"{where}: leerer Platzhalter {{}}")
+                raise ValueError(f"patterns.{name}: leerer Platzhalter {{}}")
             unknown = found - KNOWN_PLACEHOLDERS
             if unknown:
                 raise ValueError(
-                    f"{where} enthält unbekannte Platzhalter {sorted(unknown)}; "
+                    f"patterns.{name} enthält unbekannte Platzhalter {sorted(unknown)}; "
                     f"erlaubt sind {sorted(KNOWN_PLACEHOLDERS)}"
                 )
         return self

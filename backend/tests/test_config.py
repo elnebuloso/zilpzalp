@@ -15,7 +15,7 @@ def test_load_valid_config(valid_config, write_config):
     assert cfg.date_format == "%Y-%m-%d"
     assert cfg.paths.watchfolder.name == "inbox"
     assert cfg.targets[0].name == "Finanzen"
-    assert cfg.patterns[0].template == "{date}__{sender}_{doctype}_{description}"
+    assert cfg.patterns["standard"].template == "{date}__{sender}_{doctype}_{description}"
 
 
 def test_missing_file_raises_config_error(tmp_path):
@@ -88,29 +88,48 @@ def test_paths_use_defaults_when_env_unset(valid_config, write_config, monkeypat
     assert paths.trash == Path("/data/trash")
 
 
-def test_unknown_placeholder_in_default_pattern_raises(valid_config, write_config):
-    valid_config["default_pattern"] = "{date}_{unknown}"
-    path = write_config(valid_config)
-
-    with pytest.raises(ConfigError, match="unbekannte Platzhalter"):
-        load_config(path)
-
-
 def test_unknown_placeholder_in_pattern_template_raises(valid_config, write_config):
-    valid_config["patterns"] = [{"name": "standard", "template": "{date}_{bogus}"}]
+    valid_config["patterns"] = {"standard": {"template": "{date}_{bogus}"}}
+    valid_config["default_pattern"] = "standard"
     path = write_config(valid_config)
 
     with pytest.raises(ConfigError, match="bogus"):
         load_config(path)
 
 
-def test_known_placeholders_are_valid(valid_config, write_config):
-    valid_config["default_pattern"] = "{sender}-{doctype}-{description}-{date}"
+def test_empty_placeholder_raises_clear_message(valid_config, write_config):
+    valid_config["patterns"] = {"standard": {"template": "{date}_{}"}}
+    valid_config["default_pattern"] = "standard"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="leerer Platzhalter"):
+        load_config(path)
+
+
+def test_empty_patterns_raises(valid_config, write_config):
+    valid_config["patterns"] = {}
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="patterns"):
+        load_config(path)
+
+
+def test_default_pattern_must_reference_existing_key(valid_config, write_config):
+    valid_config["default_pattern"] = "doesnotexist"
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError, match="default_pattern"):
+        load_config(path)
+
+
+def test_pattern_template_known_placeholders_valid(valid_config, write_config):
+    valid_config["patterns"] = {"x": {"template": "{sender}-{doctype}-{description}-{date}"}}
+    valid_config["default_pattern"] = "x"
     path = write_config(valid_config)
 
     cfg = load_config(path)
 
-    assert cfg.default_pattern == "{sender}-{doctype}-{description}-{date}"
+    assert cfg.patterns["x"].template == "{sender}-{doctype}-{description}-{date}"
 
 
 def test_invalid_date_pattern_regex_raises(valid_config, write_config):
@@ -156,14 +175,6 @@ def test_date_format_with_directive_is_valid(valid_config, write_config):
     cfg = load_config(path)
 
     assert cfg.date_format == "%d.%m.%Y"
-
-
-def test_empty_placeholder_raises_clear_message(valid_config, write_config):
-    valid_config["default_pattern"] = "{date}_{}"
-    path = write_config(valid_config)
-
-    with pytest.raises(ConfigError, match="leerer Platzhalter"):
-        load_config(path)
 
 
 def test_invalid_summary_mode_raises_config_error(valid_config, write_config):

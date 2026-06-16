@@ -13,10 +13,10 @@ def _config(tmp_path: Path, original_handling: str = "keep", extra: str = ""):
         f"""
 original_handling: {original_handling}
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
 patterns:
-  - name: standard
+  standard:
     template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 {extra}
 """,

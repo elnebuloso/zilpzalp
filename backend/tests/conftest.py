@@ -26,15 +26,15 @@ def valid_config(tmp_path):
     return {
         "original_handling": "move",
         "summary_mode": "on_conflict",
-        "default_pattern": "{date}__{sender}_{doctype}_{description}",
+        "default_pattern": "standard",
         "date_format": "%Y-%m-%d",
         "date_patterns": [],
         "targets": [
             {"name": "Finanzen", "path": str(tmp_path / "finanzen"), "default": False}
         ],
-        "patterns": [
-            {"name": "standard", "template": "{date}__{sender}_{doctype}_{description}"}
-        ],
+        "patterns": {
+            "standard": {"template": "{date}__{sender}_{doctype}_{description}"}
+        },
         "rules": [],
     }
 

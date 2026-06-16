@@ -20,11 +20,9 @@ class Suggestion:
 
 
 def _resolve_pattern(config: Config, pattern_name: str | None) -> str:
-    if pattern_name:
-        for pattern in config.patterns:
-            if pattern.name == pattern_name:
-                return pattern.template
-    return config.default_pattern
+    if pattern_name and pattern_name in config.patterns:
+        return config.patterns[pattern_name].template
+    return config.patterns[config.default_pattern].template
 
 
 def _preselect(candidates: list[DateCandidate], preferred_label: str | None) -> int | None:
