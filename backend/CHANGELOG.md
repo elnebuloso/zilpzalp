@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/elnebuloso/zilpzalp/compare/v0.2.2...v0.3.0) (2026-06-16)
+
+
+### Features
+
+* fallback dates when no date is extracted ([#4](https://github.com/elnebuloso/zilpzalp/issues/4)) ([9e06132](https://github.com/elnebuloso/zilpzalp/commit/9e06132b85213bd0d9ec8fc5111e40ef5deee74a))
+
 ## [0.2.2](https://github.com/elnebuloso/zilpzalp/compare/v0.2.1...v0.2.2) (2026-06-14)
 
 
