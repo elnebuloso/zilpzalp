@@ -59,8 +59,8 @@
           <div class="field">
             <label class="field-label">{{ t('review.pattern') }}</label>
             <select class="select" name="pattern">
-              {% for p in config.patterns %}
-              <option value="{{ p.name }}" data-template="{{ p.template }}" {% if p.name == suggestion.pattern_name %}selected{% endif %}>{{ p.name }} — {{ p.template }}</option>
+              {% for name, p in config.patterns.items() %}
+              <option value="{{ name }}" data-template="{{ p.template }}" {% if name == suggestion.pattern_name %}selected{% endif %}>{{ name }} — {{ p.template }}</option>
               {% endfor %}
             </select>
           </div>
@@ -98,6 +98,10 @@
         </div>
         <div class="review-actions">
           <a class="btn ghost" href="/queue">{{ t('action.cancel') }}</a>
+          <button type="button" class="btn ghost" hx-post="/documents/{{ entry.id }}/skip"
+                  {% if config.original_handling == 'delete' %}hx-confirm="{{ t('confirm.skip') }}"{% endif %}>
+            {{ t('action.skip') }}
+          </button>
           <button type="button" class="btn primary" id="confirm-btn" style="flex:1;justify-content:center"
                   hx-post="/documents/{{ entry.id }}/confirm" hx-include="#review-form" hx-target="#modal-root" hx-swap="innerHTML">
             {{ t('action.confirm') }}

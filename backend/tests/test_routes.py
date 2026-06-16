@@ -193,7 +193,7 @@ def test_config_page_shows_current_yaml(client):
     response = client.get("/config")
     assert response.status_code == 200
     assert "Konfiguration" in response.text
-    assert "watchfolder" in response.text          # current file content shown
+    assert "original_handling" in response.text    # current file content shown
 
 
 def test_config_save_valid_updates_state(client):
@@ -423,3 +423,44 @@ def test_overview_shows_upload_zone(client):
     assert 'id="upload-zone"' in body
     assert 'id="upload-input"' in body
     assert "PDF" in body
+
+
+def test_skip_deletes_file_and_removes_entry_and_cache(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "skipme.pdf")
+    Path(cfg.paths.cache).joinpath("skipme.json").write_text("{}", encoding="utf-8")
+
+    response = client.post(f"/documents/{entry.id}/skip", follow_redirects=False)
+
+    assert response.status_code == 200
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    assert app.state.queue.get_by_id(entry.id) is None
+    assert not (Path(cfg.paths.watchfolder) / "skipme.pdf").exists()
+    assert not Path(cfg.paths.cache).joinpath("skipme.json").exists()
+
+
+def test_skip_unknown_entry_redirects(client):
+    response = client.post("/documents/deadbeef/skip", follow_redirects=False)
+    assert response.status_code == 200
+    assert response.headers.get("HX-Redirect") == "/queue"
+
+
+def test_queue_list_shows_skip_button(client):
+    _add_ready(client, "rechnung.pdf")
+    body = client.get("/partials/queue").text
+    assert "/skip" in body
+    assert "Überspringen" in body
+
+
+def test_config_save_triggers_reanalysis(client, monkeypatch):
+    import yaml as _yaml
+
+    called = {"n": 0}
+    monkeypatch.setattr(app.state.worker, "reanalyze_all", lambda: called.__setitem__("n", called["n"] + 1))
+
+    cfg_path = Path(app.state.config_path)
+    new = _yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    new["summary_mode"] = "always"
+    client.post("/config", data={"text": _yaml.safe_dump(new, allow_unicode=True)})
+
+    assert called["n"] == 1

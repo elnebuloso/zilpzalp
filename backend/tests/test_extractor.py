@@ -8,6 +8,32 @@ from zilpzalp.extractor import ExtractionError, document_from_odl, extract
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
+def test_extract_writes_cache_and_returns_document(tmp_path, monkeypatch):
+    import zilpzalp.extractor as extractor_mod
+
+    pdf = tmp_path / "rechnung.pdf"
+    pdf.write_bytes(b"%PDF-1.4")
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir(exist_ok=True)
+
+    def fake_convert(*, input_path, output_dir, format):
+        out = Path(output_dir)
+        (out / "rechnung.json").write_text(
+            json.dumps({"type": "paragraph", "content": "Datum 15.01.2026",
+                        "page number": 1}),
+            encoding="utf-8",
+        )
+        (out / "rechnung.md").write_text("# Rechnung\n15.01.2026", encoding="utf-8")
+
+    monkeypatch.setattr(extractor_mod.opendataloader_pdf, "convert", fake_convert)
+
+    doc = extract(pdf, cache_dir)
+
+    assert any("15.01.2026" in b.text for b in doc.blocks)
+    assert (cache_dir / "rechnung.json").exists()
+    assert (cache_dir / "rechnung.md").read_text(encoding="utf-8").startswith("# Rechnung")
+
+
 def test_document_from_odl_simple_elements():
     data = json.loads((FIXTURES / "invoice.odl.json").read_text(encoding="utf-8"))
     doc = document_from_odl(data)
@@ -43,13 +69,13 @@ def test_document_from_odl_table_cells_when_present():
 
 
 @pytest.mark.integration
-def test_extract_real_pdf_returns_document():
-    doc = extract(FIXTURES / "invoice.pdf")
+def test_extract_real_pdf_returns_document(tmp_path):
+    doc = extract(FIXTURES / "invoice.pdf", tmp_path)
     full = "\n".join(b.text for b in doc.blocks)
     assert "15.01.2026" in full
 
 
 @pytest.mark.integration
-def test_extract_pdf_without_text_raises():
+def test_extract_pdf_without_text_raises(tmp_path):
     with pytest.raises(ExtractionError):
-        extract(FIXTURES / "empty.pdf")
+        extract(FIXTURES / "empty.pdf", tmp_path)

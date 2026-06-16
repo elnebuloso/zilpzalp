@@ -27,18 +27,31 @@ class Worker:
     move to error/ for unreadable PDFs.
     """
 
-    def __init__(self, register: Queue, config_provider: Callable[[], Config]) -> None:
+    def __init__(
+        self,
+        register: Queue,
+        config_provider: Callable[[], Config],
+        cache,
+    ) -> None:
         self._register = register
         self._config_provider = config_provider
+        self._cache = cache
         self._work: _queue.Queue = _queue.Queue()
         self._thread = threading.Thread(
             target=self._run, name="zilpzalp-worker", daemon=True
         )
 
     def submit(self, path: Path) -> None:
-        """Watcher callback: register (dedup) and enqueue for processing."""
+        """Watcher callback: register (dedup) and enqueue a fresh extraction."""
         if self._register.add(path):
-            self._work.put(Path(path))
+            self._work.put(("extract", Path(path)))
+
+    def reanalyze_all(self) -> None:
+        """Re-run analyze+suggest for every entry that has a cached extraction,
+        using the current config. Cheap: extraction is skipped."""
+        for entry in self._register.list():
+            if self._cache.load_document(entry.path) is not None:
+                self._work.put(("reanalyze", entry.path))
 
     def start(self) -> None:
         self._thread.start()
@@ -55,24 +68,27 @@ class Worker:
             item = self._work.get()
             if item is _SHUTDOWN:
                 return
+            action, path = item
             try:
-                self._process(item)
+                self._process(path, reuse=(action == "reanalyze"))
             except Exception:  # never let the worker thread die
                 logger.exception("Unerwarteter Fehler im Worker bei %s", item)
 
-    def _process(self, path: Path) -> None:
+    def _process(self, path: Path, reuse: bool = False) -> None:
         self._register.mark_analyzing(path)
         config = self._config_provider()
-        try:
-            document = extract(path)
-        except ExtractionError as exc:
-            self._move_to_error(path, config)
-            self._register.mark_error(path, str(exc))
-            return
-        except Exception:
-            logger.exception("Extraktionsfehler bei %s", path)
-            self._register.mark_error(path, "technischer Fehler bei der Analyse")
-            return
+        document = self._cache.load_document(path) if reuse else None
+        if document is None:
+            try:
+                document = extract(path, config.paths.cache)
+            except ExtractionError as exc:
+                self._move_to_error(path, config)
+                self._register.mark_error(path, str(exc))
+                return
+            except Exception:
+                logger.exception("Extraktionsfehler bei %s", path)
+                self._register.mark_error(path, "technischer Fehler bei der Analyse")
+                return
         try:
             analysis = analyze(document, config, file_dates=file_dates(path, config))
             suggestion = suggest(analysis, config)

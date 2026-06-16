@@ -17,16 +17,12 @@ mkdocs/site/
 /config/
 /targets/
 
-# Demo: Struktur (.gitkeep), config.yaml und Beispiel-PDF bleiben versioniert,
-# der Laufzeit-Output (verschobene/verarbeitete/Fehler-Dateien) nicht.
+# Demo: nur das Beispiel-PDF in der Inbox ist versioniert; generierte Ordner nicht.
 /demo/data/inbox/*
 !/demo/data/inbox/.gitkeep
 !/demo/data/inbox/beispiel-rechnung.pdf
-/demo/data/error/*
-!/demo/data/error/.gitkeep
-/demo/data/processed/*
-!/demo/data/processed/.gitkeep
-/demo/targets/finanzen/*
-!/demo/targets/finanzen/.gitkeep
-/demo/targets/versicherungen/*
-!/demo/targets/versicherungen/.gitkeep
+/demo/data/error/
+/demo/data/processed/
+/demo/data/trash/
+/demo/data/outbox/
+/demo/data/cache/

@@ -24,8 +24,30 @@ class FileConflictError(ProcessorError):
 @dataclass(frozen=True)
 class ProcessResult:
     copied: list[Path]
-    original_action: Literal["moved", "deleted", "kept"]
-    original_destination: Path | None = None   # set only for "moved"
+    original_action: Literal["deleted", "trashed"]
+    original_destination: Path | None = None   # set only for "trashed"
+
+
+def _unique_name(folder: Path, name: str) -> Path:
+    candidate = folder / name
+    if not candidate.exists():
+        return candidate
+    stem, suffix = candidate.stem, candidate.suffix
+    counter = 1
+    while (folder / f"{stem} ({counter}){suffix}").exists():
+        counter += 1
+    return folder / f"{stem} ({counter}){suffix}"
+
+
+def _dispose(source: Path, config: Config) -> tuple[str, Path | None]:
+    """Remove the inbox original per config.original_handling. Used by both
+    filing (after the copy) and skipping (no copy)."""
+    if config.original_handling == "trash":
+        dest = _unique_name(config.paths.trash, source.name)
+        shutil.move(str(source), str(dest))
+        return "trashed", dest
+    source.unlink(missing_ok=True)
+    return "deleted", None
 
 
 def process(
@@ -34,7 +56,7 @@ def process(
     targets: list[Path],
     config: Config,
 ) -> ProcessResult:
-    """Copy *source* as *filename* into every target folder, then handle the
+    """Copy *source* as *filename* into every target folder, then dispose of the
     original per config.original_handling.
 
     All precondition/conflict checks run before any file is touched, so a
@@ -48,28 +70,18 @@ def process(
             raise ProcessorError(f"Zielordner fehlt: {target}")
 
     destinations = [target / filename for target in targets]
-
     for dest in destinations:
         if dest.exists():
             raise FileConflictError(dest)
 
-    processed_dest: Path | None = None
-    if config.original_handling == "move":
-        processed_dest = config.paths.processed_folder / source.name
-        if processed_dest.exists():
-            raise FileConflictError(processed_dest)
-
     for dest in destinations:
         shutil.copy2(source, dest)
 
-    if config.original_handling == "move":
-        shutil.move(str(source), str(processed_dest))
-        return ProcessResult(
-            copied=destinations,
-            original_action="moved",
-            original_destination=processed_dest,
-        )
-    if config.original_handling == "delete":
-        source.unlink()
-        return ProcessResult(copied=destinations, original_action="deleted")
-    return ProcessResult(copied=destinations, original_action="kept")
+    action, dest = _dispose(source, config)
+    return ProcessResult(copied=destinations, original_action=action, original_destination=dest)
+
+
+def skip(source: Path, config: Config) -> ProcessResult:
+    """Discard an inbox original without filing it, per config.original_handling."""
+    action, dest = _dispose(source, config)
+    return ProcessResult(copied=[], original_action=action, original_destination=dest)

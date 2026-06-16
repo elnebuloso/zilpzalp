@@ -2,28 +2,39 @@ import pytest
 import yaml
 
 
+@pytest.fixture(autouse=True)
+def env_paths(tmp_path, monkeypatch):
+    """Point all ZILPZALP_PATH_* at fresh temp dirs and create them, so every
+    test runs against a writable, isolated /data layout."""
+    mapping = {
+        "ZILPZALP_PATH_INBOX": tmp_path / "inbox",
+        "ZILPZALP_PATH_ERROR": tmp_path / "error",
+        "ZILPZALP_PATH_TRASH": tmp_path / "trash",
+        "ZILPZALP_PATH_CACHE": tmp_path / "cache",
+        "ZILPZALP_PATH_OUTBOX": tmp_path / "outbox",
+    }
+    for var, path in mapping.items():
+        path.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setenv(var, str(path))
+    return mapping
+
+
 @pytest.fixture
 def valid_config(tmp_path):
-    """A complete, valid config dict whose paths point at real temp dirs."""
-    for sub in ("inbox", "error", "processed", "finanzen"):
-        (tmp_path / sub).mkdir()
+    """A complete, valid domain config dict. Paths come from env (env_paths)."""
+    (tmp_path / "finanzen").mkdir(exist_ok=True)
     return {
-        "paths": {
-            "watchfolder": str(tmp_path / "inbox"),
-            "error_folder": str(tmp_path / "error"),
-            "processed_folder": str(tmp_path / "processed"),
-        },
-        "original_handling": "move",
+        "original_handling": "delete",
         "summary_mode": "on_conflict",
-        "default_pattern": "{date}__{sender}_{doctype}_{description}",
+        "default_pattern": "standard",
         "date_format": "%Y-%m-%d",
         "date_patterns": [],
         "targets": [
             {"name": "Finanzen", "path": str(tmp_path / "finanzen"), "default": False}
         ],
-        "patterns": [
-            {"name": "standard", "template": "{date}__{sender}_{doctype}_{description}"}
-        ],
+        "patterns": {
+            "standard": {"template": "{date}__{sender}_{doctype}_{description}"}
+        },
         "rules": [],
     }
 

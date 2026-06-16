@@ -17,10 +17,34 @@ class ConfigError(Exception):
     """Raised when config.yaml is missing, unparseable, or invalid."""
 
 
+DEFAULT_PATHS = {
+    "inbox": "/data/inbox",
+    "error": "/data/error",
+    "trash": "/data/trash",
+    "cache": "/data/cache",
+    "outbox": "/data/outbox",
+}
+
+
 class Paths(BaseModel):
     watchfolder: Path
     error_folder: Path
-    processed_folder: Path | None = None
+    trash: Path
+    cache: Path
+
+
+def load_paths() -> Paths:
+    env = os.environ.get
+    return Paths(
+        watchfolder=Path(env("ZILPZALP_PATH_INBOX", DEFAULT_PATHS["inbox"])),
+        error_folder=Path(env("ZILPZALP_PATH_ERROR", DEFAULT_PATHS["error"])),
+        trash=Path(env("ZILPZALP_PATH_TRASH", DEFAULT_PATHS["trash"])),
+        cache=Path(env("ZILPZALP_PATH_CACHE", DEFAULT_PATHS["cache"])),
+    )
+
+
+def outbox_path() -> Path:
+    return Path(os.environ.get("ZILPZALP_PATH_OUTBOX", DEFAULT_PATHS["outbox"]))
 
 
 class Target(BaseModel):
@@ -30,7 +54,6 @@ class Target(BaseModel):
 
 
 class Pattern(BaseModel):
-    name: str
     template: str
 
 
@@ -50,13 +73,13 @@ class DatePattern(BaseModel):
 
 class Config(BaseModel):
     paths: Paths
-    original_handling: Literal["move", "delete", "keep"]
+    original_handling: Literal["delete", "trash"]
     summary_mode: Literal["always", "on_conflict", "never"]
     default_pattern: str
     date_format: str
     date_patterns: list[DatePattern] = []
     targets: list[Target] = []
-    patterns: list[Pattern] = []
+    patterns: dict[str, Pattern] = {}
     # rules are consumed by the analyzer/suggestion engine (Milestone 2);
     # kept opaque here on purpose.
     rules: list[dict] = []
@@ -71,47 +94,30 @@ class Config(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _check_paths_exist(self) -> "Config":
-        required = [
-            ("watchfolder", self.paths.watchfolder),
-            ("error_folder", self.paths.error_folder),
-        ]
-        for label, folder in required:
-            if not folder.is_dir():
-                raise ValueError(
-                    f"paths.{label} {str(folder)!r} existiert nicht oder ist kein Verzeichnis"
-                )
-        if self.original_handling == "move":
-            processed = self.paths.processed_folder
-            if processed is None:
-                raise ValueError(
-                    "paths.processed_folder ist erforderlich, wenn original_handling: move"
-                )
-            if not processed.is_dir():
-                raise ValueError(
-                    f"paths.processed_folder {str(processed)!r} existiert nicht "
-                    "oder ist kein Verzeichnis"
-                )
-        return self
-
-    @model_validator(mode="after")
-    def _check_placeholders(self) -> "Config":
-        templates = [("default_pattern", self.default_pattern)]
-        templates += [
-            (f"patterns[{i}].template ({p.name})", p.template)
-            for i, p in enumerate(self.patterns)
-        ]
-        for where, template in templates:
-            found = set(_PLACEHOLDER_RE.findall(template))
+    def _check_patterns(self) -> "Config":
+        if not self.patterns:
+            raise ValueError("patterns darf nicht leer sein")
+        if self.default_pattern not in self.patterns:
+            raise ValueError(
+                f"default_pattern {self.default_pattern!r} verweist auf kein "
+                f"definiertes Pattern; verfügbar: {sorted(self.patterns)}"
+            )
+        for name, pattern in self.patterns.items():
+            found = set(_PLACEHOLDER_RE.findall(pattern.template))
             if "" in found:
-                raise ValueError(f"{where}: leerer Platzhalter {{}}")
+                raise ValueError(f"patterns.{name}: leerer Platzhalter {{}}")
             unknown = found - KNOWN_PLACEHOLDERS
             if unknown:
                 raise ValueError(
-                    f"{where} enthält unbekannte Platzhalter {sorted(unknown)}; "
+                    f"patterns.{name} enthält unbekannte Platzhalter {sorted(unknown)}; "
                     f"erlaubt sind {sorted(KNOWN_PLACEHOLDERS)}"
                 )
         return self
+
+
+def _apply_default_target(config: Config) -> None:
+    if not config.targets:
+        config.targets = [Target(name="Outbox", path=outbox_path(), default=True)]
 
 
 def load_config(path: str | Path) -> Config:
@@ -131,10 +137,14 @@ def load_config(path: str | Path) -> Config:
         raise ConfigError(
             f"Konfigurationsdatei {str(path)!r} muss ein YAML-Mapping enthalten"
         ) from None
+    data.pop("paths", None)  # paths come from env, never from YAML
+    data["paths"] = load_paths()
     try:
-        return Config(**data)
+        config = Config(**data)
     except ValidationError as exc:
         raise ConfigError(_format_validation_error(path, exc)) from exc
+    _apply_default_target(config)
+    return config
 
 
 def _format_validation_error(path: str | Path, exc: ValidationError) -> str:
@@ -156,10 +166,13 @@ def save_config(path: str | Path, text: str) -> Config:
         raise ConfigError(f"Eingabe ist kein gültiges YAML: {exc}") from exc
     if not isinstance(data, dict):
         raise ConfigError("Konfiguration muss ein YAML-Mapping enthalten")
+    data.pop("paths", None)  # paths come from env, never from YAML
+    data["paths"] = load_paths()
     try:
         config = Config(**data)
     except ValidationError as exc:
         raise ConfigError(_format_validation_error(path, exc)) from exc
+    _apply_default_target(config)
 
     fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     try:

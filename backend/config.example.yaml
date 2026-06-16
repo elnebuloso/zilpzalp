@@ -1,28 +1,25 @@
-# Beispielkonfiguration für ZilpZalp. Für lokale Läufe nach config.yaml kopieren
-# und die Pfade an existierende Verzeichnisse anpassen.
-paths:
-  watchfolder: /data/inbox
-  error_folder: /data/error
-  processed_folder: /data/processed   # nur erforderlich bei original_handling: move
+# Beispielkonfiguration (Domäne). Infrastruktur-Pfade kommen aus Env-Variablen
+# (ZILPZALP_PATH_INBOX/ERROR/TRASH/CACHE/OUTBOX), nicht aus dieser Datei.
+original_handling: delete        # delete | trash
+summary_mode: on_conflict        # always | on_conflict | never
 
-original_handling: move        # move | delete | keep
-summary_mode: on_conflict      # always | on_conflict | never
-
-default_pattern: "{date}__{sender}_{doctype}_{description}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
 
-# Optional: zusätzliche Datums-Matcher für Sonderfälle (additiv zur eingebauten Erkennung).
+# Optional: zusätzliche Datums-Matcher (additiv zur eingebauten Erkennung).
 date_patterns:
   - label: leistungsdatum
     regex: 'Leistungsdatum:\s*(\d{2}\.\d{2}\.\d{4})'
 
+# Fehlt dieser Block, wird automatisch ein Default-Target "Outbox"
+# (ZILPZALP_PATH_OUTBOX) angelegt.
 targets:
   - name: Finanzen
     path: /targets/finanzen
-    default: false
+    default: true
 
 patterns:
-  - name: standard
+  standard:
     template: "{date}__{sender}_{doctype}_{description}"
 
 rules:

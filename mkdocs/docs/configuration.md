@@ -1,27 +1,37 @@
 # Configuration
 
-The file `config.yaml` (mounted at `/config/config.yaml`) is the **only persistent
-setting**. It is validated at startup: if a required path is missing or a naming pattern
-contains an unknown placeholder, ZilpZalp **does not start** and instead reports the
-error clearly.
+The file `config.yaml` (path controlled by the `ZILPZALP_CONFIG` env var, default
+`/config/config.yaml`) is the **only persistent setting**. It is validated at startup:
+if a naming pattern contains an unknown placeholder, ZilpZalp **does not start** and
+instead reports the error clearly.
 
-!!! info "Paths are container paths"
-    All paths in `config.yaml` refer to the **inside of the container**
-    (`/data/inbox`, `/targets/…`). How these map to host folders is defined in
-    `docker-compose.yml` (see [Installation](installation.md)).
+!!! info "Infra paths come from environment variables"
+    Folder paths are **not** part of `config.yaml`. They are set via
+    `ZILPZALP_PATH_*` environment variables (see table below).
+
+!!! tip "Volume mount for persistence"
+    Mount `/config` as a Docker volume so that UI config edits survive container
+    restarts. On first start the entrypoint seeds `/config/config.yaml` from the
+    built-in default if the file does not exist yet.
+
+## Infrastructure path variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ZILPZALP_PATH_INBOX` | `/data/inbox` | Watched folder for incoming PDFs |
+| `ZILPZALP_PATH_ERROR` | `/data/error` | Storage for unreadable PDFs |
+| `ZILPZALP_PATH_TRASH` | `/data/trash` | Trash bin (used with `original_handling: trash`) |
+| `ZILPZALP_PATH_OUTBOX` | `/data/outbox` | Default output target ("Outbox") |
+| `ZILPZALP_PATH_CACHE` | `/data/cache` | OCR / extraction cache |
 
 ## Full example
 
 ```yaml
-paths:
-  watchfolder: /data/inbox
-  error_folder: /data/error
-  processed_folder: /data/processed   # only needed with original_handling: move
+# Infra paths come from ZILPZALP_PATH_* env vars — not from this file.
+original_handling: delete        # delete | trash
+summary_mode: on_conflict        # always | on_conflict | never
 
-original_handling: move        # move | delete | keep
-summary_mode: on_conflict      # always | on_conflict | never
-
-default_pattern: "{date}__{sender}_{doctype}_{description}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
 
 # Optional: additional date matchers for special cases.
@@ -30,13 +40,15 @@ date_patterns:
   - label: leistungsdatum
     regex: 'Leistungsdatum:\s*(\d{2}\.\d{2}\.\d{4})'
 
+# If this block is omitted, a default "Outbox" target (ZILPZALP_PATH_OUTBOX)
+# is created automatically.
 targets:
   - name: Finanzen
     path: /targets/finanzen
-    default: false
+    default: true
 
 patterns:
-  - name: standard
+  standard:
     template: "{date}__{sender}_{doctype}_{description}"
 
 rules:
@@ -60,21 +72,12 @@ rules:
 
 ## Fields
 
-### `paths`
-
-| Key | Required | Meaning |
-|---|---|---|
-| `watchfolder` | yes | the watched inbox folder |
-| `error_folder` | yes | storage for unreadable PDFs |
-| `processed_folder` | only with `original_handling: move` | storage for processed originals |
-
 ### `original_handling`
 
-What happens to the original in the watchfolder after successful filing:
+What happens to the original in the inbox after successful filing:
 
-- `move` — move it to `processed_folder`
-- `delete` — delete it
-- `keep` — leave it in the watchfolder
+- `delete` — delete it permanently
+- `trash` — move it to `ZILPZALP_PATH_TRASH`
 
 ### `summary_mode`
 
@@ -89,7 +92,17 @@ Format of the date in the filename, as a Python `strftime` pattern
 ### Naming patterns (`default_pattern`, `patterns`)
 
 Placeholders in the pattern: `{date}`, `{sender}`, `{doctype}`, `{description}`.
-`patterns` names reusable patterns that rules reference by name.
+
+`patterns` is a **map** (key → pattern definition). Rules reference patterns by their
+key name. `default_pattern` names the key to use when no rule matches.
+
+```yaml
+patterns:
+  standard:
+    template: "{date}__{sender}_{doctype}_{description}"
+  compact:
+    template: "{date}_{description}"
+```
 
 ### `date_patterns` (optional)
 
@@ -100,7 +113,9 @@ at load time with a clear message.
 
 ### `targets`
 
-List of target folders with `name`, `path`, and `default` (pre-selection in the UI).
+List of target folders, each with `name`, `path`, and `default` (pre-selection in the UI).
+If this block is omitted entirely, ZilpZalp synthesises a single "Outbox" target pointing
+to `ZILPZALP_PATH_OUTBOX`.
 
 ### `rules`
 

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +10,7 @@ def test_config_available_on_app_state(valid_config, write_config, monkeypatch):
     monkeypatch.setenv(CONFIG_ENV, str(path))
 
     with TestClient(app):
-        assert app.state.config.original_handling == "move"
+        assert app.state.config.original_handling == "delete"
 
 
 def test_startup_aborts_on_invalid_config(valid_config, write_config, monkeypatch):
@@ -26,7 +24,7 @@ def test_startup_aborts_on_invalid_config(valid_config, write_config, monkeypatc
 
 
 def test_watcher_populates_queue_on_startup(
-    valid_config, write_config, monkeypatch
+    valid_config, write_config, monkeypatch, env_paths
 ):
     # Avoid a real JVM call: stub the extractor used by the worker.
     from zilpzalp import worker as worker_mod
@@ -35,12 +33,12 @@ def test_watcher_populates_queue_on_startup(
     monkeypatch.setattr(
         worker_mod,
         "extract",
-        lambda p: Document(
+        lambda p, c: Document(
             blocks=[Block(kind="paragraph", text="Datum 15.01.2026", page=1, bbox=(0, 0, 0, 0))]
         ),
     )
 
-    watchfolder = Path(valid_config["paths"]["watchfolder"])
+    watchfolder = env_paths["ZILPZALP_PATH_INBOX"]
     (watchfolder / "incoming.pdf").write_bytes(b"%PDF-1.4")
     path = write_config(valid_config)
     monkeypatch.setenv(CONFIG_ENV, str(path))

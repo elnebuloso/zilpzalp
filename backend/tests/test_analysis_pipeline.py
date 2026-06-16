@@ -15,10 +15,13 @@ def _config(tmp_path: Path) -> "object":
 paths:
   watchfolder: {tmp_path / "inbox"}
   error_folder: {tmp_path / "error"}
-original_handling: keep
+original_handling: delete
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 rules:
   - name: Stadtwerke
     match:

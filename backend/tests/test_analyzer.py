@@ -6,19 +6,17 @@ from zilpzalp.analyzer import analyze
 
 
 def _config(tmp_path: Path):
-    # Minimal-Config mit existierenden Pflichtpfaden; original_handling=keep -> kein processed.
-    (tmp_path / "inbox").mkdir()
-    (tmp_path / "error").mkdir()
+    # Minimal-Config; paths come from env (env_paths autouse fixture).
     cfg = tmp_path / "config.yaml"
     cfg.write_text(
-        f"""
-paths:
-  watchfolder: {tmp_path / "inbox"}
-  error_folder: {tmp_path / "error"}
-original_handling: keep
+        """
+original_handling: delete
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{date}__{sender}_{doctype}_{description}"
 """,
         encoding="utf-8",
     )
@@ -61,10 +59,13 @@ def test_config_date_patterns_add_labeled_candidates(tmp_path):
 paths:
   watchfolder: {tmp_path / "inbox"}
   error_folder: {tmp_path / "error"}
-original_handling: keep
+original_handling: delete
 summary_mode: never
-default_pattern: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
+default_pattern: standard
 date_format: "%Y-%m-%d"
+patterns:
+  standard:
+    template: "{{date}}__{{sender}}_{{doctype}}_{{description}}"
 date_patterns:
   - label: leistungsdatum
     regex: 'Leistungszeitraum bis (\\d{{2}}\\.\\d{{2}}\\.\\d{{4}})'

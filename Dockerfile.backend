@@ -38,6 +38,11 @@ WORKDIR /app/backend
 COPY --from=builder /app/backend/.venv ./.venv
 COPY backend/src ./src
 
+# Domänen-Default-Config + Entrypoint, der sie nach /config seedet, falls leer.
+COPY backend/config.default.yaml /app/backend/config.default.yaml
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Config wird als Volume gemountet; Default-Pfad zeigt dorthin.
 ENV ZILPZALP_CONFIG=/config/config.yaml
 
@@ -47,4 +52,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/live', timeout=3).status == 200 else 1)"
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["uvicorn", "zilpzalp.main:app", "--host", "0.0.0.0", "--port", "8000"]
