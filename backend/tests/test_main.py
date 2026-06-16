@@ -33,7 +33,7 @@ def test_watcher_populates_queue_on_startup(
     monkeypatch.setattr(
         worker_mod,
         "extract",
-        lambda p: Document(
+        lambda p, c: Document(
             blocks=[Block(kind="paragraph", text="Datum 15.01.2026", page=1, bbox=(0, 0, 0, 0))]
         ),
     )

@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from zilpzalp.cache import DocumentCache
 from zilpzalp.config import load_config, outbox_path
 from zilpzalp.queue import Queue
 from zilpzalp.watcher import Watcher
@@ -42,14 +43,17 @@ async def lifespan(app: FastAPI):
     _ensure_dirs(config)
     app.state.config = config
     app.state.config_path = config_path
+    cache = DocumentCache(config.paths.cache)
+    app.state.cache = cache
     queue = Queue()
     app.state.queue = queue
-    worker = Worker(queue, lambda: app.state.config)
+    worker = Worker(queue, lambda: app.state.config, cache)
     app.state.worker = worker
     worker.start()
     watcher = Watcher(config.paths.watchfolder, worker.submit)
     app.state.watcher = watcher
     watcher.start()
+    cache.prune([e.path.name for e in queue.list()])
     app.state.started = True
     try:
         yield
