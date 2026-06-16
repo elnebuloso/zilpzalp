@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
+
+from pypdf import PdfReader
 
 from zilpzalp.config import Config
 from zilpzalp.document import Document
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -80,6 +86,43 @@ def _find_dates_in_text(text: str) -> list[tuple[int, int, str, datetime.date]]:
             continue
         kept.append((start, end, hit, d))
     return kept
+
+
+def _pdf_metadata_dates(path: Path) -> list[tuple[str, datetime.date]]:
+    """(label_key, date) for the PDF's CreationDate/ModDate. [] on any read error."""
+    try:
+        meta = PdfReader(str(path)).metadata
+        out: list[tuple[str, datetime.date]] = []
+        if meta is not None:
+            if meta.creation_date is not None:
+                out.append(("pdf_created", meta.creation_date.date()))
+            if meta.modification_date is not None:
+                out.append(("pdf_modified", meta.modification_date.date()))
+        return out
+    except Exception:
+        logger.debug("PDF-Metadaten von %s nicht lesbar", path, exc_info=True)
+        return []
+
+
+def file_dates(path: Path, config: Config) -> list[DateCandidate]:
+    """File-level fallback dates, always appended after text candidates.
+
+    Priority: PDF CreationDate, PDF ModDate, then filesystem mtime. Each entry
+    is skipped when unavailable; never raises (the worker must not lose a
+    document over a metadata hiccup)."""
+    entries = list(_pdf_metadata_dates(Path(path)))
+    mtime = datetime.date.fromtimestamp(Path(path).stat().st_mtime)
+    entries.append(("file_modified", mtime))
+    return [
+        DateCandidate(
+            normalized=d.strftime(config.date_format),
+            raw="",
+            label=None,
+            snippet=None,
+            label_key=key,
+        )
+        for key, d in entries
+    ]
 
 
 _INLINE_LABEL = re.compile(r"([A-Za-zäöüÄÖÜ][A-Za-zäöüÄÖÜ ]{1,39}?)[:\s]*$")
