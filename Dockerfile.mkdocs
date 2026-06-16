@@ -1,14 +1,13 @@
 # syntax=docker/dockerfile:1
 
-# --- Build: statische Site mit mkdocs-material erzeugen ----------------------
-FROM squidfunk/mkdocs-material:9 AS build
+FROM squidfunk/mkdocs-material:9 AS dev
 
 WORKDIR /docs
 COPY mkdocs/ ./
-# --strict bricht bei kaputten Links/Nav ab → fehlerhafte Doku wird kein Image.
+
+FROM dev AS build
 RUN mkdocs build --strict
 
-# --- Serve: statische Auslieferung über nginx -------------------------------
 FROM nginx:alpine AS serve
 COPY --from=build /docs/site /usr/share/nginx/html
 EXPOSE 80
