@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/elnebuloso/zilpzalp/compare/v0.3.0...v0.4.0) (2026-06-16)
+
+
+### Features
+
+* **upload:** upload PDFs into the inbox from the browser ([#6](https://github.com/elnebuloso/zilpzalp/issues/6)) ([0b1405d](https://github.com/elnebuloso/zilpzalp/commit/0b1405d907c802c8cfadaa47d319db2a4799b17b))
+
 ## [0.3.0](https://github.com/elnebuloso/zilpzalp/compare/v0.2.2...v0.3.0) (2026-06-16)
 
 
