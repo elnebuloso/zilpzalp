@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from zilpzalp.web import i18n
+from zilpzalp.web.i18n import translate
 
 LOCALES = Path(i18n.__file__).parent / "locales"
 
@@ -67,3 +68,8 @@ class _FakeRequest:
 
 def _fake_request(cookies, accept):
     return _FakeRequest(cookies, {"accept-language": accept})
+
+
+def test_upload_done_label_uploaded():
+    assert translate("upload.status.done", "de") == "hochgeladen"
+    assert translate("upload.status.done", "en") == "uploaded"

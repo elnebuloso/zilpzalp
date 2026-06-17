@@ -94,7 +94,7 @@
   "upload.hint": "Mehrere Dateien möglich · nur PDF",
   "upload.status.queued": "wartet",
   "upload.status.uploading": "lädt …",
-  "upload.status.done": "fertig",
+  "upload.status.done": "hochgeladen",
   "upload.status.error": "Fehler",
   "upload.err_not_pdf": "Nur PDF-Dateien werden akzeptiert.",
   "upload.err_write": "Die Datei konnte nicht gespeichert werden."
