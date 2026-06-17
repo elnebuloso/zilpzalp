@@ -106,13 +106,23 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   des Images gegen ein echtes PDF prüfen, ob der HTML-Tab gefüllt wird; falls nicht,
   `"html"` aus der `format`-Liste in [extractor.py](../../backend/src/zilpzalp/extractor.py)
   entfernen und den HTML-Tab ausbauen.
-- **„Überspringen" soll nur überspringen, nicht löschen:** In der Review-Seite soll
-  „Überspringen" das Dokument nur zurückstellen und direkt zum nächsten springen —
-  **ohne** das Original zu löschen/verschieben und **ohne** Bestätigungs-Alert. Heute
-  ruft `skip_document` ([web/routes.py](../../backend/src/zilpzalp/web/routes.py)) `skip()`
-  ([processor.py](../../backend/src/zilpzalp/processor.py)) auf, das das Original gemäß
-  `original_handling` disponiert (bei `delete` löscht), und das Template zeigt dabei eine
-  `hx-confirm`-Alertbox. Gewünscht: Original unangetastet lassen, nur aus der aktuellen
-  Ansicht/Queue nehmen und weiterspringen, kein `hx-confirm`. **Offene Frage:** Wie wird
-  verhindert, dass das im Watchfolder verbliebene Dokument sofort wieder analysiert wird
-  und erneut auftaucht (z. B. „übersprungen"-Marker je Datei statt Re-Enqueue)?
+- **Aktionsmodell überarbeiten — Skip ≠ Löschen, eigener Entfernen-Button:** Die
+  Bedeutung der Aktionen klarer trennen. Gewünschtes Verhalten:
+  - **Überspringen (Review):** springt nur weiter und **belässt das Dokument in der
+    Warteschlange** — kein Disponieren des Originals, **kein** `hx-confirm`-Alert.
+  - **`original_handling: delete|trash`** wirkt **nur bei bestätigten, umbenannten/abgelegten**
+    Dateien (also beim Confirm/Ablegen), nicht beim Überspringen.
+  - **Entfernen/Löschen-Button** in der **Warteschlange** und in der **„jüngste
+    Dokumente"-Ansicht** (Übersicht): entfernt das Dokument bewusst und disponiert das
+    Original **je nach Einstellung** (`trash` oder `delete`).
+
+  Heute falsch: In der Warteschlange ([_queue_list.html](../../backend/src/zilpzalp/web/templates/_queue_list.html))
+  steht ein **Überspringen**-Button, der über `skip_document`
+  ([web/routes.py](../../backend/src/zilpzalp/web/routes.py)) `skip()`
+  ([processor.py](../../backend/src/zilpzalp/processor.py)) das Original gemäß
+  `original_handling` disponiert (bei `delete` löscht, mit `hx-confirm`). Dort gehört
+  stattdessen ein **Entfernen/Löschen**-Button hin; die Übersicht
+  ([_overview.html](../../backend/src/zilpzalp/web/templates/_overview.html)) hat heute gar
+  keine Entfernen-Aktion. **Offene Frage:** Wenn ein übersprungenes Dokument in der Queue
+  bleibt und die Datei im Watchfolder liegt — wie wird unnötige Dauer-Re-Analyse vermieden
+  (Status bleibt einfach „ready", kein Re-Enqueue)?
