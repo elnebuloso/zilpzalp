@@ -33,20 +33,19 @@ Watchfolder → Analyze (date / sender / type) → Suggest → Review in browser
 ## Quick start
 
 ZilpZalp runs as two containers — the **backend** (web UI + processing) and the
-**docs site** — orchestrated by `docker-compose.yml`. The shipped `demo/` folder is
-ready to run: a sample invoice already sits in the inbox, so a document shows up in
-the queue right away.
+**docs site** — orchestrated by `docker-compose.yml`. Compose bind-mounts the runtime
+folders under `docker/backend/` (created on first start); the inbox starts empty.
 
 ```bash
 docker compose up -d --build
 ```
 
-- Web UI: <http://localhost:8000>
-- Documentation: <http://localhost:8001>
+- Web UI: <http://localhost:8080>
+- Documentation: <http://localhost:8081>
 
-For real use, edit [`demo/config/config.yaml`](demo/config/config.yaml) and drop your
-own PDFs into `demo/data/inbox` — or repoint the volumes in `docker-compose.yml` to
-your own host paths. See the
+For real use, edit `docker/backend/config/config.yaml` (written on first start) and drop
+your own PDFs into `docker/backend/data/inbox` — or repoint the volumes in
+`docker-compose.yml` to your own host paths. See the
 [installation guide](https://elnebuloso.github.io/zilpzalp/installation/) for details.
 
 ## Documentation

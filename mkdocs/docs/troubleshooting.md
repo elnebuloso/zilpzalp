@@ -42,7 +42,7 @@ watchfolder.
 
 ```bash
 docker compose ps                             # are both containers running?
-curl -fsS http://localhost:8000/healthz/live  # backend healthy? -> {"status":"ok"}
+curl -fsS http://localhost:8080/healthz/live  # backend healthy? -> {"status":"ok"}
 docker compose logs -f backend                # live backend logs
 docker compose logs -f docs                   # live docs-site logs
 ```
