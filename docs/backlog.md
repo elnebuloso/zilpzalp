@@ -99,3 +99,13 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
   mit einem künftigen httpx-Major zu Fehlern — Testaufbau migrieren, damit die
   pytest-Ausgabe wieder warnungsfrei ist.
+- **Release-Reihenfolge optimieren — kein Release ohne Docker-Artefakt:** In
+  [.github/workflows/release.yml](../../.github/workflows/release.yml) erstellt der
+  `release-please`-Job zuerst GitHub-Release **und** Tag; `test` und `build-push`
+  laufen erst danach. Schlägt der Docker-Build/-Push (oder der Test) fehl, existiert
+  ein veröffentlichtes Release `vX.Y.Z` ohne passendes Image
+  `elnebuloso/zilpzalp-backend:vX.Y.Z` — inkonsistenter Zustand. Reihenfolge umdrehen:
+  Tests + Docker-Push zuerst, GitHub-Release/Tag erst danach und nur, wenn das Artefakt
+  bereitliegt. Umsetzungsideen: release-please nur Release-PR/Manifest verwalten lassen
+  (`skip-github-release`) und das GitHub-Release in einem Folgeschritt nach erfolgreichem
+  `build-push` erzeugen, oder Tests/Build bereits auf der Release-PR vor dem Merge fahren.
