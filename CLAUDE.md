@@ -12,6 +12,15 @@ Trivial tasks (one-liners, obvious fixes): just do it.
   refactor what isn't broken. Remove orphans your change creates; mention pre-existing
   dead code, don't delete it unasked.
 
+## Backend & running the app
+
+- The Python backend lives in `backend/` — `uv`, the virtualenv, and `pyproject.toml`
+  are all there. Run `uv`, `pytest`, and `uvicorn` from `backend/`
+  (e.g. `cd backend && uv run pytest`).
+- To run the app for manual or Playwright checks, use the dev-server script from the
+  repo root: `scripts/devserver.sh start|stop|status|logs`. It serves on
+  <http://127.0.0.1:8000> with isolated runtime data under `.dev/backend/` (gitignored).
+
 ## Documentation language
 
 - `README.md` and the mkdocs documentation under `mkdocs/` are written in English.

@@ -38,6 +38,8 @@
       "Bash(gh release view *)",
       "Bash(gh pr create *)",
       "Bash(bash */subagent-driven-development/scripts/*)",
+      "Bash(scripts/devserver.sh *)",
+      "Bash(./scripts/devserver.sh *)",
       "Bash(java -version)",
       "Bash(command -v apt-get)",
       "Bash(command -v docker)",
