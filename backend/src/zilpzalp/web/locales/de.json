@@ -67,6 +67,7 @@
   "review.meta_original": "Original",
   "review.msg_date_required": "Bitte ein Datum wählen.",
   "review.msg_target_required": "Mindestens einen Zielordner wählen.",
+  "review.extract_unavailable": "Nicht verfügbar",
 
   "config.title": "Konfiguration",
   "config.subtitle": "Konfiguration als YAML. Wird beim Speichern geprüft.",

@@ -511,3 +511,49 @@ def test_document_pdf_served_inline(client):
 def test_document_pdf_unknown_id_404(client):
     response = client.get("/documents/deadbeef/pdf")
     assert response.status_code == 404
+
+
+def test_extract_markdown_returns_pre(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.md").write_text("# Hallo", encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/markdown")
+    assert response.status_code == 200
+    assert "<pre" in response.text
+    assert "# Hallo" in response.text
+
+
+def test_extract_html_returns_sandboxed_iframe(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.html").write_text("<h1>Hi</h1>", encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/html")
+    assert response.status_code == 200
+    assert "<iframe" in response.text
+    assert "sandbox" in response.text
+    assert "srcdoc" in response.text
+
+
+def test_extract_json_is_pretty_printed(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.json").write_text('{"a":1,"b":2}', encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/json")
+    assert response.status_code == 200
+    assert '"a": 1' in response.text  # indented, space after colon
+
+
+def test_extract_missing_file_shows_unavailable(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/extract/markdown")
+    assert response.status_code == 200
+    assert "Nicht verfügbar" in response.text
+
+
+def test_extract_unknown_kind_404(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/extract/bogus")
+    assert response.status_code == 404

@@ -1,0 +1,7 @@
+{% if content is none %}
+<div class="drawer-empty">{{ t('review.extract_unavailable') }}</div>
+{% elif kind == 'html' %}
+<iframe class="drawer-iframe" sandbox srcdoc="{{ content }}"></iframe>
+{% else %}
+<pre class="drawer-pre">{{ content|safe }}</pre>
+{% endif %}

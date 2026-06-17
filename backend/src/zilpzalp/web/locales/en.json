@@ -67,6 +67,7 @@
   "review.meta_original": "Original",
   "review.msg_date_required": "Please choose a date.",
   "review.msg_target_required": "Choose at least one target folder.",
+  "review.extract_unavailable": "Not available",
 
   "config.title": "Configuration",
   "config.subtitle": "Configuration as YAML. Validated on save.",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -190,6 +191,31 @@ def document_pdf(request: Request, entry_id: str):
         content_disposition_type="inline",
         filename=entry.path.name,
     )
+
+
+@router.get("/documents/{entry_id}/extract/{kind}")
+def extract_content(request: Request, entry_id: str, kind: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or kind not in ("markdown", "html", "json"):
+        return Response(status_code=404)
+    cache = request.app.state.cache
+    if kind == "markdown":
+        content = cache.read_markdown(entry.path)
+    elif kind == "html":
+        content = cache.read_html(entry.path)
+    else:
+        content = cache.read_json_text(entry.path)
+        if content is not None:
+            content = json.dumps(json.loads(content), indent=2, ensure_ascii=False)
+    lang = resolve_language(request)
+    context = {
+        "kind": kind,
+        "content": content,
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
+    }
+    return templates.TemplateResponse(request, "_extract_pane.html", context)
 
 
 def _resolve_template(config: Config, pattern_name: str) -> str:
