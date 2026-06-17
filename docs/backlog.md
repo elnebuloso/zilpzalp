@@ -87,6 +87,9 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Viewport 1×4 (breit) bzw. 2×2 (schmaler) statt 3+1.
 - **Betriebsangaben auf der Übersichtsseite:** Betriebs-/Laufzeitangaben auf der
   Übersichtsseite in der Spalte „Hochladen" unterhalb von „PDF hochladen" anzeigen.
+- **Betriebsangaben auf der Konfigurationsseite:** Dieselben Betriebsangaben auch auf
+  der Seite „Konfiguration" in der rechten Spalte anzeigen, damit man die geparsten
+  Daten direkt sieht.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
