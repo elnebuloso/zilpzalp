@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Resp
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
-from zilpzalp.processor import FileConflictError, ProcessorError, process, skip
+from zilpzalp.processor import FileConflictError, ProcessorError, process, remove
 from zilpzalp.queue import Queue
 from zilpzalp.web.i18n import SUPPORTED, resolve_language, translate
 from zilpzalp.web.naming import render_filename
@@ -388,7 +388,7 @@ def skip_document(request: Request, entry_id: str):
     config: Config = request.app.state.config
     lang = resolve_language(request)
     try:
-        skip(entry.path, config)
+        remove(entry.path, config)
     except ProcessorError as exc:
         message = translate("toast.file_error", lang, error=str(exc))
         return Response(status_code=200, headers={
