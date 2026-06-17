@@ -36,11 +36,12 @@
               {% else %}{{ t('queue.waiting') }}{% endif %}
             </div>
           </div>
-          {% if entry.status == 'ready' %}
-            <a class="btn sm primary" href="/review/{{ entry.id }}">{{ t('action.review') }}</a>
-          {% else %}
+          <div style="display:flex;gap:8px;align-items:center">
             <span class="badge {{ STATUS_BADGE[entry.status] }}"><span class="dot"></span>{{ t('status.' ~ entry.status) }}</span>
-          {% endif %}
+            {% if entry.status == 'ready' %}
+            <a class="btn sm primary" href="/review/{{ entry.id }}">{{ t('action.review') }}</a>
+            {% endif %}
+          </div>
         </div>
         {% endfor %}
       </div>

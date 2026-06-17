@@ -490,3 +490,10 @@ def test_queue_survives_missing_file(client):
     entry.path.unlink()
     response = client.get("/partials/queue")
     assert response.status_code == 200
+
+
+def test_overview_recent_shows_ready_badge(client):
+    _add_ready(client, "rechnung.pdf")
+    body = client.get("/partials/overview").text
+    assert "b-ready" in body
+    assert "/review/" in body
