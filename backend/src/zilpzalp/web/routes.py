@@ -180,7 +180,6 @@ def review_page(request: Request, entry_id: str):
             "config": config,
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
-            "preselected_index": suggestion.preselected_date_index or 0,
             "original_label": translate("original." + config.original_handling, lang),
         }
     )

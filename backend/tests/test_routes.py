@@ -598,3 +598,12 @@ def test_skip_advances_to_next_ready_document(client):
 
     redirect = response.headers.get("HX-Redirect", "")
     assert redirect.startswith(f"/review/{second.id}")
+
+
+def test_review_has_no_preselected_date(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/review/{entry.id}")
+    assert response.status_code == 200
+    body = response.text
+    assert "date-opt sel" not in body          # no candidate preselected
+    assert 'data-selected-date=""' in body     # hidden value starts empty

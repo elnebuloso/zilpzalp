@@ -53,7 +53,7 @@
   "review.back": "Zurück zur Warteschlange",
   "review.title": "Dokument prüfen",
   "review.choose_date": "Datum wählen",
-  "review.choose_date_hint": "Alle gefundenen Datumsangaben. Eine ist vorgewählt — bei Bedarf wechseln.",
+  "review.choose_date_hint": "Alle gefundenen Datumsangaben. Bitte eine wählen.",
   "review.manual_date": "Datum manuell eingeben",
   "review.fields": "Felder",
   "review.sender": "Absender",

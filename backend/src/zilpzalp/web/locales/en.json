@@ -53,7 +53,7 @@
   "review.back": "Back to the queue",
   "review.title": "Review document",
   "review.choose_date": "Choose date",
-  "review.choose_date_hint": "All detected dates. One is preselected — switch if needed.",
+  "review.choose_date_hint": "All detected dates. Please choose one.",
   "review.manual_date": "Enter date manually",
   "review.fields": "Fields",
   "review.sender": "Sender",

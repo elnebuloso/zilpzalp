@@ -14,7 +14,7 @@
         data-msg-date="{{ t('review.msg_date_required') }}"
         data-msg-target="{{ t('review.msg_target_required') }}">
     <input type="hidden" name="date_kind" value="candidate" />
-    <input type="hidden" name="date_value" data-selected-date="{{ suggestion.date_candidates[preselected_index].normalized if suggestion.date_candidates else '' }}" />
+    <input type="hidden" name="date_value" data-selected-date="" />
 
     <div class="dash-stack">
       <div class="card card-pad">
@@ -22,7 +22,7 @@
         <p class="muted" style="font-size:13px;margin:0 0 16px">{{ t('review.choose_date_hint') }}</p>
         <div class="date-list">
           {% for c in suggestion.date_candidates %}
-          <button type="button" class="date-opt {% if loop.index0 == preselected_index %}sel{% endif %}" data-date="{{ c.normalized }}">
+          <button type="button" class="date-opt" data-date="{{ c.normalized }}">
             <span class="date-radio"><span class="date-radio-dot"></span></span>
             <span style="min-width:0">
               <span style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
