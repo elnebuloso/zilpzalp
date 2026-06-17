@@ -93,6 +93,13 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Verlinkung zur Dokumentation + GitHub:** Links zur Doku
   (<https://elnebuloso.github.io/zilpzalp/>) und zum GitHub-Repo in der UI einbauen —
   z. B. im Header, ggf. als GitHub-Icon.
+- **Übersichtsseite — Liste & Upload-Feedback:** Mehrere zusammenhängende Punkte zur
+  Dokumentenliste:
+  - Neu in der Inbox gefundene Dokumente oben einsortieren, absteigend nach Alter
+    (jüngste zuerst).
+  - Beim Upload per UI wächst die Liste immer weiter; ein erneuter Upload zeigt nur
+    die gerade hochgeladenen Files an — Verhalten klären/beheben.
+  - „fertig" ist als Status irreführend — sollte „hochgeladen" heißen.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
