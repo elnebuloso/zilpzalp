@@ -65,8 +65,18 @@ def _preselected_date(suggestion) -> str | None:
     return suggestion.date_candidates[idx].normalized
 
 
+def _by_mtime_desc(entries):
+    """Sort queue entries newest-first by file mtime; missing files sort last."""
+    def _mtime(entry):
+        try:
+            return entry.path.stat().st_mtime
+        except OSError:
+            return 0.0
+    return sorted(entries, key=_mtime, reverse=True)
+
+
 def _recent(queue: Queue, limit: int = 6):
-    return queue.list()[:limit]
+    return _by_mtime_desc(queue.list())[:limit]
 
 
 def _base_context(request: Request, active: str) -> dict:
@@ -129,7 +139,7 @@ def overview_partial(request: Request):
 def queue_page(request: Request):
     queue: Queue = request.app.state.queue
     context = _base_context(request, "queue")
-    context.update({"entries": queue.list(), "preselected_date": _preselected_date,
+    context.update({"entries": _by_mtime_desc(queue.list()), "preselected_date": _preselected_date,
                     "config": request.app.state.config})
     return templates.TemplateResponse(request, "queue.html", context)
 
@@ -138,7 +148,7 @@ def queue_page(request: Request):
 def queue_partial(request: Request):
     queue: Queue = request.app.state.queue
     context = _base_context(request, "queue")
-    context.update({"entries": queue.list(), "preselected_date": _preselected_date,
+    context.update({"entries": _by_mtime_desc(queue.list()), "preselected_date": _preselected_date,
                     "config": request.app.state.config})
     return templates.TemplateResponse(request, "_queue_list.html", context)
 

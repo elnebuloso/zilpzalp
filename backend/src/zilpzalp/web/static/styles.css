@@ -193,7 +193,7 @@ button { font-family: inherit; cursor: pointer; }
 .mono { font-family: var(--font-mono); }
 
 /* ---------- counters ---------- */
-.counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--gap); }
+.counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
 .counter {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-card); padding: var(--pad-card); position: relative; overflow: hidden;

@@ -94,7 +94,7 @@
   "upload.hint": "Multiple files allowed · PDF only",
   "upload.status.queued": "queued",
   "upload.status.uploading": "uploading …",
-  "upload.status.done": "done",
+  "upload.status.done": "uploaded",
   "upload.status.error": "error",
   "upload.err_not_pdf": "Only PDF files are accepted.",
   "upload.err_write": "The file could not be saved."

@@ -178,6 +178,7 @@
       item.row.querySelector(".ur-state").textContent = stateText;
     }
     function enqueue(files) {
+      list.replaceChildren();
       Array.prototype.forEach.call(files, function (file) {
         if (!isPdf(file)) {
           var row = addRow(file.name, notPdfMsg);
