@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/elnebuloso/zilpzalp/compare/v1.2.0...v1.3.0) (2026-06-17)
+
+
+### Features
+
+* **web:** optimize the review page (next-doc chaining, explicit date, PDF open, extraction drawer) ([#13](https://github.com/elnebuloso/zilpzalp/issues/13)) ([e081ffd](https://github.com/elnebuloso/zilpzalp/commit/e081ffd8fda46b28958e74a604a55fc164726a27))
+
 ## [1.2.0](https://github.com/elnebuloso/zilpzalp/compare/v1.1.0...v1.2.0) (2026-06-17)
 
 
