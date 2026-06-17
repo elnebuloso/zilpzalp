@@ -17,15 +17,8 @@ mkdocs/site/
 /config/
 /targets/
 
-# Demo: nur das Beispiel-PDF in der Inbox ist versioniert; generierte Ordner nicht.
-/demo/data/inbox/*
-!/demo/data/inbox/.gitkeep
-!/demo/data/inbox/beispiel-rechnung.pdf
-/demo/data/error/
-/demo/data/processed/
-/demo/data/trash/
-/demo/data/outbox/
-/demo/data/cache/
+# Local uv dev-server runtime (scripts/devserver.sh) — never versioned.
+/.dev/
 
 /mocks/*
 !/mocks/.gitkeep
