@@ -99,3 +99,10 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   bereitliegt. Umsetzungsideen: release-please nur Release-PR/Manifest verwalten lassen
   (`skip-github-release`) und das GitHub-Release in einem Folgeschritt nach erfolgreichem
   `build-push` erzeugen, oder Tests/Build bereits auf der Release-PR vor dem Merge fahren.
+- **HTML-Extraktion am echten PDF verifizieren:** Der Test-Job in der CI mockt
+  `opendataloader_pdf.convert`, daher verlässt sich der HTML-Tab des Extraktions-Drawers
+  (seit v1.3.0, Umsetzung #7) auf die Annahme, dass die echte Bibliothek HTML ausgibt.
+  Fehlt das `.html`-Artefakt, scheitert es weich („Nicht verfügbar"). Beim ersten Lauf
+  des Images gegen ein echtes PDF prüfen, ob der HTML-Tab gefüllt wird; falls nicht,
+  `"html"` aus der `format`-Liste in [extractor.py](../../backend/src/zilpzalp/extractor.py)
+  entfernen und den HTML-Tab ausbauen.
