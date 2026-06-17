@@ -38,6 +38,8 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 6 | Feature | **Overview-Seite — Refresh** — Counter-Layout (1×4/2×2), Betriebsangaben unter „Hochladen", Status „bereit" in der Liste, jüngste-zuerst-Sortierung + Upload-Feedback (Details: [superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md](superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md)) | ✅ | `809343f` |
 | 7 | Feature | **Review-Seite — Optimierung** — nächstes bereites Dokument nach Bestätigen/Überspringen, kein vorgewähltes Datum, Original-Dateiname hervorgehoben + im neuen Tab öffnen, Extraktions-Tabs (Markdown/HTML/JSON, inline ohne Overlay) (Details: [superpowers/specs/2026-06-17-0955-review-page-optimization-design.md](superpowers/specs/2026-06-17-0955-review-page-optimization-design.md)) | ✅ | `e081ffd` |
 | 8 | Feature | **Aktionsmodell-Überarbeitung** — `originals.when_filed`/`when_removed` statt `original_handling`, Überspringen rein navigatorisch, eigener Entfernen-Button mit htmx-Inline-Bestätigung (Details: [superpowers/specs/2026-06-17-1716-action-model-rework-design.md](superpowers/specs/2026-06-17-1716-action-model-rework-design.md)) | ✅ | `e503783` |
+| 9 | Feinschliff | **Lint-Fix `test_i18n.py`** — ungenutzter `pytest`-Import entfernt, `ruff check .` projektweit grün (war bereits umgesetzt, nur nicht im Backlog erfasst) | ✅ | `6abc1b7` |
+| 10 | Feinschliff | **DEV-Server + Docker-Runtime-Layout** — `scripts/devserver.sh` (Port 8000), `.dev/` vs `docker/backend/`-Struktur, compose-Ports 8080/8081 + Einzel-Mounts, `demo/` entfernt, Docs-Sync (Details: [superpowers/specs/2026-06-17-1909-dev-and-docker-runtime-design.md](superpowers/specs/2026-06-17-1909-dev-and-docker-runtime-design.md)) | 🚧 | — |
 
 ## Ideen / später
 
@@ -61,10 +63,6 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Fehler-Ordner-Ansicht in der UI:** Den `error/`-Ordner in der Weboberfläche
   sichtbar machen — mit Fehlergrund je Eintrag und einer „erneut einreihen"-Aktion,
   statt nur im Dateisystem aufzulaufen.
-- **Lint-Fehler in `test_i18n.py` beheben:** Ungenutzter Import `pytest`
-  ([backend/tests/test_i18n.py:4](../../backend/tests/test_i18n.py#L4)) — vorbestehender
-  Ruff-Fehler (F401), unabhängig vom jeweiligen Feature. Entfernen, damit
-  `ruff check .` projektweit grün ist.
 - **Veralteten Design-Doc korrigieren:** `docs/superpowers/specs/2026-06-14-1459-zilpzalp-web-ui.md:161`
   sagt noch „`/health` bleibt" — seit Backlog #4 überholt (`/health` entfällt, ersetzt durch
   `/healthz/*`). Historisches MVP-Dokument an die aktuelle Realität anpassen oder als überholt markieren.
