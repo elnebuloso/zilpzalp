@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -464,3 +465,28 @@ def test_config_save_triggers_reanalysis(client, monkeypatch):
     client.post("/config", data={"text": _yaml.safe_dump(new, allow_unicode=True)})
 
     assert called["n"] == 1
+
+
+def test_queue_lists_newest_first(client):
+    old = _add_ready(client, "old.pdf")
+    new = _add_ready(client, "new.pdf")
+    os.utime(old.path, (1000, 1000))
+    os.utime(new.path, (2000, 2000))
+    body = client.get("/partials/queue").text
+    assert body.index("new.pdf") < body.index("old.pdf")
+
+
+def test_overview_recent_newest_first(client):
+    old = _add_ready(client, "old.pdf")
+    new = _add_ready(client, "new.pdf")
+    os.utime(old.path, (1000, 1000))
+    os.utime(new.path, (2000, 2000))
+    body = client.get("/partials/overview").text
+    assert body.index("new.pdf") < body.index("old.pdf")
+
+
+def test_queue_survives_missing_file(client):
+    entry = _add_ready(client, "gone.pdf")
+    entry.path.unlink()
+    response = client.get("/partials/queue")
+    assert response.status_code == 200
