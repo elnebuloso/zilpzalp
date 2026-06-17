@@ -194,7 +194,7 @@ def test_config_page_shows_current_yaml(client):
     response = client.get("/config")
     assert response.status_code == 200
     assert "Konfiguration" in response.text
-    assert "original_handling" in response.text    # current file content shown
+    assert "originals" in response.text    # current file content shown
 
 
 def test_config_save_valid_updates_state(client):
@@ -214,7 +214,7 @@ def test_config_save_valid_updates_state(client):
 
 def test_config_save_invalid_shows_errors_and_keeps_config(client):
     before = app.state.config.summary_mode
-    response = client.post("/config", data={"text": "original_handling: bogus"})
+    response = client.post("/config", data={"text": "originals:\n  when_filed: bogus\n  when_removed: trash"})
 
     assert response.status_code == 200
     assert "nicht übernommen" in response.text

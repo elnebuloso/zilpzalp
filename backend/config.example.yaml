@@ -1,6 +1,8 @@
 # Beispielkonfiguration (Domäne). Infrastruktur-Pfade kommen aus Env-Variablen
 # (ZILPZALP_PATH_INBOX/ERROR/TRASH/CACHE/OUTBOX), nicht aus dieser Datei.
-original_handling: delete        # delete | trash
+originals:
+  when_filed: delete    # delete | trash — Original nach erfolgreichem Ablegen
+  when_removed: trash   # delete | trash — Original beim bewussten Entfernen
 summary_mode: on_conflict        # always | on_conflict | never
 
 default_pattern: standard

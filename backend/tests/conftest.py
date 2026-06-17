@@ -24,7 +24,7 @@ def valid_config(tmp_path):
     """A complete, valid domain config dict. Paths come from env (env_paths)."""
     (tmp_path / "finanzen").mkdir(exist_ok=True)
     return {
-        "original_handling": "delete",
+        "originals": {"when_filed": "delete", "when_removed": "trash"},
         "summary_mode": "on_conflict",
         "default_pattern": "standard",
         "date_format": "%Y-%m-%d",
