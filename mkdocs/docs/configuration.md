@@ -89,8 +89,8 @@ originals:
 
 - **`when_filed`** — disposal after a successful **Confirm** (filing): `delete` removes
   the original permanently; `trash` moves it to `ZILPZALP_PATH_TRASH`.
-- **`when_removed`** — disposal after a deliberate **Remove**: `trash` moves it to
-  `ZILPZALP_PATH_TRASH`; `delete` removes it permanently.
+- **`when_removed`** — disposal after a deliberate **Remove**: `delete` removes
+  it permanently; `trash` moves it to `ZILPZALP_PATH_TRASH`.
 
 ### `summary_mode`
 

@@ -32,6 +32,7 @@ templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
 
 PDF_MAGIC = b"%PDF"
 _UPLOAD_CHUNK = 1024 * 1024
+_REMOVE_FROM = {"review", "queue", "overview"}
 
 
 def _unique_pdf_name(folder: Path, name: str) -> Path:
@@ -406,9 +407,6 @@ def skip_document(request: Request, entry_id: str):
     return Response(status_code=200, headers={"HX-Redirect": target})
 
 
-_REMOVE_FROM = {"review", "queue", "overview"}
-
-
 @router.post("/documents/{entry_id}/remove")
 def remove_document(
     request: Request,
@@ -428,8 +426,9 @@ def remove_document(
         remove(entry.path, config)
     except ProcessorError as exc:
         message = translate("toast.file_error", lang, error=str(exc))
+        err_target = {"review": f"/review/{entry_id}", "overview": "/"}.get(origin, "/queue")
         return Response(status_code=200, headers={
-            "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=err"
+            "HX-Redirect": err_target + "?flash=" + quote(message) + "&kind=err"
         })
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)

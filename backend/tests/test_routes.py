@@ -474,7 +474,8 @@ def test_remove_from_overview_redirects_to_start(client):
     response = client.post(
         f"/documents/{entry.id}/remove?from=overview", follow_redirects=False
     )
-    assert response.headers.get("HX-Redirect", "").startswith("/")
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.split("?")[0] == "/"
     assert app.state.queue.get_by_id(entry.id) is None
 
 
