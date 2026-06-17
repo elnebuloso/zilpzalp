@@ -14,20 +14,21 @@ Trivial tasks (one-liners, obvious fixes): just do it.
 
 ## Documentation language
 
-- README.md and the mkdocs documentation under `mkdocs/` are written in English.
+- `README.md` and the mkdocs documentation under `mkdocs/` are written in English.
 
 ## Git
 
 - Conventional Commits, English. Example: `fix(auth): handle expired tokens on refresh`
-- Add, Commit und Push selbstständig, sobald ein Arbeitsschritt abgeschlossen ist.
+- Stage and commit changes independently after each completed, coherent work step.
+- Ask before pushing.
 - Never force-push, amend pushed commits, or hard-reset.
 
-# Superpowers skill file naming
+## Superpowers skill file naming
 
-Use `YYYY-MM-DD-HHMM-<short-topic>.md` for Superpowers skill `specs` and `plans` so same-day files sort correctly.
+- Use `YYYY-MM-DD-HHMM-<short-topic>.md` for Superpowers skill `specs` and `plans` so same-day files sort correctly.
+- Do not use `YYYY-MM-DD-<short-topic>.md`.
 
-# example
-specs/superpowers/specs/2026-06-13-1430-user-authentication.md
-docs/superpowers/plans/2026-06-13-1430-user-authentication.md
+### example
 
-Do not use `YYYY-MM-DD-<short-topic>.md`.
+- `specs/superpowers/specs/2026-06-13-1430-user-authentication.md`
+- `docs/superpowers/plans/2026-06-13-1430-user-authentication.md`
