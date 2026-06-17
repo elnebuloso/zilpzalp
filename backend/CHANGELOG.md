@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/elnebuloso/zilpzalp/compare/v2.0.0...v2.1.0) (2026-06-17)
+
+
+### Features
+
+* **dev:** dev server script + docker runtime layout (ports 8080/8081), remove demo/ ([#19](https://github.com/elnebuloso/zilpzalp/issues/19)) ([10aea2c](https://github.com/elnebuloso/zilpzalp/commit/10aea2cced3ccb52be1a6394ac85a2beb0df3cc5))
+
 ## [2.0.0](https://github.com/elnebuloso/zilpzalp/compare/v1.3.1...v2.0.0) (2026-06-17)
 
 
