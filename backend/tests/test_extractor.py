@@ -68,6 +68,35 @@ def test_document_from_odl_table_cells_when_present():
     assert "15.01.2026" in table.text
 
 
+def test_extract_writes_html_cache(tmp_path, monkeypatch):
+    import zilpzalp.extractor as extractor_mod
+
+    pdf = tmp_path / "rechnung.pdf"
+    pdf.write_bytes(b"%PDF-1.4")
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir(exist_ok=True)
+
+    captured = {}
+
+    def fake_convert(*, input_path, output_dir, format):
+        captured["format"] = format
+        out = Path(output_dir)
+        (out / "rechnung.json").write_text(
+            json.dumps({"type": "paragraph", "content": "Datum 15.01.2026",
+                        "page number": 1}),
+            encoding="utf-8",
+        )
+        (out / "rechnung.md").write_text("# Rechnung", encoding="utf-8")
+        (out / "rechnung.html").write_text("<h1>Rechnung</h1>", encoding="utf-8")
+
+    monkeypatch.setattr(extractor_mod.opendataloader_pdf, "convert", fake_convert)
+
+    extract(pdf, cache_dir)
+
+    assert "html" in captured["format"]
+    assert (cache_dir / "rechnung.html").read_text(encoding="utf-8") == "<h1>Rechnung</h1>"
+
+
 @pytest.mark.integration
 def test_extract_real_pdf_returns_document(tmp_path):
     doc = extract(FIXTURES / "invoice.pdf", tmp_path)
