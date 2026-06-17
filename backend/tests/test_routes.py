@@ -558,3 +558,43 @@ def test_extract_unknown_kind_404(client):
     entry = _add_ready(client, "rechnung.pdf")
     response = client.get(f"/documents/{entry.id}/extract/bogus")
     assert response.status_code == 404
+
+
+def test_confirm_advances_to_next_ready_document(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    first = _add_ready(client, "first.pdf")
+    second = _add_ready(client, "second.pdf")
+
+    response = client.post(
+        f"/documents/{first.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.status_code == 200
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith(f"/review/{second.id}")
+    assert "flash=" in redirect
+
+
+def test_confirm_returns_to_queue_when_no_more_ready(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    only = _add_ready(client, "only.pdf")
+
+    response = client.post(
+        f"/documents/{only.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+
+
+def test_skip_advances_to_next_ready_document(client):
+    first = _add_ready(client, "first.pdf")
+    second = _add_ready(client, "second.pdf")
+
+    response = client.post(f"/documents/{first.id}/skip", follow_redirects=False)
+
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith(f"/review/{second.id}")

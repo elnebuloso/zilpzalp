@@ -80,6 +80,14 @@ def _recent(queue: Queue, limit: int = 6):
     return _by_mtime_desc(queue.list())[:limit]
 
 
+def _next_ready(queue: Queue):
+    """First ready, reviewable entry in newest-first order, or None."""
+    for entry in _by_mtime_desc(queue.list()):
+        if entry.status == "ready" and entry.suggestion is not None:
+            return entry
+    return None
+
+
 def _base_context(request: Request, active: str) -> dict:
     queue: Queue = request.app.state.queue
     counts = _counts(queue)
@@ -277,8 +285,10 @@ def _execute(request, entry, filename, target_paths, config):
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)
     message = translate("toast.filed", lang, filename=filename)
+    nxt = _next_ready(queue)
+    target = f"/review/{nxt.id}" if nxt else "/queue"
     resp = Response(status_code=200)
-    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(message) + "&kind=ok"
+    resp.headers["HX-Redirect"] = target + "?flash=" + quote(message) + "&kind=ok"
     return resp
 
 
@@ -388,8 +398,10 @@ def skip_document(request: Request, entry_id: str):
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)
     message = translate("toast.skipped", lang, filename=entry.path.name)
+    nxt = _next_ready(queue)
+    target = f"/review/{nxt.id}" if nxt else "/queue"
     return Response(status_code=200, headers={
-        "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=ok"
+        "HX-Redirect": target + "?flash=" + quote(message) + "&kind=ok"
     })
 
 
