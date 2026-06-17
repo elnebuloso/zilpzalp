@@ -35,7 +35,7 @@ Several related frictions around running the app locally:
 - Make docker-compose self-documenting by mounting each storage path explicitly.
 - Remove `demo/` and bring README/mkdocs docs back in sync with reality.
 - Document in-repo where the backend lives.
-- Fold in one aligned backlog cleanup (lint fix) so `ruff check .` is green.
+- Correct the stale backlog lint-fix entry (the fix already landed in `6abc1b7`).
 
 ## Non-Goals
 
@@ -194,10 +194,12 @@ the local dev server stays 8000):
 
 (Match by content during implementation; line numbers shift as edits land.)
 
-### 8. Folded-in cleanup — lint fix (backlog)
+### 8. Folded-in cleanup — lint fix (already resolved)
 
-Remove the unused `pytest` import in `backend/tests/test_i18n.py` (Ruff F401) so
-`cd backend && uv run ruff check .` is green project-wide. (Backlog "Ideen / später".)
+The backlog "Ideen / später" item — unused `pytest` import in `backend/tests/test_i18n.py`
+(Ruff F401) — is **already fixed** by commit `6abc1b7` ("style(tests): remove unused pytest
+import in test_i18n"). `cd backend && uv run ruff check .` is green project-wide. No code
+change remains; only the stale backlog entry needs correcting (see §10).
 
 ### 9. Already done
 
@@ -207,13 +209,13 @@ single runtime seed). Listed here for completeness; no further action.
 
 ### 10. Backlog tracking
 
-Per `docs/backlog.md` upkeep rule, add to the "## Umsetzung" table:
+Per `docs/backlog.md` upkeep rule, update the backlog:
 
-- one row for this update (Art: `Feinschliff`, Thema: dev server + docker runtime layout,
-  linking this spec), and
-- the lint fix moves out of "Ideen / später" into its own Umsetzung row.
-
-Both get their final commit SHA on completion.
+- add one row to the "## Umsetzung" table for this update (Art: `Feinschliff`, Thema: dev
+  server + docker runtime layout, linking this spec), SHA filled on completion; and
+- move the now-stale lint-fix item out of "Ideen / später" into the Umsetzung table as
+  ✅ done, attributing commit `6abc1b7` (it was resolved earlier; the backlog just never
+  recorded it).
 
 ## Testing / Verification
 
