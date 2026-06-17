@@ -700,6 +700,35 @@ def test_review_links_original_pdf_in_new_tab(client):
     assert "rechnung.pdf" in body
 
 
+def test_queue_list_shows_remove_control_not_skip(client):
+    _add_ready(client, "rechnung.pdf")
+    body = client.get("/partials/queue").text
+    assert "Entfernen" in body
+    assert "remove-control?from=queue" in body
+    assert "/skip" not in body          # skip button gone from the queue list
+    assert "Überspringen" not in body
+
+
+def test_overview_recent_shows_remove_control(client):
+    _add_ready(client, "rechnung.pdf")
+    body = client.get("/partials/overview").text
+    assert "remove-control?from=overview" in body
+
+
+def test_review_has_skip_and_remove_controls(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    body = client.get(f"/review/{entry.id}").text
+    assert f"/documents/{entry.id}/skip" in body          # navigation skip
+    assert "remove-control?from=review" in body           # inline remove
+    assert "hx-confirm" not in body                        # no browser confirm dialog
+
+
+def test_overview_info_panel_shows_both_original_settings(client):
+    body = client.get("/").text
+    assert "Original beim Ablegen" in body
+    assert "Original beim Entfernen" in body
+
+
 def test_review_renders_extraction_tabs(client):
     entry = _add_ready(client, "rechnung.pdf")
     body = client.get(f"/review/{entry.id}").text

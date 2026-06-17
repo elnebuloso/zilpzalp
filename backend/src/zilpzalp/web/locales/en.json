@@ -20,13 +20,11 @@
 
   "toast.filed": "“{filename}” has been filed.",
   "toast.file_error": "Error while filing: {error}",
-  "toast.skipped": "“{filename}” was skipped.",
 
   "overview.title": "Overview",
   "overview.operations": "Operational details",
   "overview.watchfolder": "Watched folder",
   "overview.config_file": "Configuration file",
-  "overview.original_handling": "Original handling",
   "overview.summary": "Summary",
   "overview.targets": "Target folders",
   "overview.patterns": "Naming patterns",
@@ -51,7 +49,6 @@
   "action.remove": "Remove",
   "action.yes": "Yes",
   "action.no": "No",
-  "confirm.skip": "Permanently delete this document?",
   "confirm.remove": "Remove? Original → {target}",
   "toast.removed": "“{filename}” was removed.",
   "overview.original_when_filed": "Original when filed",
