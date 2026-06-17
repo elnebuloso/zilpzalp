@@ -106,3 +106,13 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   des Images gegen ein echtes PDF prüfen, ob der HTML-Tab gefüllt wird; falls nicht,
   `"html"` aus der `format`-Liste in [extractor.py](../../backend/src/zilpzalp/extractor.py)
   entfernen und den HTML-Tab ausbauen.
+- **„Überspringen" soll nur überspringen, nicht löschen:** In der Review-Seite soll
+  „Überspringen" das Dokument nur zurückstellen und direkt zum nächsten springen —
+  **ohne** das Original zu löschen/verschieben und **ohne** Bestätigungs-Alert. Heute
+  ruft `skip_document` ([web/routes.py](../../backend/src/zilpzalp/web/routes.py)) `skip()`
+  ([processor.py](../../backend/src/zilpzalp/processor.py)) auf, das das Original gemäß
+  `original_handling` disponiert (bei `delete` löscht), und das Template zeigt dabei eine
+  `hx-confirm`-Alertbox. Gewünscht: Original unangetastet lassen, nur aus der aktuellen
+  Ansicht/Queue nehmen und weiterspringen, kein `hx-confirm`. **Offene Frage:** Wie wird
+  verhindert, dass das im Watchfolder verbliebene Dokument sofort wieder analysiert wird
+  und erneut auftaucht (z. B. „übersprungen"-Marker je Datei statt Re-Enqueue)?
