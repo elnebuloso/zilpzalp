@@ -3,5 +3,5 @@
 {% elif kind == 'html' %}
 <iframe class="drawer-iframe" sandbox srcdoc="{{ content }}"></iframe>
 {% else %}
-<pre class="drawer-pre">{{ content|safe }}</pre>
+<pre class="drawer-pre">{{ content }}</pre>
 {% endif %}

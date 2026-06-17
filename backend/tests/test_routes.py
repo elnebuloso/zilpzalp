@@ -534,6 +534,7 @@ def test_extract_html_returns_sandboxed_iframe(client):
     assert "<iframe" in response.text
     assert "sandbox" in response.text
     assert "srcdoc" in response.text
+    assert "allow-scripts" not in response.text
 
 
 def test_extract_json_is_pretty_printed(client):
@@ -543,7 +544,7 @@ def test_extract_json_is_pretty_printed(client):
 
     response = client.get(f"/documents/{entry.id}/extract/json")
     assert response.status_code == 200
-    assert '"a": 1' in response.text  # indented, space after colon
+    assert '&#34;a&#34;: 1' in response.text  # indented, space after colon, with HTML escaping
 
 
 def test_extract_missing_file_shows_unavailable(client):
