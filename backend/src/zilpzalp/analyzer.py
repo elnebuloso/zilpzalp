@@ -35,12 +35,24 @@ class Analysis:
 # --- Eingebaute Datumsformate (laufen immer, ohne Config) ---
 _NUMERIC = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b")
 _ISO = re.compile(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b")
-_MONTHS_DE = {
+_MONTHS = {
+    # Deutsch
     "januar": 1, "februar": 2, "maerz": 3, "märz": 3, "april": 4, "mai": 5,
     "juni": 6, "juli": 7, "august": 8, "september": 9, "oktober": 10,
     "november": 11, "dezember": 12,
+    # Englisch (Vollform)
+    "january": 1, "february": 2, "march": 3, "may": 5, "june": 6, "july": 7,
+    "october": 10, "december": 12,
+    # Englisch (Abkuerzungen)
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8,
+    "sep": 9, "sept": 9, "oct": 10, "nov": 11, "dec": 12,
 }
-_LONG_DE = re.compile(r"\b(\d{1,2})\.?\s+([A-Za-zäöüÄÖÜ]+)\s+(\d{4})\b")
+# Tag zuerst: "5. Maerz 2026", "7 March 2024"
+_LONG_DAY_FIRST = re.compile(r"\b(\d{1,2})\.?\s+([A-Za-zäöüÄÖÜ]+)\s+(\d{4})\b")
+# Monat zuerst (englisch): "April 19, 2023", "Apr 19th, 2023"
+_LONG_MONTH_FIRST = re.compile(
+    r"\b([A-Za-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\b"
+)
 
 
 def _two_digit_year(value: int) -> int:
@@ -67,11 +79,18 @@ def _numeric_matches(text: str) -> list[tuple[int, int, str, datetime.date]]:
         d = _valid_date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
         if d is not None:
             out.append((m.start(), m.end(), m.group(0), d))
-    for m in _LONG_DE.finditer(text):
-        month = _MONTHS_DE.get(m.group(2).lower())
+    for m in _LONG_DAY_FIRST.finditer(text):
+        month = _MONTHS.get(m.group(2).lower())
         if month is None:
             continue
         d = _valid_date(int(m.group(3)), month, int(m.group(1)))
+        if d is not None:
+            out.append((m.start(), m.end(), m.group(0), d))
+    for m in _LONG_MONTH_FIRST.finditer(text):
+        month = _MONTHS.get(m.group(1).lower())
+        if month is None:
+            continue
+        d = _valid_date(int(m.group(3)), month, int(m.group(2)))
         if d is not None:
             out.append((m.start(), m.end(), m.group(0), d))
     return out

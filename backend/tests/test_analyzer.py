@@ -50,6 +50,30 @@ def test_long_form_german_and_two_digit_year(tmp_path):
     assert "1999-07-01" in normalized            # 99 -> 1999 (Pivot 69)
 
 
+def test_long_form_english_month_first(tmp_path):
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Date of issue April 19, 2023", page=1, bbox=(0, 0, 0, 0)),
+        Block(kind="paragraph", text="Paid on Apr 19, 2023", page=1, bbox=(0, 0, 0, 0)),
+        Block(kind="paragraph", text="Due September 1st, 2024", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    normalized = [c.normalized for c in analysis.date_candidates]
+
+    assert "2023-04-19" in normalized            # "April 19, 2023"
+    assert "2024-09-01" in normalized            # abbreviation + ordinal suffix
+    assert all(c.raw for c in analysis.date_candidates)
+
+
+def test_long_form_english_day_first(tmp_path):
+    doc = Document(blocks=[
+        Block(kind="paragraph", text="Invoice date 7 March 2024", page=1, bbox=(0, 0, 0, 0)),
+    ])
+    analysis = analyze(doc, _config(tmp_path))
+    normalized = [c.normalized for c in analysis.date_candidates]
+
+    assert "2024-03-07" in normalized            # English month name, day first
+
+
 def test_config_date_patterns_add_labeled_candidates(tmp_path):
     (tmp_path / "inbox").mkdir(exist_ok=True)
     (tmp_path / "error").mkdir(exist_ok=True)
