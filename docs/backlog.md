@@ -100,6 +100,11 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   - Beim Upload per UI wächst die Liste immer weiter; ein erneuter Upload zeigt nur
     die gerade hochgeladenen Files an — Verhalten klären/beheben.
   - „fertig" ist als Status irreführend — sollte „hochgeladen" heißen.
+- **Review-Seite — nahtlos weiterarbeiten + Fehlbestätigung verhindern:** Nach Klick
+  auf „Bestätigen" direkt das nächste Dokument vorlegen, damit man ohne Umweg
+  weiterarbeiten kann. Damit man nicht stumpf/zu schnell bestätigt und versehentlich
+  falsch umbenennt, sollte kein Datum vorausgewählt sein — „Bestätigen" bleibt
+  inaktiv, bis aktiv ein Datum gewählt wurde.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
