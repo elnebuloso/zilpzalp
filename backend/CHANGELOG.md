@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/elnebuloso/zilpzalp/compare/v1.3.0...v1.3.1) (2026-06-17)
+
+
+### Bug Fixes
+
+* **web:** replace extraction overlay drawer with inline review tabs ([#15](https://github.com/elnebuloso/zilpzalp/issues/15)) ([44beec8](https://github.com/elnebuloso/zilpzalp/commit/44beec831f053a36036e2f48e1e32aae2575ebd4))
+
 ## [1.3.0](https://github.com/elnebuloso/zilpzalp/compare/v1.2.0...v1.3.0) (2026-06-17)
 
 
