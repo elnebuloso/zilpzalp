@@ -49,3 +49,37 @@ def test_prune_removes_orphans_keeps_valid(tmp_path):
     assert (tmp_path / "keep.json").exists()
     assert not (tmp_path / "orphan.json").exists()
     assert not (tmp_path / "orphan.md").exists()
+
+
+def test_read_helpers_return_text_or_none(tmp_path):
+    (tmp_path / "doc.md").write_text("# Title", encoding="utf-8")
+    (tmp_path / "doc.html").write_text("<h1>Title</h1>", encoding="utf-8")
+    (tmp_path / "doc.json").write_text('{"a": 1}', encoding="utf-8")
+    cache = DocumentCache(tmp_path)
+
+    assert cache.read_markdown(Path("/inbox/doc.pdf")) == "# Title"
+    assert cache.read_html(Path("/inbox/doc.pdf")) == "<h1>Title</h1>"
+    assert cache.read_json_text(Path("/inbox/doc.pdf")) == '{"a": 1}'
+    assert cache.read_markdown(Path("/inbox/missing.pdf")) is None
+    assert cache.read_html(Path("/inbox/missing.pdf")) is None
+    assert cache.read_json_text(Path("/inbox/missing.pdf")) is None
+
+
+def test_remove_deletes_html_too(tmp_path):
+    (tmp_path / "doc.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "doc.md").write_text("x", encoding="utf-8")
+    (tmp_path / "doc.html").write_text("<i>x</i>", encoding="utf-8")
+    cache = DocumentCache(tmp_path)
+
+    cache.remove(Path("/inbox/doc.pdf"))
+
+    assert not (tmp_path / "doc.html").exists()
+
+
+def test_prune_removes_html_orphans(tmp_path):
+    for stem in ("keep", "orphan"):
+        (tmp_path / f"{stem}.html").write_text("<i>x</i>", encoding="utf-8")
+    DocumentCache(tmp_path).prune(["keep.pdf"])
+
+    assert (tmp_path / "keep.html").exists()
+    assert not (tmp_path / "orphan.html").exists()
