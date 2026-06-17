@@ -25,6 +25,28 @@
     }
     var close = e.target.closest("[data-toast-close]");
     if (close) { close.closest(".toast").remove(); }
+    var openBtn = e.target.closest("[data-drawer-open]");
+    if (openBtn) {
+      var drawer = document.getElementById(openBtn.getAttribute("data-drawer-open"));
+      if (drawer) {
+        drawer.hidden = false;
+        var firstTab = drawer.querySelector("[data-drawer-tab]");
+        if (firstTab) firstTab.click();  // lazy-load the default (Markdown) pane
+      }
+      return;
+    }
+    var closeBtn = e.target.closest("[data-drawer-close]");
+    if (closeBtn) { closeBtn.closest(".drawer-scrim").hidden = true; return; }
+    var scrim = e.target.closest(".drawer-scrim");
+    if (scrim && e.target === scrim) { scrim.hidden = true; return; }
+    var tab = e.target.closest("[data-drawer-tab]");
+    if (tab) {
+      tab.parentNode.querySelectorAll("[data-drawer-tab]").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      tab.classList.add("active");
+      // htmx handles the fetch via the tab's hx-get attributes
+    }
   });
 
   // ---------- Toast-Auto-Dismiss ----------

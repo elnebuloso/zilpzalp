@@ -36,6 +36,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 4 | Feature | **Health-Endpunkte für Kubernetes-Probes** — `/healthz/startup`, `/healthz/ready`, `/healthz/live` mit Komponenten-Status; `/health` entfällt (Details: [superpowers/specs/2026-06-14-2348-health-probes-design.md](superpowers/specs/2026-06-14-2348-health-probes-design.md)) | ✅ | `7630595` |
 | 5 | Feature | **CI-Release-Pipeline (GitHub Actions)** — Auto-Semver aus Conventional Commits via `release-please`, Backend-Image nach Docker Hub `elnebuloso/zilpzalp-backend:vX.Y.Z` (Details: [superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md](superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md)) | ✅ | `75a6378` |
 | 6 | Feature | **Overview-Seite — Refresh** — Counter-Layout (1×4/2×2), Betriebsangaben unter „Hochladen", Status „bereit" in der Liste, jüngste-zuerst-Sortierung + Upload-Feedback (Details: [superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md](superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md)) | ✅ | `809343f` |
+| 7 | Feature | **Review-Seite — Optimierung** — nächstes bereites Dokument nach Bestätigen/Überspringen, kein vorgewähltes Datum, Original-Dateiname hervorgehoben + im neuen Tab öffnen, Extraktions-Drawer (Markdown/HTML/JSON) (Details: [superpowers/specs/2026-06-17-0955-review-page-optimization-design.md](superpowers/specs/2026-06-17-0955-review-page-optimization-design.md)) | ✅ | — |
 
 ## Ideen / später
 
@@ -66,10 +67,6 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Veralteten Design-Doc korrigieren:** `docs/superpowers/specs/2026-06-14-1459-zilpzalp-web-ui.md:161`
   sagt noch „`/health` bleibt" — seit Backlog #4 überholt (`/health` entfällt, ersetzt durch
   `/healthz/*`). Historisches MVP-Dokument an die aktuelle Realität anpassen oder als überholt markieren.
-- **Extrahierte Inhalte in der Review-Preview anzeigen:** Das pro Dokument gecachte
-  JSON + Markdown (siehe [superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md](superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md))
-  dem User in der Review-Ansicht lesbar machen, damit er die Analyse nachvollziehen
-  kann. Fundament (persistierter Extraktions-Cache) ist mit jenem Spec gelegt.
 - **„Trash leeren"-Aktion in der UI:** Für den `original_handling: trash`-Modus
   einen Weg schaffen, `/data/trash` über die Oberfläche zu leeren, statt nur im
   Dateisystem (siehe [superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md](superpowers/specs/2026-06-17-0009-config-improvements-and-extraction-cache-design.md)).
@@ -87,13 +84,6 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Verlinkung zur Dokumentation + GitHub:** Links zur Doku
   (<https://elnebuloso.github.io/zilpzalp/>) und zum GitHub-Repo in der UI einbauen —
   z. B. im Header, ggf. als GitHub-Icon.
-- **Review-Seite — nahtlos weiterarbeiten + Fehlbestätigung verhindern:** Nach Klick
-  auf „Bestätigen" direkt das nächste Dokument vorlegen, damit man ohne Umweg
-  weiterarbeiten kann. Damit man nicht stumpf/zu schnell bestätigt und versehentlich
-  falsch umbenennt, sollte kein Datum vorausgewählt sein — „Bestätigen" bleibt
-  inaktiv, bis aktiv ein Datum gewählt wurde.
-- **Review-Seite — originalen Dateinamen hervorheben:** Den ursprünglichen Dateinamen
-  optisch besser hervorheben (z. B. andere Farbe und/oder anderer Platz).
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber

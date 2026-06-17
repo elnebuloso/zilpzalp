@@ -497,3 +497,131 @@ def test_overview_recent_shows_ready_badge(client):
     body = client.get("/partials/overview").text
     assert "b-ready" in body
     assert "/review/" in body
+
+
+def test_document_pdf_served_inline(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/pdf")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "inline" in response.headers.get("content-disposition", "")
+    assert response.content.startswith(b"%PDF")
+
+
+def test_document_pdf_unknown_id_404(client):
+    response = client.get("/documents/deadbeef/pdf")
+    assert response.status_code == 404
+
+
+def test_extract_markdown_returns_pre(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.md").write_text("# Hallo", encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/markdown")
+    assert response.status_code == 200
+    assert "<pre" in response.text
+    assert "# Hallo" in response.text
+
+
+def test_extract_html_returns_sandboxed_iframe(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.html").write_text("<h1>Hi</h1>", encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/html")
+    assert response.status_code == 200
+    assert "<iframe" in response.text
+    assert "sandbox" in response.text
+    assert "srcdoc" in response.text
+    assert "allow-scripts" not in response.text
+
+
+def test_extract_json_is_pretty_printed(client):
+    cfg = app.state.config
+    entry = _add_ready(client, "rechnung.pdf")
+    Path(cfg.paths.cache).joinpath("rechnung.json").write_text('{"a":1,"b":2}', encoding="utf-8")
+
+    response = client.get(f"/documents/{entry.id}/extract/json")
+    assert response.status_code == 200
+    assert '&#34;a&#34;: 1' in response.text  # indented, space after colon, with HTML escaping
+
+
+def test_extract_missing_file_shows_unavailable(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/extract/markdown")
+    assert response.status_code == 200
+    assert "Nicht verfügbar" in response.text
+
+
+def test_extract_unknown_kind_404(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/extract/bogus")
+    assert response.status_code == 404
+
+
+def test_confirm_advances_to_next_ready_document(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    first = _add_ready(client, "first.pdf")
+    second = _add_ready(client, "second.pdf")
+
+    response = client.post(
+        f"/documents/{first.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.status_code == 200
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith(f"/review/{second.id}")
+    assert "flash=" in redirect
+
+
+def test_confirm_returns_to_queue_when_no_more_ready(client):
+    cfg = app.state.config
+    cfg.__dict__["summary_mode"] = "never"
+    only = _add_ready(client, "only.pdf")
+
+    response = client.post(
+        f"/documents/{only.id}/confirm",
+        data=_form(cfg.targets[0].path),
+    )
+
+    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+
+
+def test_skip_advances_to_next_ready_document(client):
+    first = _add_ready(client, "first.pdf")
+    second = _add_ready(client, "second.pdf")
+
+    response = client.post(f"/documents/{first.id}/skip", follow_redirects=False)
+
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith(f"/review/{second.id}")
+
+
+def test_review_has_no_preselected_date(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/review/{entry.id}")
+    assert response.status_code == 200
+    body = response.text
+    assert "date-opt sel" not in body          # no candidate preselected
+    assert 'data-selected-date=""' in body     # hidden value starts empty
+
+
+def test_review_links_original_pdf_in_new_tab(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    body = client.get(f"/review/{entry.id}").text
+    assert f'href="/documents/{entry.id}/pdf"' in body
+    assert 'target="_blank"' in body
+    assert "rechnung.pdf" in body
+
+
+def test_review_renders_extraction_drawer(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    body = client.get(f"/review/{entry.id}").text
+    assert "Extrahierten Inhalt ansehen" in body          # trigger button
+    assert f'/documents/{entry.id}/extract/markdown' in body
+    assert f'/documents/{entry.id}/extract/html' in body
+    assert f'/documents/{entry.id}/extract/json' in body
+    assert 'id="extract-drawer"' in body

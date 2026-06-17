@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import tempfile
 from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
@@ -77,6 +78,14 @@ def _by_mtime_desc(entries):
 
 def _recent(queue: Queue, limit: int = 6):
     return _by_mtime_desc(queue.list())[:limit]
+
+
+def _next_ready(queue: Queue):
+    """First ready, reviewable entry in newest-first order, or None."""
+    for entry in _by_mtime_desc(queue.list()):
+        if entry.status == "ready" and entry.suggestion is not None:
+            return entry
+    return None
 
 
 def _base_context(request: Request, active: str) -> dict:
@@ -171,11 +180,49 @@ def review_page(request: Request, entry_id: str):
             "config": config,
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
-            "preselected_index": suggestion.preselected_date_index or 0,
             "original_label": translate("original." + config.original_handling, lang),
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
+
+
+@router.get("/documents/{entry_id}/pdf")
+def document_pdf(request: Request, entry_id: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or not entry.path.exists():
+        return Response(status_code=404)
+    return FileResponse(
+        entry.path,
+        media_type="application/pdf",
+        content_disposition_type="inline",
+        filename=entry.path.name,
+    )
+
+
+@router.get("/documents/{entry_id}/extract/{kind}")
+def extract_content(request: Request, entry_id: str, kind: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or kind not in ("markdown", "html", "json"):
+        return Response(status_code=404)
+    cache = request.app.state.cache
+    if kind == "markdown":
+        content = cache.read_markdown(entry.path)
+    elif kind == "html":
+        content = cache.read_html(entry.path)
+    else:
+        content = cache.read_json_text(entry.path)
+        if content is not None:
+            content = json.dumps(json.loads(content), indent=2, ensure_ascii=False)
+    lang = resolve_language(request)
+    context = {
+        "kind": kind,
+        "content": content,
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
+    }
+    return templates.TemplateResponse(request, "_extract_pane.html", context)
 
 
 def _resolve_template(config: Config, pattern_name: str) -> str:
@@ -237,8 +284,10 @@ def _execute(request, entry, filename, target_paths, config):
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)
     message = translate("toast.filed", lang, filename=filename)
+    nxt = _next_ready(queue)
+    target = f"/review/{nxt.id}" if nxt else "/queue"
     resp = Response(status_code=200)
-    resp.headers["HX-Redirect"] = "/queue?flash=" + quote(message) + "&kind=ok"
+    resp.headers["HX-Redirect"] = target + "?flash=" + quote(message) + "&kind=ok"
     return resp
 
 
@@ -348,8 +397,10 @@ def skip_document(request: Request, entry_id: str):
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)
     message = translate("toast.skipped", lang, filename=entry.path.name)
+    nxt = _next_ready(queue)
+    target = f"/review/{nxt.id}" if nxt else "/queue"
     return Response(status_code=200, headers={
-        "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=ok"
+        "HX-Redirect": target + "?flash=" + quote(message) + "&kind=ok"
     })
 
 

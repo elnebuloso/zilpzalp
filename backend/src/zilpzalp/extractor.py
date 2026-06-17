@@ -114,7 +114,7 @@ def extract(pdf_path: str | Path, cache_dir: str | Path) -> Document:
         opendataloader_pdf.convert(
             input_path=[str(pdf_path)],
             output_dir=tmp,
-            format=["json", "markdown"],
+            format=["json", "markdown", "html"],
         )
         json_outputs = list(Path(tmp).glob("*.json"))
         if not json_outputs:
@@ -126,6 +126,9 @@ def extract(pdf_path: str | Path, cache_dir: str | Path) -> Document:
         md_outputs = list(Path(tmp).glob("*.md")) or list(Path(tmp).glob("*.markdown"))
         if md_outputs:
             shutil.move(str(md_outputs[0]), str(cache_dir / f"{stem}.md"))
+        html_outputs = list(Path(tmp).glob("*.html"))
+        if html_outputs:
+            shutil.move(str(html_outputs[0]), str(cache_dir / f"{stem}.html"))
         data = json.loads(json_dest.read_text(encoding="utf-8"))
     document = document_from_odl(data)
     if not any(block.text.strip() for block in document.blocks):

@@ -7,14 +7,17 @@
   </a>
   <div class="view-head" style="margin-bottom:22px">
     <h1 class="view-title">{{ t('review.title') }}</h1>
-    <p class="view-sub mono" style="font-size:13.5px">{{ entry.path.name }}</p>
+    <a class="orig-file" href="/documents/{{ entry.id }}/pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex:none"><path d="M14 3v5h5M14 3l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+      <span class="mono">{{ entry.path.name }}</span>
+    </a>
   </div>
 
   <form id="review-form" class="review-grid" data-ext="{{ ext }}"
         data-msg-date="{{ t('review.msg_date_required') }}"
         data-msg-target="{{ t('review.msg_target_required') }}">
     <input type="hidden" name="date_kind" value="candidate" />
-    <input type="hidden" name="date_value" data-selected-date="{{ suggestion.date_candidates[preselected_index].normalized if suggestion.date_candidates else '' }}" />
+    <input type="hidden" name="date_value" data-selected-date="" />
 
     <div class="dash-stack">
       <div class="card card-pad">
@@ -22,7 +25,7 @@
         <p class="muted" style="font-size:13px;margin:0 0 16px">{{ t('review.choose_date_hint') }}</p>
         <div class="date-list">
           {% for c in suggestion.date_candidates %}
-          <button type="button" class="date-opt {% if loop.index0 == preselected_index %}sel{% endif %}" data-date="{{ c.normalized }}">
+          <button type="button" class="date-opt" data-date="{{ c.normalized }}">
             <span class="date-radio"><span class="date-radio-dot"></span></span>
             <span style="min-width:0">
               <span style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
@@ -97,6 +100,9 @@
           <div class="np-meta-row"><span class="k">{{ t('review.meta_original') }}</span><span class="v">{{ original_label }}</span></div>
         </div>
         <div class="review-actions">
+          <button type="button" class="btn ghost" data-drawer-open="extract-drawer">
+            {{ t('review.extract_button') }}
+          </button>
           <a class="btn ghost" href="/queue">{{ t('action.cancel') }}</a>
           <button type="button" class="btn ghost" hx-post="/documents/{{ entry.id }}/skip"
                   {% if config.original_handling == 'delete' %}hx-confirm="{{ t('confirm.skip') }}"{% endif %}>
@@ -110,6 +116,34 @@
         </div>
         <p class="faint" id="confirm-hint" style="font-size:12px;margin:10px 2px 0;text-align:center"></p>
       </div>
+    </div>
+    <div class="drawer-scrim" id="extract-drawer" hidden>
+      <aside class="drawer" onclick="event.stopPropagation()">
+        <div class="drawer-head">
+          <h2 class="drawer-title">{{ t('review.extract_title') }}</h2>
+          <button type="button" class="drawer-close" data-drawer-close aria-label="{{ t('review.extract_close') }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="drawer-tabs">
+          <button type="button" class="drawer-tab active" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/markdown" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_markdown') }}
+          </button>
+          <button type="button" class="drawer-tab" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/html" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_html') }}
+          </button>
+          <button type="button" class="drawer-tab" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/json" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_json') }}
+          </button>
+          <a class="drawer-tab drawer-pdf" href="/documents/{{ entry.id }}/pdf" target="_blank" rel="noopener">
+            {{ t('review.open_pdf') }}
+          </a>
+        </div>
+        <div class="drawer-pane" id="drawer-pane"></div>
+      </aside>
     </div>
   </form>
 </div>
