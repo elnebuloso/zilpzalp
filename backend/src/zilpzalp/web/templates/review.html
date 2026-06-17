@@ -100,6 +100,9 @@
           <div class="np-meta-row"><span class="k">{{ t('review.meta_original') }}</span><span class="v">{{ original_label }}</span></div>
         </div>
         <div class="review-actions">
+          <button type="button" class="btn ghost" data-drawer-open="extract-drawer">
+            {{ t('review.extract_button') }}
+          </button>
           <a class="btn ghost" href="/queue">{{ t('action.cancel') }}</a>
           <button type="button" class="btn ghost" hx-post="/documents/{{ entry.id }}/skip"
                   {% if config.original_handling == 'delete' %}hx-confirm="{{ t('confirm.skip') }}"{% endif %}>
@@ -113,6 +116,34 @@
         </div>
         <p class="faint" id="confirm-hint" style="font-size:12px;margin:10px 2px 0;text-align:center"></p>
       </div>
+    </div>
+    <div class="drawer-scrim" id="extract-drawer" hidden>
+      <aside class="drawer" onclick="event.stopPropagation()">
+        <div class="drawer-head">
+          <h2 class="drawer-title">{{ t('review.extract_title') }}</h2>
+          <button type="button" class="drawer-close" data-drawer-close aria-label="{{ t('review.extract_close') }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="drawer-tabs">
+          <button type="button" class="drawer-tab active" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/markdown" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_markdown') }}
+          </button>
+          <button type="button" class="drawer-tab" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/html" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_html') }}
+          </button>
+          <button type="button" class="drawer-tab" data-drawer-tab
+                  hx-get="/documents/{{ entry.id }}/extract/json" hx-target="#drawer-pane" hx-swap="innerHTML">
+            {{ t('review.extract_tab_json') }}
+          </button>
+          <a class="drawer-tab drawer-pdf" href="/documents/{{ entry.id }}/pdf" target="_blank" rel="noopener">
+            {{ t('review.open_pdf') }}
+          </a>
+        </div>
+        <div class="drawer-pane" id="drawer-pane"></div>
+      </aside>
     </div>
   </form>
 </div>

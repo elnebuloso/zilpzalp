@@ -69,6 +69,12 @@
   "review.msg_target_required": "Mindestens einen Zielordner wählen.",
   "review.extract_unavailable": "Nicht verfügbar",
   "review.open_pdf": "PDF öffnen",
+  "review.extract_button": "Extrahierten Inhalt ansehen",
+  "review.extract_title": "Extrahierter Inhalt",
+  "review.extract_close": "Schließen",
+  "review.extract_tab_markdown": "Markdown",
+  "review.extract_tab_html": "HTML",
+  "review.extract_tab_json": "JSON",
 
   "config.title": "Konfiguration",
   "config.subtitle": "Konfiguration als YAML. Wird beim Speichern geprüft.",

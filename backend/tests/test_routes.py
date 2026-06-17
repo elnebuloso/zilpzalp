@@ -615,3 +615,13 @@ def test_review_links_original_pdf_in_new_tab(client):
     assert f'href="/documents/{entry.id}/pdf"' in body
     assert 'target="_blank"' in body
     assert "rechnung.pdf" in body
+
+
+def test_review_renders_extraction_drawer(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    body = client.get(f"/review/{entry.id}").text
+    assert "Extrahierten Inhalt ansehen" in body          # trigger button
+    assert f'/documents/{entry.id}/extract/markdown' in body
+    assert f'/documents/{entry.id}/extract/html' in body
+    assert f'/documents/{entry.id}/extract/json' in body
+    assert 'id="extract-drawer"' in body
