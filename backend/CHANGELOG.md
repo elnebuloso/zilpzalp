@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/elnebuloso/zilpzalp/compare/v1.0.0...v1.1.0) (2026-06-17)
+
+
+### Features
+
+* **analyzer:** recognize common English date formats ([aed0870](https://github.com/elnebuloso/zilpzalp/commit/aed0870d015315f4fd7ec843c445a1eed0cfae50))
+
 ## [1.0.0](https://github.com/elnebuloso/zilpzalp/compare/v0.4.0...v1.0.0) (2026-06-16)
 
 
