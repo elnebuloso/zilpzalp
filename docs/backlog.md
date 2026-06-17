@@ -82,6 +82,9 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Screenshots in der mkdocs-Doku via Playwright:** Die mkdocs-Dokumentation mit
   Screenshots der Weboberfläche anreichern, automatisiert über Playwright erzeugt,
   damit sie bei UI-Änderungen reproduzierbar aktualisiert werden können.
+- **Counter-Boxen auf der Startseite layouten:** Aktuell stehen 3 Boxen
+  nebeneinander, die 4. rutscht darunter. Alle 4 sollen gleichmäßig liegen — je nach
+  Viewport 1×4 (breit) bzw. 2×2 (schmaler) statt 3+1.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
