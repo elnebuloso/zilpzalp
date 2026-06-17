@@ -497,3 +497,17 @@ def test_overview_recent_shows_ready_badge(client):
     body = client.get("/partials/overview").text
     assert "b-ready" in body
     assert "/review/" in body
+
+
+def test_document_pdf_served_inline(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    response = client.get(f"/documents/{entry.id}/pdf")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "inline" in response.headers.get("content-disposition", "")
+    assert response.content.startswith(b"%PDF")
+
+
+def test_document_pdf_unknown_id_404(client):
+    response = client.get("/documents/deadbeef/pdf")
+    assert response.status_code == 404

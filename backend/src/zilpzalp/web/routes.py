@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
@@ -176,6 +176,20 @@ def review_page(request: Request, entry_id: str):
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
+
+
+@router.get("/documents/{entry_id}/pdf")
+def document_pdf(request: Request, entry_id: str):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None or not entry.path.exists():
+        return Response(status_code=404)
+    return FileResponse(
+        entry.path,
+        media_type="application/pdf",
+        content_disposition_type="inline",
+        filename=entry.path.name,
+    )
 
 
 def _resolve_template(config: Config, pattern_name: str) -> str:
