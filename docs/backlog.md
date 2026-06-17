@@ -79,6 +79,9 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   automatischen Re-Analyse nach Config-Änderung.
 - **Status „bereit" auf der Übersichtsseite:** Auf der Übersichtsseite fehlt der
   Status „bereit" analog zur Warteschlangenseite — dort konsistent ergänzen.
+- **Screenshots in der mkdocs-Doku via Playwright:** Die mkdocs-Dokumentation mit
+  Screenshots der Weboberfläche anreichern, automatisiert über Playwright erzeugt,
+  damit sie bei UI-Änderungen reproduzierbar aktualisiert werden können.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
