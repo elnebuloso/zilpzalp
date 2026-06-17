@@ -5,9 +5,14 @@ services:
       dockerfile: Dockerfile.backend
     image: zilpzalp-backend
     ports:
-      - "8000:8000"
+      - "8080:8000"
     volumes:
-      - ./demo/data:/data
+      - ./docker/backend/config:/config
+      - ./docker/backend/data/inbox:/data/inbox
+      - ./docker/backend/data/error:/data/error
+      - ./docker/backend/data/trash:/data/trash
+      - ./docker/backend/data/cache:/data/cache
+      - ./docker/backend/data/outbox:/data/outbox
     restart: unless-stopped
 
   docs:
@@ -19,6 +24,6 @@ services:
     volumes:
       - ./mkdocs:/docs
     ports:
-      - "8001:8000"
+      - "8081:8000"
     restart: unless-stopped
     command: serve --dev-addr=0.0.0.0:8000 --livereload

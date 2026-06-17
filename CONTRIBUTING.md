@@ -24,8 +24,8 @@ Run the full app locally (backend + docs site):
 docker compose up -d --build
 ```
 
-- Web UI: <http://localhost:8000>
-- Documentation: <http://localhost:8001>
+- Web UI: <http://localhost:8080>
+- Documentation: <http://localhost:8081>
 
 ## Tests & linting
 
@@ -73,7 +73,7 @@ End-user docs live under [`mkdocs/`](mkdocs/) and are built with
 [mkdocs-material](https://squidfunk.github.io/mkdocs-material/). Preview locally:
 
 ```bash
-docker compose up docs   # http://localhost:8001, live-reload
+docker compose up docs   # http://localhost:8081, live-reload
 ```
 
 Pushes to `main` that touch `mkdocs/**` deploy automatically to GitHub Pages

@@ -12,22 +12,32 @@ Trivial tasks (one-liners, obvious fixes): just do it.
   refactor what isn't broken. Remove orphans your change creates; mention pre-existing
   dead code, don't delete it unasked.
 
+## Backend & running the app
+
+- The Python backend lives in `backend/` — `uv`, the virtualenv, and `pyproject.toml`
+  are all there. Run `uv`, `pytest`, and `uvicorn` from `backend/`
+  (e.g. `cd backend && uv run pytest`).
+- To run the app for manual or Playwright checks, use the dev-server script from the
+  repo root: `scripts/devserver.sh start|stop|status|logs`. It serves on
+  <http://127.0.0.1:8000> with isolated runtime data under `.dev/backend/` (gitignored).
+
 ## Documentation language
 
-- README.md and the mkdocs documentation under `mkdocs/` are written in English.
+- `README.md` and the mkdocs documentation under `mkdocs/` are written in English.
 
 ## Git
 
 - Conventional Commits, English. Example: `fix(auth): handle expired tokens on refresh`
-- Add, Commit und Push selbstständig, sobald ein Arbeitsschritt abgeschlossen ist.
+- Stage and commit changes independently after each completed, coherent work step.
+- Ask before pushing.
 - Never force-push, amend pushed commits, or hard-reset.
 
-# Superpowers skill file naming
+## Superpowers skill file naming
 
-Use `YYYY-MM-DD-HHMM-<short-topic>.md` for Superpowers skill `specs` and `plans` so same-day files sort correctly.
+- Use `YYYY-MM-DD-HHMM-<short-topic>.md` for Superpowers skill `specs` and `plans` so same-day files sort correctly.
+- Do not use `YYYY-MM-DD-<short-topic>.md`.
 
-# example
-specs/superpowers/specs/2026-06-13-1430-user-authentication.md
-docs/superpowers/plans/2026-06-13-1430-user-authentication.md
+### example
 
-Do not use `YYYY-MM-DD-<short-topic>.md`.
+- `specs/superpowers/specs/2026-06-13-1430-user-authentication.md`
+- `docs/superpowers/plans/2026-06-13-1430-user-authentication.md`
