@@ -26,3 +26,6 @@ mkdocs/site/
 /demo/data/trash/
 /demo/data/outbox/
 /demo/data/cache/
+
+/mocks/*
+!/mocks/.gitkeep
