@@ -426,31 +426,111 @@ def test_overview_shows_upload_zone(client):
     assert "PDF" in body
 
 
-def test_skip_deletes_file_and_removes_entry_and_cache(client):
+def test_skip_is_navigation_only_and_keeps_document(client):
     cfg = app.state.config
-    entry = _add_ready(client, "skipme.pdf")
-    Path(cfg.paths.cache).joinpath("skipme.json").write_text("{}", encoding="utf-8")
+    entry = _add_ready(client, "keepme.pdf")
+    Path(cfg.paths.cache).joinpath("keepme.json").write_text("{}", encoding="utf-8")
 
     response = client.post(f"/documents/{entry.id}/skip", follow_redirects=False)
 
     assert response.status_code == 200
-    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    # nothing disposed, nothing dropped — skip is pure navigation
+    assert app.state.queue.get_by_id(entry.id) is not None
+    assert (Path(cfg.paths.watchfolder) / "keepme.pdf").exists()
+    assert Path(cfg.paths.cache).joinpath("keepme.json").exists()
+
+
+def test_skip_last_ready_goes_to_start_page(client):
+    only = _add_ready(client, "only.pdf")
+
+    response = client.post(f"/documents/{only.id}/skip", follow_redirects=False)
+
+    assert response.headers.get("HX-Redirect") == "/"
+
+
+def test_remove_from_queue_disposes_and_redirects_to_queue(client):
+    cfg = app.state.config
+    cfg.__dict__["originals"].__dict__["when_removed"] = "delete"
+    entry = _add_ready(client, "drop.pdf")
+    Path(cfg.paths.cache).joinpath("drop.json").write_text("{}", encoding="utf-8")
+
+    response = client.post(
+        f"/documents/{entry.id}/remove?from=queue", follow_redirects=False
+    )
+
+    assert response.status_code == 200
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith("/queue")
+    assert "flash=" in redirect
     assert app.state.queue.get_by_id(entry.id) is None
-    assert not (Path(cfg.paths.watchfolder) / "skipme.pdf").exists()
-    assert not Path(cfg.paths.cache).joinpath("skipme.json").exists()
+    assert not (Path(cfg.paths.watchfolder) / "drop.pdf").exists()
+    assert not Path(cfg.paths.cache).joinpath("drop.json").exists()
 
 
-def test_skip_unknown_entry_redirects(client):
-    response = client.post("/documents/deadbeef/skip", follow_redirects=False)
+def test_remove_from_overview_redirects_to_start(client):
+    entry = _add_ready(client, "drop.pdf")
+    response = client.post(
+        f"/documents/{entry.id}/remove?from=overview", follow_redirects=False
+    )
+    assert response.headers.get("HX-Redirect", "").startswith("/")
+    assert app.state.queue.get_by_id(entry.id) is None
+
+
+def test_remove_from_review_advances_to_next_ready(client):
+    first = _add_ready(client, "first.pdf")
+    second = _add_ready(client, "second.pdf")
+
+    response = client.post(
+        f"/documents/{first.id}/remove?from=review", follow_redirects=False
+    )
+
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.startswith(f"/review/{second.id}")
+
+
+def test_remove_trashes_when_configured(client):
+    cfg = app.state.config
+    cfg.__dict__["originals"].__dict__["when_removed"] = "trash"
+    entry = _add_ready(client, "trashme.pdf")
+
+    client.post(f"/documents/{entry.id}/remove?from=queue", follow_redirects=False)
+
+    assert (Path(cfg.paths.trash) / "trashme.pdf").exists()
+
+
+def test_remove_tolerates_missing_original(client):
+    # error-style entry: queue knows it, file already gone from the watchfolder
+    cfg = app.state.config
+    entry = _add_ready(client, "ghost.pdf")
+    (Path(cfg.paths.watchfolder) / "ghost.pdf").unlink()
+
+    response = client.post(
+        f"/documents/{entry.id}/remove?from=queue", follow_redirects=False
+    )
+
+    assert response.status_code == 200
+    assert app.state.queue.get_by_id(entry.id) is None
+
+
+def test_remove_unknown_entry_redirects(client):
+    response = client.post("/documents/deadbeef/remove?from=queue", follow_redirects=False)
     assert response.status_code == 200
     assert response.headers.get("HX-Redirect") == "/queue"
 
 
-def test_queue_list_shows_skip_button(client):
-    _add_ready(client, "rechnung.pdf")
-    body = client.get("/partials/queue").text
-    assert "/skip" in body
-    assert "Überspringen" in body
+def test_remove_control_renders_idle_then_confirm(client):
+    entry = _add_ready(client, "rechnung.pdf")
+
+    idle = client.get(f"/documents/{entry.id}/remove-control?from=queue&confirm=0").text
+    assert "Entfernen" in idle
+    assert "confirm=1" in idle
+    assert f"rm-{entry.id}" in idle
+
+    confirm = client.get(f"/documents/{entry.id}/remove-control?from=queue&confirm=1").text
+    assert "Ja" in confirm
+    assert "Nein" in confirm
+    assert f"/documents/{entry.id}/remove?from=queue" in confirm
+    assert "Original" in confirm  # the hint
 
 
 def test_config_save_triggers_reanalysis(client, monkeypatch):
