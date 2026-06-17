@@ -519,3 +519,13 @@ input[type="date"].input { font-family: var(--font-mono); }
 }
 .lang-opt:hover { color: var(--text); }
 .lang-opt.active { color: var(--accent); background: var(--accent-bg); }
+
+/* Original file link */
+.orig-file {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 8px; padding: 5px 11px;
+  border: 1px solid var(--accent-line); border-radius: 8px;
+  background: var(--accent-bg); color: var(--accent);
+  font-size: 13.5px; text-decoration: none;
+}
+.orig-file:hover { filter: brightness(1.08); }

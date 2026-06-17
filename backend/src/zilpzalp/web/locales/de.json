@@ -68,6 +68,7 @@
   "review.msg_date_required": "Bitte ein Datum wählen.",
   "review.msg_target_required": "Mindestens einen Zielordner wählen.",
   "review.extract_unavailable": "Nicht verfügbar",
+  "review.open_pdf": "PDF öffnen",
 
   "config.title": "Konfiguration",
   "config.subtitle": "Konfiguration als YAML. Wird beim Speichern geprüft.",

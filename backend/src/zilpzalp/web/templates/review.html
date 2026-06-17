@@ -7,7 +7,10 @@
   </a>
   <div class="view-head" style="margin-bottom:22px">
     <h1 class="view-title">{{ t('review.title') }}</h1>
-    <p class="view-sub mono" style="font-size:13.5px">{{ entry.path.name }}</p>
+    <a class="orig-file" href="/documents/{{ entry.id }}/pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex:none"><path d="M14 3v5h5M14 3l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+      <span class="mono">{{ entry.path.name }}</span>
+    </a>
   </div>
 
   <form id="review-form" class="review-grid" data-ext="{{ ext }}"

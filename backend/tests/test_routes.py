@@ -607,3 +607,11 @@ def test_review_has_no_preselected_date(client):
     body = response.text
     assert "date-opt sel" not in body          # no candidate preselected
     assert 'data-selected-date=""' in body     # hidden value starts empty
+
+
+def test_review_links_original_pdf_in_new_tab(client):
+    entry = _add_ready(client, "rechnung.pdf")
+    body = client.get(f"/review/{entry.id}").text
+    assert f'href="/documents/{entry.id}/pdf"' in body
+    assert 'target="_blank"' in body
+    assert "rechnung.pdf" in body
