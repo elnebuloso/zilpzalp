@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/elnebuloso/zilpzalp/compare/v1.3.1...v2.0.0) (2026-06-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **config:** the original_handling config setting is removed and replaced by the nested originals group (originals.when_filed, originals.when_removed).
+
+### Features
+
+* **config:** rework action model — split originals handling, navigation-only skip, dedicated remove ([#17](https://github.com/elnebuloso/zilpzalp/issues/17)) ([e503783](https://github.com/elnebuloso/zilpzalp/commit/e5037836a23180c9258cda73410055c1274e0e11))
+
 ## [Unreleased]
 
 ### ⚠ BREAKING CHANGES
