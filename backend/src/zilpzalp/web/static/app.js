@@ -24,28 +24,20 @@
       return;
     }
     var close = e.target.closest("[data-toast-close]");
-    if (close) { close.closest(".toast").remove(); }
-    var openBtn = e.target.closest("[data-drawer-open]");
-    if (openBtn) {
-      var drawer = document.getElementById(openBtn.getAttribute("data-drawer-open"));
-      if (drawer) {
-        drawer.hidden = false;
-        var firstTab = drawer.querySelector("[data-drawer-tab]");
-        if (firstTab) firstTab.click();  // lazy-load the default (Markdown) pane
-      }
-      return;
-    }
-    var closeBtn = e.target.closest("[data-drawer-close]");
-    if (closeBtn) { closeBtn.closest(".drawer-scrim").hidden = true; return; }
-    var scrim = e.target.closest(".drawer-scrim");
-    if (scrim && e.target === scrim) { scrim.hidden = true; return; }
-    var tab = e.target.closest("[data-drawer-tab]");
+    if (close) { close.closest(".toast").remove(); return; }
+    // Review-Seite: Inline-Tabs (Prüfen / Markdown / HTML / JSON). Alle Panels
+    // bleiben im DOM, nur die Sichtbarkeit wird umgeschaltet — so behält das
+    // Prüfen-Formular seinen Zustand. htmx lädt die Extrakt-Panels lazy
+    // (hx-trigger="click once") in ihren eigenen #pane-… Container.
+    var tab = e.target.closest("[data-tab]");
     if (tab) {
-      tab.parentNode.querySelectorAll("[data-drawer-tab]").forEach(function (b) {
-        b.classList.remove("active");
-      });
+      var bar = tab.closest(".review-tabs");
+      bar.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.remove("active"); });
       tab.classList.add("active");
-      // htmx handles the fetch via the tab's hx-get attributes
+      var name = tab.getAttribute("data-tab");
+      document.querySelectorAll("[data-pane]").forEach(function (p) {
+        p.hidden = p.getAttribute("data-pane") !== name;
+      });
     }
   });
 
