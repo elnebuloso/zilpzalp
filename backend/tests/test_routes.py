@@ -676,6 +676,10 @@ def test_confirm_returns_to_start_when_no_more_ready(client):
 def test_skip_advances_to_next_ready_document(client):
     first = _add_ready(client, "first.pdf")
     second = _add_ready(client, "second.pdf")
+    # first is the newest → newest-first sweep order is [first, second],
+    # so skipping first must advance to second.
+    os.utime(first.path, (2000, 2000))
+    os.utime(second.path, (1000, 1000))
 
     response = client.post(f"/documents/{first.id}/skip", follow_redirects=False)
 
