@@ -8,8 +8,8 @@ Status: Approved (pending spec review)
 Two recurring frictions:
 
 1. **No autonomous app run.** An agent (or developer) cannot reliably start/stop the
-   FastAPI app to run manual or Playwright checks. `uvicorn --reload` spawns a child
-   reloader process, so ad-hoc `kill` orphans the worker. The app also defaults its
+   FastAPI app to run manual or Playwright checks. There is no deterministic start that
+   waits until the server actually serves, nor a clean stop. The app also defaults its
    runtime paths to `/data/*` and `/config` (absolute root paths), so a plain
    `uv run uvicorn` does not boot on a clean local checkout.
 2. **Backend location is not documented in-repo.** The Python project root is `backend/`
@@ -18,9 +18,9 @@ Two recurring frictions:
 
 ## Goal
 
-- A deterministic script an agent can call to start/stop the dev server on host port
-  **8000**, self-contained on a clean checkout, returning only once the server actually
-  serves.
+- A deterministic script an agent can call to start/stop the dev server (single uvicorn
+  process, no live-reload) on host port **8000**, self-contained on a clean checkout,
+  returning only once the server actually serves.
 - Move the docker-compose host port mappings off 8000/8001 to **8080/8081** so the
   compose stack and the local dev server can coexist.
 - Document in-repo where the backend lives so agents stop re-discovering it.
@@ -29,6 +29,8 @@ Two recurring frictions:
 
 - No change to container-internal ports (stay 8000).
 - No new dependency (no `make`/`just`); plain POSIX shell + existing `uv`.
+- No live-reload. The server runs as a single process; restart via `stop`+`start` after
+  code changes. (Dropped deliberately to keep stop a portable single-process `kill`.)
 - The script does not run Playwright; it only guarantees the server is up. Playwright is
   driven separately (MCP browser tools).
 
@@ -40,21 +42,22 @@ POSIX `sh` script with subcommands, invoked from repo root:
 
 | Command  | Behavior |
 |----------|----------|
-| `start`  | Seed config if missing → export dev path env → launch uvicorn `--reload` in its own process group → poll health → print URL. Idempotent: if already up (PID file live), no-op. |
-| `stop`   | `kill -TERM` the stored **process group**, wait for exit, remove PID file. No-op if not running. |
+| `start`  | Seed config if missing → export dev path env → launch uvicorn in the background → poll health → print URL. Idempotent: if already up (PID file live), no-op. |
+| `stop`   | `kill -TERM` the stored **PID**, wait for exit, remove PID file. No-op if not running. |
 | `status` | Report up/down, PID, port. |
 | `logs`   | Tail the logfile (`tail -f` by default, `-n` honored if passed through). |
 
 Internals:
 
-- **Launch command:** from `backend/`:
-  `uv run uvicorn zilpzalp.main:app --host 127.0.0.1 --port 8000 --reload`
-  The script `cd`s into `backend/` itself, so callers never need to.
-- **Clean stop despite `--reload`:** start via `setsid` so the process becomes a
-  process-group leader; store the **PGID**; stop with `kill -TERM -<PGID>` to take down
-  the reloader and its worker child together.
-- **PID + log files:** `.devserver.pid` (stores PGID) and `.devserver.log` at repo root.
-  Both gitignored.
+- **Launch command:** from `backend/`, backgrounded with output to the logfile:
+  `uv run uvicorn zilpzalp.main:app --host 127.0.0.1 --port 8000`
+  The script `cd`s into `backend/` itself, so callers never need to. Single process
+  (no `--reload`), so no supervisor/worker split.
+- **Clean stop:** store `$!` (the backgrounded `uv run` PID) in the PID file; stop with
+  `kill -TERM <PID>`. `uv run` forwards the signal to its uvicorn child, which shuts down
+  cleanly. No `setsid` / process group needed — fully portable.
+- **PID + log files:** `.devserver.pid` (stores the PID) and `.devserver.log` at repo
+  root. Both gitignored.
 - **Health gate:** after launch, poll `http://127.0.0.1:8000/healthz/live` until HTTP 200
   or a ~15s timeout. On timeout: print the last log lines and exit non-zero so failures
   are loud. On success: print `Dev server up at http://127.0.0.1:8000`.
@@ -143,6 +146,6 @@ After the compose port change, update the user-facing compose URLs from 8000/800
 ## Risks / Notes
 
 - `uv run` may spuriously rewrite `backend/uv.lock`; restore before committing.
-- The script is POSIX `sh`; `setsid` and `kill -TERM -<PGID>` are Linux-available (the
-  dev environment is Linux/WSL2). macOS lacks `setsid` by default — out of scope for now;
-  note it if cross-platform support is later required.
+- Single-process + plain `kill -TERM <PID>` is portable (no `setsid`, no process group),
+  working on Linux/WSL2 and macOS alike. The trade-off — no live-reload — is accepted; a
+  code change requires `stop`+`start`.
