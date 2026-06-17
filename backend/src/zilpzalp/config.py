@@ -71,9 +71,14 @@ class DatePattern(BaseModel):
         return value
 
 
+class Originals(BaseModel):
+    when_filed: Literal["delete", "trash"]
+    when_removed: Literal["delete", "trash"]
+
+
 class Config(BaseModel):
     paths: Paths
-    original_handling: Literal["delete", "trash"]
+    originals: Originals
     summary_mode: Literal["always", "on_conflict", "never"]
     default_pattern: str
     date_format: str

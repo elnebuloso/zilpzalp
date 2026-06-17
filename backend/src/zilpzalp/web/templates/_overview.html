@@ -41,6 +41,7 @@
             {% if entry.status == 'ready' %}
             <a class="btn sm primary" href="/review/{{ entry.id }}">{{ t('action.review') }}</a>
             {% endif %}
+            {% with from_view='overview', confirm=False %}{% include "_remove_control.html" %}{% endwith %}
           </div>
         </div>
         {% endfor %}

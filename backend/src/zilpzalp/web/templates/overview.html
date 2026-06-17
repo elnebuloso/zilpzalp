@@ -30,7 +30,8 @@
         <div class="info-grid">
           <div class="info-cell"><div class="info-k">{{ t('overview.watchfolder') }}</div><div class="info-v mono">{{ config.paths.watchfolder }}</div></div>
           <div class="info-cell"><div class="info-k">{{ t('overview.config_file') }}</div><div class="info-v mono">{{ config_path }}</div></div>
-          <div class="info-cell"><div class="info-k">{{ t('overview.original_handling') }}</div><div class="info-v">{{ t('original.' ~ config.original_handling) }}</div></div>
+          <div class="info-cell"><div class="info-k">{{ t('overview.original_when_filed') }}</div><div class="info-v">{{ t('original.' ~ config.originals.when_filed) }}</div></div>
+          <div class="info-cell"><div class="info-k">{{ t('overview.original_when_removed') }}</div><div class="info-v">{{ t('original.' ~ config.originals.when_removed) }}</div></div>
           <div class="info-cell"><div class="info-k">{{ t('overview.summary') }}</div><div class="info-v">{{ t('summary_mode.' ~ config.summary_mode) }}</div></div>
           <div class="info-cell"><div class="info-k">{{ t('overview.targets') }}</div><div class="info-v">{{ config.targets | length }}</div></div>
           <div class="info-cell"><div class="info-k">{{ t('overview.patterns') }}</div><div class="info-v">{{ config.patterns | length }}</div></div>

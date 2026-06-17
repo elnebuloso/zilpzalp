@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### ⚠ BREAKING CHANGES
+
+* `config.yaml`: `original_handling` is removed. Replace it with:
+  ```yaml
+  originals:
+    when_filed: delete    # delete | trash — original after a successful filing
+    when_removed: trash   # delete | trash — original on deliberate removal
+  ```
+  Existing configs must be migrated.
+
+### Changed
+
+* **Skip** in the review now navigates to the next document only — it no longer deletes or discards anything. To deliberately discard a document, use the new **Remove** action (available in the queue list, overview, and review) which disposes the original per `originals.when_removed` and shows an inline Yes/No confirmation.
+
 ## [1.3.1](https://github.com/elnebuloso/zilpzalp/compare/v1.3.0...v1.3.1) (2026-06-17)
 
 

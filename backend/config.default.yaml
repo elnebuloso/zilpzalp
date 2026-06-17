@@ -1,6 +1,8 @@
 # Minimal-Konfiguration, die der Container-Entrypoint nach /config/config.yaml
 # seedet, falls dort keine Datei liegt. Pfade kommen aus ZILPZALP_PATH_*.
-original_handling: delete
+originals:
+  when_filed: delete
+  when_removed: trash
 summary_mode: on_conflict
 default_pattern: standard
 date_format: "%Y-%m-%d"

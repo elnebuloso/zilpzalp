@@ -19,7 +19,7 @@ mounts the bundled `demo/` folder (relative to the repo root):
 | `./demo/config` | `/config` | contains `config.yaml` (the only persistent setting) |
 | `./demo/data/inbox` | `/data/inbox` | **watchfolder** — new PDFs land here |
 | `./demo/data/error` | `/data/error` | unreadable/faulty PDFs |
-| `./demo/data/processed` | `/data/processed` | processed originals (with `original_handling: move`) |
+| `./demo/data/trash` | `/data/trash` | originals moved here when `originals.when_filed` or `originals.when_removed` is set to `trash` |
 | `./demo/targets` | `/targets` | target folders for filed documents |
 
 ## Quick start (demo)

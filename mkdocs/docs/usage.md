@@ -20,10 +20,20 @@ All operation happens through the web UI at <http://localhost:8000>.
     - **Final filename:** built live from the naming pattern.
 
 4. **Confirm.** Depending on the `summary_mode` setting, a summary appears first. After
-   confirmation ZilpZalp copies the file into the target folder.
+   confirmation ZilpZalp copies the file into all selected target folders and disposes
+   the original according to `originals.when_filed` (`delete` or `trash`). The entry
+   disappears from the queue. If no further ready document remains, you are returned to
+   the overview.
 
-5. **Original.** The original in the watchfolder is handled according to
-   `original_handling` (moved, deleted, or kept). The entry disappears from the queue.
+5. **Skip.** Navigation only — jumps to the next ready document and leaves the current
+   one untouched in the queue. No file is moved or deleted. If no further ready document
+   remains after the current one, you are returned to the overview.
+
+6. **Remove.** Deliberately discards a document. Available from the queue list, the
+   overview, and the review page. The original is disposed according to
+   `originals.when_removed` (`delete` or `trash`). Before the action executes, the
+   button swaps to an inline **Yes / No** confirmation so accidental clicks are
+   prevented.
 
 ## Name conflicts
 

@@ -10,7 +10,8 @@ def test_load_valid_config(valid_config, write_config):
     cfg = load_config(path)
 
     assert isinstance(cfg, Config)
-    assert cfg.original_handling == "delete"
+    assert cfg.originals.when_filed == "delete"
+    assert cfg.originals.when_removed == "trash"
     assert cfg.summary_mode == "on_conflict"
     assert cfg.date_format == "%Y-%m-%d"
     assert cfg.paths.watchfolder.name == "inbox"
@@ -39,22 +40,31 @@ def test_non_mapping_yaml_raises_config_error(tmp_path):
         load_config(path)
 
 
-def test_invalid_enum_raises_config_error(valid_config, write_config):
-    valid_config["original_handling"] = "bogus"
+def test_invalid_originals_enum_raises_config_error(valid_config, write_config):
+    valid_config["originals"]["when_removed"] = "bogus"
     path = write_config(valid_config)
 
     with pytest.raises(ConfigError) as exc:
         load_config(path)
-    assert "original_handling" in str(exc.value)
+    assert "when_removed" in str(exc.value)
 
 
-def test_missing_required_field_raises_config_error(valid_config, write_config):
-    del valid_config["original_handling"]
+def test_missing_originals_raises_config_error(valid_config, write_config):
+    del valid_config["originals"]
     path = write_config(valid_config)
 
     with pytest.raises(ConfigError) as exc:
         load_config(path)
-    assert "original_handling" in str(exc.value)
+    assert "originals" in str(exc.value)
+
+
+def test_missing_one_originals_field_raises_config_error(valid_config, write_config):
+    del valid_config["originals"]["when_filed"]
+    path = write_config(valid_config)
+
+    with pytest.raises(ConfigError) as exc:
+        load_config(path)
+    assert "when_filed" in str(exc.value)
 
 
 def test_non_utf8_file_raises_config_error(tmp_path):
@@ -202,7 +212,7 @@ def test_save_config_rejects_invalid_value_and_keeps_old_file(valid_config, writ
     path = write_config(valid_config)
     original = path.read_text(encoding="utf-8")
     bad = dict(valid_config)
-    bad["original_handling"] = "bogus"
+    bad["originals"] = {"when_filed": "bogus", "when_removed": "trash"}
 
     with pytest.raises(ConfigError):
         save_config(path, yaml.safe_dump(bad, allow_unicode=True))
@@ -221,15 +231,15 @@ def test_save_config_rejects_invalid_yaml_and_keeps_old_file(valid_config, write
 
 
 def test_trash_handling_is_valid(valid_config, write_config):
-    valid_config["original_handling"] = "trash"
+    valid_config["originals"]["when_filed"] = "trash"
     path = write_config(valid_config)
-    assert load_config(path).original_handling == "trash"
+    assert load_config(path).originals.when_filed == "trash"
 
 
 def test_move_handling_is_rejected(valid_config, write_config):
-    valid_config["original_handling"] = "move"
+    valid_config["originals"]["when_filed"] = "move"
     path = write_config(valid_config)
-    with pytest.raises(ConfigError, match="original_handling"):
+    with pytest.raises(ConfigError, match="when_filed"):
         load_config(path)
 
 

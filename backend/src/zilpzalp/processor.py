@@ -39,11 +39,11 @@ def _unique_name(folder: Path, name: str) -> Path:
     return folder / f"{stem} ({counter}){suffix}"
 
 
-def _dispose(source: Path, config: Config) -> tuple[str, Path | None]:
-    """Remove the inbox original per config.original_handling. Used by both
-    filing (after the copy) and skipping (no copy)."""
-    if config.original_handling == "trash":
-        dest = _unique_name(config.paths.trash, source.name)
+def _dispose(source: Path, trash: Path, mode: str) -> tuple[str, Path | None]:
+    """Remove the inbox original. *mode* is "delete" or "trash"; the caller
+    chooses it per situation (when_filed for filing, when_removed for removal)."""
+    if mode == "trash":
+        dest = _unique_name(trash, source.name)
         shutil.move(str(source), str(dest))
         return "trashed", dest
     source.unlink(missing_ok=True)
@@ -77,11 +77,16 @@ def process(
     for dest in destinations:
         shutil.copy2(source, dest)
 
-    action, dest = _dispose(source, config)
+    action, dest = _dispose(source, config.paths.trash, config.originals.when_filed)
     return ProcessResult(copied=destinations, original_action=action, original_destination=dest)
 
 
-def skip(source: Path, config: Config) -> ProcessResult:
-    """Discard an inbox original without filing it, per config.original_handling."""
-    action, dest = _dispose(source, config)
+def remove(source: Path, config: Config) -> ProcessResult:
+    """Discard an inbox original on explicit removal, per
+    config.originals.when_removed. Tolerant of an already-missing original
+    (e.g. an error entry whose file was moved to error/): no disposition, no
+    error — the caller still drops the queue entry."""
+    if not source.exists():
+        return ProcessResult(copied=[], original_action="deleted", original_destination=None)
+    action, dest = _dispose(source, config.paths.trash, config.originals.when_removed)
     return ProcessResult(copied=[], original_action=action, original_destination=dest)

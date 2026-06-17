@@ -20,13 +20,11 @@
 
   "toast.filed": "„{filename}“ wurde abgelegt.",
   "toast.file_error": "Fehler bei der Ablage: {error}",
-  "toast.skipped": "„{filename}“ wurde übersprungen.",
 
   "overview.title": "Übersicht",
   "overview.operations": "Betriebsangaben",
   "overview.watchfolder": "Überwachter Ordner",
   "overview.config_file": "Konfigurationsdatei",
-  "overview.original_handling": "Umgang mit Original",
   "overview.summary": "Zusammenfassung",
   "overview.targets": "Zielordner",
   "overview.patterns": "Namensmuster",
@@ -48,7 +46,13 @@
   "action.confirm": "Bestätigen",
   "action.execute": "Ausführen",
   "action.skip": "Überspringen",
-  "confirm.skip": "Dieses Dokument endgültig löschen?",
+  "action.remove": "Entfernen",
+  "action.yes": "Ja",
+  "action.no": "Nein",
+  "confirm.remove": "Entfernen? Original → {target}",
+  "toast.removed": "„{filename}“ wurde entfernt.",
+  "overview.original_when_filed": "Original beim Ablegen",
+  "overview.original_when_removed": "Original beim Entfernen",
 
   "review.back": "Zurück zur Warteschlange",
   "review.title": "Dokument prüfen",

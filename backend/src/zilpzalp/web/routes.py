@@ -7,12 +7,12 @@ import tempfile
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from zilpzalp.config import Config, ConfigError, save_config
-from zilpzalp.processor import FileConflictError, ProcessorError, process, skip
+from zilpzalp.processor import FileConflictError, ProcessorError, process, remove
 from zilpzalp.queue import Queue
 from zilpzalp.web.i18n import SUPPORTED, resolve_language, translate
 from zilpzalp.web.naming import render_filename
@@ -32,6 +32,7 @@ templates.env.globals["STATUS_BADGE"] = STATUS_BADGE
 
 PDF_MAGIC = b"%PDF"
 _UPLOAD_CHUNK = 1024 * 1024
+_REMOVE_FROM = {"review", "queue", "overview"}
 
 
 def _unique_pdf_name(folder: Path, name: str) -> Path:
@@ -88,6 +89,22 @@ def _next_ready(queue: Queue):
     return None
 
 
+def _next_ready_after(queue: Queue, current_id: str):
+    """First ready, reviewable entry AFTER *current_id* in newest-first order,
+    or None. Drives the forward sweep of 'skip' so it never bounces back."""
+    ready = [
+        e for e in _by_mtime_desc(queue.list())
+        if e.status == "ready" and e.suggestion is not None
+    ]
+    seen = False
+    for entry in ready:
+        if seen:
+            return entry
+        if entry.id == current_id:
+            seen = True
+    return None
+
+
 def _base_context(request: Request, active: str) -> dict:
     queue: Queue = request.app.state.queue
     counts = _counts(queue)
@@ -99,6 +116,7 @@ def _base_context(request: Request, active: str) -> dict:
         "flash": request.query_params.get("flash"),
         "flash_kind": request.query_params.get("kind", "ok"),
         "lang": lang,
+        "when_removed": request.app.state.config.originals.when_removed,
         "t": lambda key, **kw: translate(key, lang, **kw),
     }
 
@@ -180,7 +198,7 @@ def review_page(request: Request, entry_id: str):
             "config": config,
             "recommended": recommended,
             "ext": entry.path.suffix or ".pdf",
-            "original_label": translate("original." + config.original_handling, lang),
+            "original_label": translate("original." + config.originals.when_filed, lang),
         }
     )
     return templates.TemplateResponse(request, "review.html", context)
@@ -269,7 +287,7 @@ def _summary_response(request, entry, filename, target_paths, conflicts,
         "selected": selected,
         "conflict_set": conflict_set,
         "has_conflict": bool(conflicts),
-        "original_label": translate("original." + config.original_handling, lang),
+        "original_label": translate("original." + config.originals.when_filed, lang),
         "form_values": form_values,
         "lang": lang,
         "t": lambda key, **kw: translate(key, lang, **kw),
@@ -285,7 +303,7 @@ def _execute(request, entry, filename, target_paths, config):
     request.app.state.cache.remove(entry.path)
     message = translate("toast.filed", lang, filename=filename)
     nxt = _next_ready(queue)
-    target = f"/review/{nxt.id}" if nxt else "/queue"
+    target = f"/review/{nxt.id}" if nxt else "/"
     resp = Response(status_code=200)
     resp.headers["HX-Redirect"] = target + "?flash=" + quote(message) + "&kind=ok"
     return resp
@@ -381,27 +399,76 @@ def execute(
 
 @router.post("/documents/{entry_id}/skip")
 def skip_document(request: Request, entry_id: str):
+    """Navigation only: jump to the next ready document after this one; leave
+    the document untouched in the queue. No file operation, no flash."""
     queue: Queue = request.app.state.queue
+    nxt = _next_ready_after(queue, entry_id)
+    target = f"/review/{nxt.id}" if nxt else "/"
+    return Response(status_code=200, headers={"HX-Redirect": target})
+
+
+@router.post("/documents/{entry_id}/remove")
+def remove_document(
+    request: Request,
+    entry_id: str,
+    origin: str = Query("queue", alias="from"),
+):
+    queue: Queue = request.app.state.queue
+    lang = resolve_language(request)
+    if origin not in _REMOVE_FROM:
+        origin = "queue"
     entry = queue.get_by_id(entry_id)
     if entry is None:
-        return Response(status_code=200, headers={"HX-Redirect": "/queue"})
+        target = "/" if origin in ("review", "overview") else "/queue"
+        return Response(status_code=200, headers={"HX-Redirect": target})
     config: Config = request.app.state.config
-    lang = resolve_language(request)
     try:
-        skip(entry.path, config)
+        remove(entry.path, config)
     except ProcessorError as exc:
         message = translate("toast.file_error", lang, error=str(exc))
+        err_target = {"review": f"/review/{entry_id}", "overview": "/"}.get(origin, "/queue")
         return Response(status_code=200, headers={
-            "HX-Redirect": "/queue?flash=" + quote(message) + "&kind=err"
+            "HX-Redirect": err_target + "?flash=" + quote(message) + "&kind=err"
         })
     queue.remove(entry.path)
     request.app.state.cache.remove(entry.path)
-    message = translate("toast.skipped", lang, filename=entry.path.name)
-    nxt = _next_ready(queue)
-    target = f"/review/{nxt.id}" if nxt else "/queue"
+    message = translate("toast.removed", lang, filename=entry.path.name)
+    if origin == "review":
+        nxt = _next_ready(queue)
+        target = f"/review/{nxt.id}" if nxt else "/"
+    elif origin == "overview":
+        target = "/"
+    else:
+        target = "/queue"
     return Response(status_code=200, headers={
         "HX-Redirect": target + "?flash=" + quote(message) + "&kind=ok"
     })
+
+
+@router.get("/documents/{entry_id}/remove-control")
+def remove_control(
+    request: Request,
+    entry_id: str,
+    origin: str = Query("queue", alias="from"),
+    confirm: int = 0,
+):
+    queue: Queue = request.app.state.queue
+    entry = queue.get_by_id(entry_id)
+    if entry is None:
+        return Response(status_code=200)  # gone; nothing to render
+    if origin not in _REMOVE_FROM:
+        origin = "queue"
+    config: Config = request.app.state.config
+    lang = resolve_language(request)
+    context = {
+        "entry": entry,
+        "from_view": origin,
+        "confirm": bool(confirm),
+        "when_removed": config.originals.when_removed,
+        "lang": lang,
+        "t": lambda key, **kw: translate(key, lang, **kw),
+    }
+    return templates.TemplateResponse(request, "_remove_control.html", context)
 
 
 def _config_context(request: Request, text: str, errors: list[str], saved: bool):

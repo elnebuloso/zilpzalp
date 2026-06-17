@@ -37,6 +37,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 5 | Feature | **CI-Release-Pipeline (GitHub Actions)** — Auto-Semver aus Conventional Commits via `release-please`, Backend-Image nach Docker Hub `elnebuloso/zilpzalp-backend:vX.Y.Z` (Details: [superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md](superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md)) | ✅ | `75a6378` |
 | 6 | Feature | **Overview-Seite — Refresh** — Counter-Layout (1×4/2×2), Betriebsangaben unter „Hochladen", Status „bereit" in der Liste, jüngste-zuerst-Sortierung + Upload-Feedback (Details: [superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md](superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md)) | ✅ | `809343f` |
 | 7 | Feature | **Review-Seite — Optimierung** — nächstes bereites Dokument nach Bestätigen/Überspringen, kein vorgewähltes Datum, Original-Dateiname hervorgehoben + im neuen Tab öffnen, Extraktions-Tabs (Markdown/HTML/JSON, inline ohne Overlay) (Details: [superpowers/specs/2026-06-17-0955-review-page-optimization-design.md](superpowers/specs/2026-06-17-0955-review-page-optimization-design.md)) | ✅ | `e081ffd` |
+| 8 | Feature | **Aktionsmodell-Überarbeitung** — `originals.when_filed`/`when_removed` statt `original_handling`, Überspringen rein navigatorisch, eigener Entfernen-Button mit htmx-Inline-Bestätigung (Details: [superpowers/specs/2026-06-17-1716-action-model-rework-design.md](superpowers/specs/2026-06-17-1716-action-model-rework-design.md)) | 🚧 | — |
 
 ## Ideen / später
 
@@ -106,23 +107,3 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   des Images gegen ein echtes PDF prüfen, ob der HTML-Tab gefüllt wird; falls nicht,
   `"html"` aus der `format`-Liste in [extractor.py](../../backend/src/zilpzalp/extractor.py)
   entfernen und den HTML-Tab ausbauen.
-- **Aktionsmodell überarbeiten — Skip ≠ Löschen, eigener Entfernen-Button:** Die
-  Bedeutung der Aktionen klarer trennen. Gewünschtes Verhalten:
-  - **Überspringen (Review):** springt nur weiter und **belässt das Dokument in der
-    Warteschlange** — kein Disponieren des Originals, **kein** `hx-confirm`-Alert.
-  - **`original_handling: delete|trash`** wirkt **nur bei bestätigten, umbenannten/abgelegten**
-    Dateien (also beim Confirm/Ablegen), nicht beim Überspringen.
-  - **Entfernen/Löschen-Button** in der **Warteschlange** und in der **„jüngste
-    Dokumente"-Ansicht** (Übersicht): entfernt das Dokument bewusst und disponiert das
-    Original **je nach Einstellung** (`trash` oder `delete`).
-
-  Heute falsch: In der Warteschlange ([_queue_list.html](../../backend/src/zilpzalp/web/templates/_queue_list.html))
-  steht ein **Überspringen**-Button, der über `skip_document`
-  ([web/routes.py](../../backend/src/zilpzalp/web/routes.py)) `skip()`
-  ([processor.py](../../backend/src/zilpzalp/processor.py)) das Original gemäß
-  `original_handling` disponiert (bei `delete` löscht, mit `hx-confirm`). Dort gehört
-  stattdessen ein **Entfernen/Löschen**-Button hin; die Übersicht
-  ([_overview.html](../../backend/src/zilpzalp/web/templates/_overview.html)) hat heute gar
-  keine Entfernen-Aktion. **Offene Frage:** Wenn ein übersprungenes Dokument in der Queue
-  bleibt und die Datei im Watchfolder liegt — wie wird unnötige Dauer-Re-Analyse vermieden
-  (Status bleibt einfach „ready", kein Re-Enqueue)?

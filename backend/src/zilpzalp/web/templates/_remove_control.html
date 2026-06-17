@@ -1,0 +1,14 @@
+<span id="rm-{{ entry.id }}" class="rm-control">
+  {% if confirm %}
+    <span class="rm-hint">{{ t('confirm.remove', target=t('original.' ~ when_removed)) }}</span>
+    <button type="button" class="btn sm danger"
+            hx-post="/documents/{{ entry.id }}/remove?from={{ from_view }}">{{ t('action.yes') }}</button>
+    <button type="button" class="btn sm ghost"
+            hx-get="/documents/{{ entry.id }}/remove-control?from={{ from_view }}&confirm=0"
+            hx-target="#rm-{{ entry.id }}" hx-swap="outerHTML">{{ t('action.no') }}</button>
+  {% else %}
+    <button type="button" class="btn sm ghost"
+            hx-get="/documents/{{ entry.id }}/remove-control?from={{ from_view }}&confirm=1"
+            hx-target="#rm-{{ entry.id }}" hx-swap="outerHTML">{{ t('action.remove') }}</button>
+  {% endif %}
+</span>

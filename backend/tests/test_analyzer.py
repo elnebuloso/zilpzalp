@@ -10,7 +10,9 @@ def _config(tmp_path: Path):
     cfg = tmp_path / "config.yaml"
     cfg.write_text(
         """
-original_handling: delete
+originals:
+  when_filed: delete
+  when_removed: trash
 summary_mode: never
 default_pattern: standard
 date_format: "%Y-%m-%d"
@@ -83,7 +85,9 @@ def test_config_date_patterns_add_labeled_candidates(tmp_path):
 paths:
   watchfolder: {tmp_path / "inbox"}
   error_folder: {tmp_path / "error"}
-original_handling: delete
+originals:
+  when_filed: delete
+  when_removed: trash
 summary_mode: never
 default_pattern: standard
 date_format: "%Y-%m-%d"
