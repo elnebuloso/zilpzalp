@@ -90,6 +90,9 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 - **Betriebsangaben auf der Konfigurationsseite:** Dieselben Betriebsangaben auch auf
   der Seite „Konfiguration" in der rechten Spalte anzeigen, damit man die geparsten
   Daten direkt sieht.
+- **Verlinkung zur Dokumentation + GitHub:** Links zur Doku
+  (<https://elnebuloso.github.io/zilpzalp/>) und zum GitHub-Repo in der UI einbauen —
+  z. B. im Header, ggf. als GitHub-Icon.
 - **TestClient-Deprecation beheben:** Die Tests lösen vorbestehende
   httpx/starlette-`TestClient`-Deprecation-Warnings aus (per-request `cookies=`,
   `Using httpx with starlette.testclient is deprecated`). Harmlos heute, werden aber
