@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/elnebuloso/zilpzalp/compare/v1.1.0...v1.2.0) (2026-06-17)
+
+
+### Features
+
+* **web:** refresh the overview page (counters, sorting, badges, upload feedback) ([#11](https://github.com/elnebuloso/zilpzalp/issues/11)) ([809343f](https://github.com/elnebuloso/zilpzalp/commit/809343f544ffe44f997611a9fc1020ccbbb3f7e6))
+
 ## [1.1.0](https://github.com/elnebuloso/zilpzalp/compare/v1.0.0...v1.1.0) (2026-06-17)
 
 
