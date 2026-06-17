@@ -35,6 +35,7 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
 | 3 | Feature | **Mehrsprachigkeit der UI (DE/EN)** — Texte aus Templates/Code lösen, i18n-Mechanismus + Sprachumschalter (Details: [superpowers/specs/2026-06-14-2212-ui-i18n-design.md](superpowers/specs/2026-06-14-2212-ui-i18n-design.md)) | ✅ | `bc3f3c0` |
 | 4 | Feature | **Health-Endpunkte für Kubernetes-Probes** — `/healthz/startup`, `/healthz/ready`, `/healthz/live` mit Komponenten-Status; `/health` entfällt (Details: [superpowers/specs/2026-06-14-2348-health-probes-design.md](superpowers/specs/2026-06-14-2348-health-probes-design.md)) | ✅ | `7630595` |
 | 5 | Feature | **CI-Release-Pipeline (GitHub Actions)** — Auto-Semver aus Conventional Commits via `release-please`, Backend-Image nach Docker Hub `elnebuloso/zilpzalp-backend:vX.Y.Z` (Details: [superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md](superpowers/specs/2026-06-15-0025-ci-release-pipeline-design.md)) | ✅ | `75a6378` |
+| 6 | Feature | **Overview-Seite — Refresh** — Counter-Layout (1×4/2×2), Betriebsangaben unter „Hochladen", Status „bereit" in der Liste, jüngste-zuerst-Sortierung + Upload-Feedback (Details: [superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md](superpowers/specs/2026-06-17-0834-overview-page-refresh-design.md)) | 🚧 | — |
 
 ## Ideen / später
 
@@ -77,29 +78,15 @@ So wird dieses Dokument gepflegt (gilt unabhängig von Tooling oder Gedächtnis)
   Aktuell wird beim Start bewusst neu extrahiert (keine Invalidierungslogik).
 - **Manueller Re-Analyse-Button:** Global und/oder pro Eintrag, als Ergänzung zur
   automatischen Re-Analyse nach Config-Änderung.
-- **Status „bereit" auf der Übersichtsseite:** Auf der Übersichtsseite fehlt der
-  Status „bereit" analog zur Warteschlangenseite — dort konsistent ergänzen.
 - **Screenshots in der mkdocs-Doku via Playwright:** Die mkdocs-Dokumentation mit
   Screenshots der Weboberfläche anreichern, automatisiert über Playwright erzeugt,
   damit sie bei UI-Änderungen reproduzierbar aktualisiert werden können.
-- **Counter-Boxen auf der Startseite layouten:** Aktuell stehen 3 Boxen
-  nebeneinander, die 4. rutscht darunter. Alle 4 sollen gleichmäßig liegen — je nach
-  Viewport 1×4 (breit) bzw. 2×2 (schmaler) statt 3+1.
-- **Betriebsangaben auf der Übersichtsseite:** Betriebs-/Laufzeitangaben auf der
-  Übersichtsseite in der Spalte „Hochladen" unterhalb von „PDF hochladen" anzeigen.
 - **Betriebsangaben auf der Konfigurationsseite:** Dieselben Betriebsangaben auch auf
   der Seite „Konfiguration" in der rechten Spalte anzeigen, damit man die geparsten
   Daten direkt sieht.
 - **Verlinkung zur Dokumentation + GitHub:** Links zur Doku
   (<https://elnebuloso.github.io/zilpzalp/>) und zum GitHub-Repo in der UI einbauen —
   z. B. im Header, ggf. als GitHub-Icon.
-- **Übersichtsseite — Liste & Upload-Feedback:** Mehrere zusammenhängende Punkte zur
-  Dokumentenliste:
-  - Neu in der Inbox gefundene Dokumente oben einsortieren, absteigend nach Alter
-    (jüngste zuerst).
-  - Beim Upload per UI wächst die Liste immer weiter; ein erneuter Upload zeigt nur
-    die gerade hochgeladenen Files an — Verhalten klären/beheben.
-  - „fertig" ist als Status irreführend — sollte „hochgeladen" heißen.
 - **Review-Seite — nahtlos weiterarbeiten + Fehlbestätigung verhindern:** Nach Klick
   auf „Bestätigen" direkt das nächste Dokument vorlegen, damit man ohne Umweg
   weiterarbeiten kann. Damit man nicht stumpf/zu schnell bestätigt und versehentlich
