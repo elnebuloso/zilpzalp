@@ -20,7 +20,7 @@ instead reports the error clearly.
 |---|---|---|
 | `ZILPZALP_PATH_INBOX` | `/data/inbox` | Watched folder for incoming PDFs |
 | `ZILPZALP_PATH_ERROR` | `/data/error` | Storage for unreadable PDFs |
-| `ZILPZALP_PATH_TRASH` | `/data/trash` | Trash bin (used with `original_handling: trash`) |
+| `ZILPZALP_PATH_TRASH` | `/data/trash` | Trash bin (used when `originals.when_filed` or `originals.when_removed` is set to `trash`) |
 | `ZILPZALP_PATH_OUTBOX` | `/data/outbox` | Default output target ("Outbox") |
 | `ZILPZALP_PATH_CACHE` | `/data/cache` | OCR / extraction cache |
 
@@ -28,7 +28,9 @@ instead reports the error clearly.
 
 ```yaml
 # Infra paths come from ZILPZALP_PATH_* env vars — not from this file.
-original_handling: delete        # delete | trash
+originals:
+  when_filed: delete             # delete | trash — original after a successful filing
+  when_removed: trash            # delete | trash — original on deliberate removal
 summary_mode: on_conflict        # always | on_conflict | never
 
 default_pattern: standard
@@ -72,12 +74,23 @@ rules:
 
 ## Fields
 
-### `original_handling`
+### `originals`
 
-What happens to the original in the inbox after successful filing:
+Controls what happens to the original PDF in the inbox for the two disposal situations.
+The asymmetry is intentional: after filing a copy already exists in the target folders,
+so deleting the original is lossless; on a deliberate removal there is no copy anywhere,
+so trashing is the safe default.
 
-- `delete` — delete it permanently
-- `trash` — move it to `ZILPZALP_PATH_TRASH`
+```yaml
+originals:
+  when_filed: delete    # delete | trash
+  when_removed: trash   # delete | trash
+```
+
+- **`when_filed`** — disposal after a successful **Confirm** (filing): `delete` removes
+  the original permanently; `trash` moves it to `ZILPZALP_PATH_TRASH`.
+- **`when_removed`** — disposal after a deliberate **Remove**: `trash` moves it to
+  `ZILPZALP_PATH_TRASH`; `delete` removes it permanently.
 
 ### `summary_mode`
 
