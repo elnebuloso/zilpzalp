@@ -147,7 +147,8 @@ def test_confirm_executes_directly_when_summary_never(client):
     )
 
     assert response.status_code == 200
-    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.split("?")[0] == "/"
     # document left the queue and a copy landed in the target
     assert app.state.queue.get_by_id(entry.id) is None
     target = Path(cfg.targets[0].path)
@@ -273,7 +274,8 @@ def test_candidate_date_uses_config_date_format(client):
     )
 
     assert response.status_code == 200
-    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.split("?")[0] == "/"
     target = Path(cfg.targets[0].path)
     names = [p.name for p in target.iterdir()]
     # Candidate date now formatted via config.date_format (15.01.2026), not raw ISO.
@@ -657,7 +659,7 @@ def test_confirm_advances_to_next_ready_document(client):
     assert "flash=" in redirect
 
 
-def test_confirm_returns_to_queue_when_no_more_ready(client):
+def test_confirm_returns_to_start_when_no_more_ready(client):
     cfg = app.state.config
     cfg.__dict__["summary_mode"] = "never"
     only = _add_ready(client, "only.pdf")
@@ -667,7 +669,8 @@ def test_confirm_returns_to_queue_when_no_more_ready(client):
         data=_form(cfg.targets[0].path),
     )
 
-    assert response.headers.get("HX-Redirect", "").startswith("/queue")
+    redirect = response.headers.get("HX-Redirect", "")
+    assert redirect.split("?")[0] == "/"
 
 
 def test_skip_advances_to_next_ready_document(client):
